@@ -1,0 +1,11 @@
+--- ../src-base/minecraft/ic2/core/block/state/Ic2BlockState.java
++++ ../src-work/minecraft/ic2/core/block/state/Ic2BlockState.java
+@@ -169,7 +169,7 @@
+             s = stringbuilder.toString();
+          }
+ 
+-         return (int)s;
++         return s;
+       }
+ 
+       public boolean hasExtraProperties() {

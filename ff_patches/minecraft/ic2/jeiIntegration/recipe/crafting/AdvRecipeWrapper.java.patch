@@ -1,0 +1,53 @@
+--- ../src-base/minecraft/ic2/jeiIntegration/recipe/crafting/AdvRecipeWrapper.java
++++ ../src-work/minecraft/ic2/jeiIntegration/recipe/crafting/AdvRecipeWrapper.java
+@@ -30,7 +30,7 @@
+             if ((i >>> 8 - k & 1) != 0) {
+                list.add(this.recipe.input[j++]);
+             } else {
+-               list.add((Object)null);
++               list.add(null);
+             }
+          }
+       }
+@@ -47,27 +47,22 @@
+    }
+ 
+    public static List<List<ItemStack>> replaceRecipeInputs(List<IRecipeInput> list) {
+-      List<List<ItemStack>> list = new ArrayList<List<ItemStack>>(list.size());
+-
+-      for(IRecipeInput irecipeinput : list) {
+-         if (irecipeinput == null) {
+-            list.add(Collections.emptyList());
+-         } else {
+-            List<ItemStack> list1 = new ArrayList<ItemStack>(irecipeinput.getInputs());
+-            ListIterator<ItemStack> listiterator = list1.listIterator();
+-
+-            while(listiterator.hasNext()) {
+-               ItemStack itemstack = listiterator.next();
+-               if (itemstack != null && itemstack.getItem() instanceof IElectricItem) {
+-                  listiterator.set(StackUtil.copyWithWildCard(itemstack));
+-               }
+-            }
+-
+-            list.add(list1);
++      ArrayList<List<ItemStack>> out = new ArrayList<List<ItemStack>>(list.size());
++      for (IRecipeInput recipe : list) {
++         if (recipe == null) {
++            out.add(Collections.emptyList());
++            continue;
+          }
++         ArrayList<ItemStack> replace = new ArrayList<ItemStack>(recipe.getInputs());
++         ListIterator<ItemStack> it = replace.listIterator();
++         while (it.hasNext()) {
++            ItemStack stack = (ItemStack)it.next();
++            if (stack == null || !(stack.getItem() instanceof IElectricItem)) continue;
++            it.set(StackUtil.copyWithWildCard(stack));
++         }
++         out.add(replace);
+       }
+-
+-      return list;
++      return out;
+    }
+ 
+    public void getIngredients(IIngredients ingredients) {

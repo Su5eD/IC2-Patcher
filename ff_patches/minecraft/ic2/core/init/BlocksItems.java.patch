@@ -1,0 +1,26 @@
+--- ../src-base/minecraft/ic2/core/init/BlocksItems.java
++++ ../src-work/minecraft/ic2/core/init/BlocksItems.java
+@@ -256,7 +256,7 @@
+       ItemMulti.create(ItemName.plate, PlateResourceType.class);
+       ItemMulti.create(ItemName.casing, CasingResourceType.class);
+       ItemMulti<NuclearResourceType> itemmulti = new ItemNuclearResource();
+-      itemmulti.setUpdateHandler((Enum)null, ItemHandlers.radioactiveUpdate);
++      itemmulti.setUpdateHandler(null, ItemHandlers.radioactiveUpdate);
+       ItemMulti<MiscResourceType> itemmulti1 = ItemMulti.<MiscResourceType>create(ItemName.misc_resource, MiscResourceType.class);
+       itemmulti1.setRarity(MiscResourceType.matter, EnumRarity.RARE);
+       itemmulti1.setRarity(MiscResourceType.iridium_ore, EnumRarity.RARE);
+@@ -362,11 +362,11 @@
+       ItemMulti<CellType> itemmulti3 = new ItemClassicCell();
+       itemmulti3.setUseHandler(CellType.empty, ItemHandlers.emptyCellFill);
+       itemmulti3.addCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, (stack) -> {
+-         CellType celltype = (CellType)cell.getType(stack);
++         CellType celltype = (CellType)itemmulti3.getType(stack);
+          CellType.CellFluidHandler celltype$cellfluidhandler;
+          if (celltype.isFluidContainer()) {
+-            cell.getClass();
+-            celltype$cellfluidhandler = new CellType.CellFluidHandler(stack, cell::getType);
++            itemmulti3.getClass();
++            celltype$cellfluidhandler = new CellType.CellFluidHandler(stack, itemmulti3::getType);
+          } else {
+             celltype$cellfluidhandler = null;
+          }

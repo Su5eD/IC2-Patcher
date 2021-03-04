@@ -1,0 +1,11 @@
+--- ../src-base/minecraft/ic2/core/profile/ProfileManager.java
++++ ../src-work/minecraft/ic2/core/profile/ProfileManager.java
+@@ -230,7 +230,7 @@
+       list3.removeAll(textureChanges);
+ 
+       assert !list3.stream().anyMatch((packx) -> {
+-         return pack.getPackName().startsWith("IC2 Profile Pack for ");
++         return packx.getPackName().startsWith("IC2 Profile Pack for ");
+       });
+ 
+       list2.forEach(list3::add);

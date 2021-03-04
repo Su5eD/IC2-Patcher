@@ -1,0 +1,41 @@
+--- ../src-base/minecraft/ic2/core/block/machine/tileentity/TileEntityBatchCrafter.java
++++ ../src-work/minecraft/ic2/core/block/machine/tileentity/TileEntityBatchCrafter.java
+@@ -133,8 +133,9 @@
+       this.progress = 0;
+       this.guiProgress = 0.0F;
+ 
+-      for(final int i = 0; i < this.ingredientsRow.length; ++i) {
+-         this.ingredientsRow[i] = new InvSlot(this, "ingredient[" + i + ']', InvSlot.Access.I, 1) {
++      for(int i = 0; i < this.ingredientsRow.length; ++i) {
++         int finalI = i;
++         this.ingredientsRow[i] = new InvSlot(this, "ingredient[" + finalI + ']', InvSlot.Access.I, 1) {
+             public boolean accepts(ItemStack ingredient) {
+                IRecipe irecipe = TileEntityBatchCrafter.this.world.isRemote ? TileEntityBatchCrafter.this.findRecipe() : TileEntityBatchCrafter.this.recipe;
+                if (irecipe == null) {
+@@ -142,14 +143,14 @@
+                } else {
+                   assert irecipe.matches(TileEntityBatchCrafter.this.crafting, TileEntityBatchCrafter.this.world);
+ 
+-                  ItemStack itemstack = TileEntityBatchCrafter.this.craftingGrid[i];
++                  ItemStack itemstack = TileEntityBatchCrafter.this.craftingGrid[finalI];
+ 
+                   boolean flag;
+                   try {
+-                     TileEntityBatchCrafter.this.craftingGrid[i] = ingredient;
++                     TileEntityBatchCrafter.this.craftingGrid[finalI] = ingredient;
+                      flag = irecipe.matches(TileEntityBatchCrafter.this.crafting, TileEntityBatchCrafter.this.world);
+                   } finally {
+-                     TileEntityBatchCrafter.this.craftingGrid[i] = itemstack;
++                     TileEntityBatchCrafter.this.craftingGrid[finalI] = itemstack;
+                   }
+ 
+                   return flag;
+@@ -158,7 +159,7 @@
+ 
+             public void onChanged() {
+                super.onChanged();
+-               TileEntityBatchCrafter.this.ingredientChange(i);
++               TileEntityBatchCrafter.this.ingredientChange(finalI);
+             }
+          };
+       }

@@ -1,0 +1,45 @@
+--- ../src-base/minecraft/ic2/core/model/MaskOverlayModel.java
++++ ../src-work/minecraft/ic2/core/model/MaskOverlayModel.java
+@@ -126,26 +126,24 @@
+       return bitset;
+    }
+ 
+-   private static List<MaskOverlayModel.Area> searchAreas(BitSet pixels, int width) {
+-      List<MaskOverlayModel.Area> list = new ArrayList<MaskOverlayModel.Area>();
+-
+-      int k;
+-      int j1;
+-      for(idx = 0; (j1 = pixels.nextSetBit(j1)) != -1; j1 = j1 + k) {
+-         int i = j1 / width;
+-         int j = j1 - i * width;
+-         k = Math.min(width - j, pixels.nextClearBit(j1 + 1) - j1);
+-         int l = 1;
+-
+-         for(int i1 = j1 + width; pixels.get(i1) && pixels.nextClearBit(i1 + 1) >= i1 + k; i1 += width) {
+-            pixels.clear(i1, i1 + k);
+-            ++l;
++   private static List<Area> searchAreas(BitSet pixels, int width) {
++      ArrayList<Area> ret = new ArrayList<Area>();
++      int idx = 0;
++      while ((idx = pixels.nextSetBit(idx)) != -1) {
++         int y = idx / width;
++         int x = idx - y * width;
++         int areaWidth = Math.min(width - x, pixels.nextClearBit(idx + 1) - idx);
++         int areaHeight = 1;
++         int nextLineIdx = idx + width;
++         while (pixels.get(nextLineIdx) && pixels.nextClearBit(nextLineIdx + 1) >= nextLineIdx + areaWidth) {
++            pixels.clear(nextLineIdx, nextLineIdx + areaWidth);
++            ++areaHeight;
++            nextLineIdx += width;
+          }
+-
+-         list.add(new MaskOverlayModel.Area(j, i, k, l));
++         ret.add(new Area(x, y, areaWidth, areaHeight));
++         idx += areaWidth;
+       }
+-
+-      return list;
++      return ret;
+    }
+ 
+    private static void generateQuads(List<MaskOverlayModel.Area> areas, int width, int height, float offset, int tint, List<BakedQuad> out) {

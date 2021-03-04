@@ -1,0 +1,37 @@
+--- ../src-base/minecraft/ic2/core/network/RpcHandler.java
++++ ../src-work/minecraft/ic2/core/network/RpcHandler.java
+@@ -40,21 +40,21 @@
+    }
+ 
+    protected static void processRpcRequest(GrowingBuffer is, EntityPlayerMP player) throws IOException {
+-      int i = is.readInt();
+-      String s = is.readString();
+-      Object[] aobject = DataEncoder.decode(is);
+-      IRpcProvider<?> irpcprovider = (IRpcProvider)providers.get(s);
+-      if (irpcprovider == null) {
++      int id = is.readInt();
++      String providerClassName = is.readString();
++      Object[] args = (Object[])DataEncoder.decode(is);
++      IRpcProvider provider = providers.get(providerClassName);
++      if (provider == null) {
+          IC2.log.warn(LogCategory.Network, "Invalid RPC request from %s.", player.getName());
+-      } else {
+-         Object object = irpcprovider.executeRpc(aobject);
+-         GrowingBuffer growingbuffer = new GrowingBuffer(256);
+-         SubPacketType.Rpc.writeTo(growingbuffer);
+-         growingbuffer.writeInt(i);
+-         DataEncoder.encode(growingbuffer, object, true);
+-         growingbuffer.flip();
+-         ((NetworkManager)IC2.network.get(true)).sendPacket(growingbuffer, true, player);
++         return;
+       }
++      Object result = provider.executeRpc(args);
++      GrowingBuffer buffer = new GrowingBuffer(256);
++      SubPacketType.Rpc.writeTo(buffer);
++      buffer.writeInt(id);
++      DataEncoder.encode(buffer, result, true);
++      buffer.flip();
++      IC2.network.get(true).sendPacket(buffer, true, player);
+    }
+ 
+    public RpcHandler() {

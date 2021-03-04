@@ -1,0 +1,3 @@
+rootProject.name = "IC2-Patcher"
+
+include(":IndustrialCraft2")

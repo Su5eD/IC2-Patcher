@@ -1,0 +1,33 @@
+--- ../src-base/minecraft/ic2/core/uu/UuGraph.java
++++ ../src-work/minecraft/ic2/core/uu/UuGraph.java
+@@ -172,22 +172,18 @@
+    }
+ 
+    private static void registerTransform(RecipeTransformation transform) {
+-      UuGraph.NodeTransform uugraph$nodetransform = new UuGraph.NodeTransform(transform);
+-      Iterator iterator = transform.inputs.iterator();
+-
+-      while(iterator.hasNext()) {
+-         for(LeanItemStack leanitemstack : (List)iterator.next()) {
+-            for(UuGraph.Node uugraph$node : getAll(leanitemstack)) {
+-               uugraph$node.provides.add(uugraph$nodetransform);
++      NodeTransform nt = new NodeTransform(transform);
++      for (List<LeanItemStack> inputs : transform.inputs) {
++         for (LeanItemStack input : inputs) {
++            for (Node node : UuGraph.getAll(input)) {
++               node.provides.add(nt);
+             }
+          }
+       }
+-
+-      for(LeanItemStack leanitemstack1 : transform.outputs) {
+-         UuGraph.Node uugraph$node1 = getInternal(leanitemstack1);
+-         uugraph$nodetransform.out.add(uugraph$node1);
++      for (LeanItemStack output : transform.outputs) {
++         Node node = UuGraph.getInternal(output);
++         nt.out.add(node);
+       }
+-
+    }
+ 
+    private static void finishCalculation() {

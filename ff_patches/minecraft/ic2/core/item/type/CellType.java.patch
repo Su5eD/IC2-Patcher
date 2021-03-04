@@ -1,0 +1,13 @@
+--- ../src-base/minecraft/ic2/core/item/type/CellType.java
++++ ../src-work/minecraft/ic2/core/item/type/CellType.java
+@@ -135,9 +135,7 @@
+ 
+       public CellFluidHandler(ItemStack container, Function<ItemStack, CellType> typeGetter) {
+          super(container);
+-         this.typeGetter = () -> {
+-            return (void)((CellType)typeGetter.apply(this.container));
+-         };
++         this.typeGetter = () -> ((CellType)typeGetter.apply(this.container));
+       }
+ 
+       public FluidStack getFluid() {

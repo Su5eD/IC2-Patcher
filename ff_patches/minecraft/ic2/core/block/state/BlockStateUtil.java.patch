@@ -1,0 +1,11 @@
+--- ../src-base/minecraft/ic2/core/block/state/BlockStateUtil.java
++++ ../src-work/minecraft/ic2/core/block/state/BlockStateUtil.java
+@@ -63,7 +63,7 @@
+ 
+       for(IProperty<?> iproperty1 : state.getPropertyKeys()) {
+          if (iproperty1.getName().equals(name)) {
+-            iproperty = iproperty1;
++            iproperty = (IProperty<T>) iproperty1;
+             break;
+          }
+       }

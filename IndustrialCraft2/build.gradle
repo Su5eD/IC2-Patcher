@@ -1,0 +1,134 @@
+import net.minecraftforge.gradle.user.ReobfMappingType
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
+buildscript {
+    repositories {
+        jcenter()
+        mavenCentral()
+        maven { url = "https://files.minecraftforge.net/maven" }
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+        classpath group: 'org.benf', name: 'cfr', version: '0.151'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:4.0.4'
+    }
+}
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'net.minecraftforge.gradle.forge'
+
+sourceCompatibility = targetCompatibility = '1.8'
+version = "1.0"
+
+minecraft {
+    version = "1.12.2-14.23.5.2847"
+    runDir = "run"
+
+    mappings = "snapshot_20171003"
+}
+
+configurations {
+    shade
+}
+
+reobf {
+    shadowJar {}
+}
+
+repositories {
+    maven {
+        name 'Progwml6 maven'
+        url 'https://dvs1.progwml6.com/files/maven/'
+    }
+    maven {
+        name "BuildCraft"
+        url = "https://mod-buildcraft.com/maven"
+    }
+}
+
+dependencies {
+    deobfProvided group: 'mezz.jei', name: 'jei_1.12.2', version: '4.15.0.293'
+    deobfProvided group: "com.mod-buildcraft", name: "buildcraft-lib", version: "7.99.24.7"
+    deobfProvided group: "com.mod-buildcraft", name: "buildcraft-main", version: "7.99.24.7"
+
+    def ejml = "com.googlecode.efficient-java-matrix-library:core:0.26"
+    implementation ejml
+    shade ejml
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src/main/java/'
+        }
+        resources {
+            srcDir 'src/main/resources/'
+        }
+    }
+}
+
+runClient.enabled = false
+runServer.enabled = false
+
+shadowJar {
+    dependsOn classes
+    finalizedBy reobfShadowJar
+
+    configurations = [project.configurations.shade]
+    classifier ""
+
+    from('src/main/java/ic2') {
+        include 'profiles/**'
+        include 'sounds/**'
+        into 'ic2'
+    }
+}
+
+jar {
+    finalizedBy 'reobfJar'
+}
+
+task devJar(type: ShadowJar, dependsOn: 'classes') {
+    configurations = [project.configurations.shade]
+    classifier 'dev'
+
+    from sourceSets.main.output
+
+    from('src/main/java/ic2') {
+        include 'profiles/**'
+        include 'sounds/**'
+        into 'ic2'
+    }
+}
+
+sourceJar.enabled = false
+
+task srcJar (type: Jar) {
+    classifier 'src'
+
+    from sourceSets.main.allSource
+}
+
+build {
+    dependsOn 'reobfShadowJar'
+    dependsOn 'devJar'
+    dependsOn 'srcJar'
+}
+
+processResources {
+    // this will ensure that this task is redone when the versions change.
+    inputs.property "version", project.version
+    inputs.property "mcversion", project.minecraft.version
+
+    // replace stuff in mcmod.info, nothing else
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+
+        // replace version and mcversion
+        expand 'version':project.version, 'mcversion':project.minecraft.version
+    }
+
+    // copy everything else except the mcmod.info
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
+}

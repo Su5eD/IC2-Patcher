@@ -1,0 +1,345 @@
+--- ../src-base/minecraft/ic2/core/IC2.java
++++ ../src-work/minecraft/ic2/core/IC2.java
+@@ -113,6 +113,7 @@
+ import net.minecraft.util.ResourceLocation;
+ import net.minecraft.util.EnumFacing.Plane;
+ import net.minecraft.util.math.BlockPos;
++import net.minecraft.util.math.RayTraceResult;
+ import net.minecraft.util.math.RayTraceResult.Type;
+ import net.minecraft.world.World;
+ import net.minecraftforge.client.event.DrawBlockHighlightEvent;
+@@ -351,10 +352,8 @@
+          }
+       }
+ 
+-      Stream stream = list1.stream().map(IForgeRegistryEntry::getRegistryName);
+-      IForgeRegistryModifiable iforgeregistrymodifiable = (IForgeRegistryModifiable)ForgeRegistries.RECIPES;
+-      ((IForgeRegistryModifiable)ForgeRegistries.RECIPES).getClass();
+-      stream.forEach(iforgeregistrymodifiable::remove);
++      Stream<ResourceLocation> stream = list1.stream().map(IForgeRegistryEntry::getRegistryName);
++      stream.forEach(((IForgeRegistryModifiable<IRecipe>)ForgeRegistries.RECIPES)::remove);
+       if (ConfigUtil.getBool(MainConfig.get(), "recipes/smeltToIc2Items")) {
+          Map<ItemStack, ItemStack> map = FurnaceRecipes.instance().getSmeltingList();
+ 
+@@ -401,7 +400,7 @@
+ 
+       try {
+          Class<?> oclass = IC2.class.getClassLoader().loadClass("ic2." + name + ".SubModule");
+-         return ((Boolean)oclass.getMethod("init").invoke((Object)null)).booleanValue();
++         return ((Boolean)oclass.getMethod("init").invoke(null)).booleanValue();
+       } catch (Throwable var2) {
+          log.debug(LogCategory.SubModule, "Submodule %s not loaded.", name);
+          return false;
+@@ -577,177 +576,175 @@
+    }
+ 
+    @SubscribeEvent
+-   @SideOnly(Side.CLIENT)
++   @SideOnly(value=Side.CLIENT)
+    public void renderEnhancedOverlay(DrawBlockHighlightEvent event) {
+-      ItemStack itemstack = StackUtil.get(event.getPlayer(), EnumHand.MAIN_HAND);
+-      if (event.getSubID() == 0 && event.getTarget().typeOfHit == Type.BLOCK && itemstack.getItem() instanceof IEnhancedOverlayProvider) {
++      ItemStack inHand = StackUtil.get(event.getPlayer(), EnumHand.MAIN_HAND);
++      if (event.getSubID() == 0 && event.getTarget().typeOfHit == RayTraceResult.Type.BLOCK && inHand.getItem() instanceof IEnhancedOverlayProvider) {
+          World world = event.getPlayer().world;
+-         BlockPos blockpos = event.getTarget().getBlockPos();
+-         EnumFacing enumfacing = event.getTarget().sideHit;
+-         if (((IEnhancedOverlayProvider)itemstack.getItem()).providesEnhancedOverlay(world, blockpos, enumfacing, event.getPlayer(), itemstack)) {
++         BlockPos blockPos = event.getTarget().getBlockPos();
++         EnumFacing side = event.getTarget().sideHit;
++         if (((IEnhancedOverlayProvider)inHand.getItem()).providesEnhancedOverlay(world, blockPos, side, event.getPlayer(), inHand)) {
+             GL11.glPushMatrix();
+-            EnhancedOverlay.transformToFace(event.getPlayer(), blockpos, enumfacing, event.getPartialTicks());
+-            GL11.glLineWidth(2.0F);
+-            GL11.glColor4f(0.0F, 0.0F, 0.0F, 0.5F);
+-            GL11.glBegin(1);
+-            GL11.glVertex3d(0.5D, 0.0D, -0.25D);
+-            GL11.glVertex3d(-0.5D, 0.0D, -0.25D);
+-            GL11.glVertex3d(0.5D, 0.0D, 0.25D);
+-            GL11.glVertex3d(-0.5D, 0.0D, 0.25D);
+-            GL11.glVertex3d(0.25D, 0.0D, -0.5D);
+-            GL11.glVertex3d(0.25D, 0.0D, 0.5D);
+-            GL11.glVertex3d(-0.25D, 0.0D, -0.5D);
+-            GL11.glVertex3d(-0.25D, 0.0D, 0.5D);
+-            GL11.glVertex3d(0.5D, 0.0D, -0.5D);
+-            GL11.glVertex3d(-0.5D, 0.0D, -0.5D);
+-            GL11.glVertex3d(0.5D, 0.0D, 0.5D);
+-            GL11.glVertex3d(-0.5D, 0.0D, 0.5D);
+-            GL11.glVertex3d(0.5D, 0.0D, -0.5D);
+-            GL11.glVertex3d(0.5D, 0.0D, 0.5D);
+-            GL11.glVertex3d(-0.5D, 0.0D, -0.5D);
+-            GL11.glVertex3d(-0.5D, 0.0D, 0.5D);
++            EnhancedOverlay.transformToFace((Entity)event.getPlayer(), blockPos, side, event.getPartialTicks());
++            GL11.glLineWidth((float)2.0f);
++            GL11.glColor4f((float)0.0f, (float)0.0f, (float)0.0f, (float)0.5f);
++            GL11.glBegin((int)1);
++            GL11.glVertex3d((double)0.5, (double)0.0, (double)-0.25);
++            GL11.glVertex3d((double)-0.5, (double)0.0, (double)-0.25);
++            GL11.glVertex3d((double)0.5, (double)0.0, (double)0.25);
++            GL11.glVertex3d((double)-0.5, (double)0.0, (double)0.25);
++            GL11.glVertex3d((double)0.25, (double)0.0, (double)-0.5);
++            GL11.glVertex3d((double)0.25, (double)0.0, (double)0.5);
++            GL11.glVertex3d((double)-0.25, (double)0.0, (double)-0.5);
++            GL11.glVertex3d((double)-0.25, (double)0.0, (double)0.5);
++            GL11.glVertex3d((double)0.5, (double)0.0, (double)-0.5);
++            GL11.glVertex3d((double)-0.5, (double)0.0, (double)-0.5);
++            GL11.glVertex3d((double)0.5, (double)0.0, (double)0.5);
++            GL11.glVertex3d((double)-0.5, (double)0.0, (double)0.5);
++            GL11.glVertex3d((double)0.5, (double)0.0, (double)-0.5);
++            GL11.glVertex3d((double)0.5, (double)0.0, (double)0.5);
++            GL11.glVertex3d((double)-0.5, (double)0.0, (double)-0.5);
++            GL11.glVertex3d((double)-0.5, (double)0.0, (double)0.5);
+             GL11.glEnd();
+             GlStateManager.enableBlend();
+-            GlStateManager.tryBlendFuncSeparate(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA, SourceFactor.ONE, DestFactor.ZERO);
++            GlStateManager.tryBlendFuncSeparate((GlStateManager.SourceFactor)GlStateManager.SourceFactor.SRC_ALPHA, (GlStateManager.DestFactor)GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, (GlStateManager.SourceFactor)GlStateManager.SourceFactor.ONE, (GlStateManager.DestFactor)GlStateManager.DestFactor.ZERO);
+             GlStateManager.disableTexture2D();
+-            GlStateManager.depthMask(false);
+-            Map<EnumFacing, Runnable> map = new EnumMap<EnumFacing, Runnable>(EnumFacing.class);
+-            if (!(world.getBlockState(blockpos).getBlock() instanceof IWrenchable)) {
+-               EnhancedOverlay.forFace(enumfacing).drawArea(EnhancedOverlay.Segment.forRayTrace(event.getTarget()), Tessellator.getInstance().getBuffer(), 0, 0, 0);
+-            } else {
+-               EnumFacing enumfacing1 = RotationUtil.rotateByRay(event.getTarget());
+-               IWrenchable iwrenchable = (IWrenchable)world.getBlockState(blockpos).getBlock();
+-               List<EnhancedOverlay.Segment> list = new ArrayList<EnhancedOverlay.Segment>();
+-
+-               for(EnhancedOverlay.Segment enhancedoverlay$segment : EnhancedOverlay.Segment.values()) {
+-                  EnumFacing enumfacing2;
+-                  switch(enhancedoverlay$segment) {
+-                  case CENTRE:
+-                     enumfacing2 = enumfacing;
+-                     break;
+-                  case TOP:
+-                     if (enumfacing.getAxis().isVertical()) {
+-                        enumfacing2 = EnumFacing.NORTH;
+-                     } else {
+-                        enumfacing2 = EnumFacing.UP;
++            GlStateManager.depthMask((boolean)false);
++            EnumMap<EnumFacing, Runnable> additionalRenders = new EnumMap<EnumFacing, Runnable>(EnumFacing.class);
++            if (world.getBlockState(blockPos).getBlock() instanceof IWrenchable) {
++               EnumFacing hoveredSpin = RotationUtil.rotateByRay(event.getTarget());
++               IWrenchable block = (IWrenchable)world.getBlockState(blockPos).getBlock();
++               ArrayList<EnhancedOverlay.Segment> skippedSegments = new ArrayList<EnhancedOverlay.Segment>();
++               for (EnhancedOverlay.Segment segment : EnhancedOverlay.Segment.values()) {
++                  EnumFacing spin;
++                  switch (segment) {
++                     case CENTRE: {
++                        spin = side;
++                        break;
+                      }
+-                     break;
+-                  case BOTTOM:
+-                     if (enumfacing.getAxis().isVertical()) {
+-                        enumfacing2 = EnumFacing.SOUTH;
+-                     } else {
+-                        enumfacing2 = EnumFacing.DOWN;
++                     case TOP: {
++                        if (side.getAxis().isVertical()) {
++                           spin = EnumFacing.NORTH;
++                           break;
++                        }
++                        spin = EnumFacing.UP;
++                        break;
+                      }
+-                     break;
+-                  case LEFT:
+-                     if (enumfacing.getAxis().isVertical()) {
+-                        enumfacing2 = EnumFacing.WEST;
+-                     } else {
+-                        enumfacing2 = enumfacing.rotateY();
++                     case BOTTOM: {
++                        if (side.getAxis().isVertical()) {
++                           spin = EnumFacing.SOUTH;
++                           break;
++                        }
++                        spin = EnumFacing.DOWN;
++                        break;
+                      }
+-                     break;
+-                  case RIGHT:
+-                     if (enumfacing.getAxis().isVertical()) {
+-                        enumfacing2 = EnumFacing.EAST;
+-                     } else {
+-                        enumfacing2 = enumfacing.rotateYCCW();
++                     case LEFT: {
++                        if (side.getAxis().isVertical()) {
++                           spin = EnumFacing.WEST;
++                           break;
++                        }
++                        spin = side.rotateY();
++                        break;
+                      }
+-                     break;
+-                  case TOP_LEFT:
+-                  case TOP_RIGHT:
+-                  case BOTTOM_LEFT:
+-                  case BOTTOM_RIGHT:
+-                     enumfacing2 = enumfacing.getOpposite();
+-                     break;
+-                  default:
+-                     throw new IllegalStateException("Unexpected segment: " + enhancedoverlay$segment);
++                     case RIGHT: {
++                        if (side.getAxis().isVertical()) {
++                           spin = EnumFacing.EAST;
++                           break;
++                        }
++                        spin = side.rotateYCCW();
++                        break;
++                     }
++                     case TOP_LEFT:
++                     case TOP_RIGHT:
++                     case BOTTOM_LEFT:
++                     case BOTTOM_RIGHT: {
++                        spin = side.getOpposite();
++                        break;
++                     }
++                     default: {
++                        throw new IllegalStateException("Unexpected segment: " + (Object)((Object)segment));
++                     }
+                   }
+-
+-                  if (iwrenchable.canSetFacing(world, blockpos, enumfacing2, event.getPlayer())) {
+-                     int i;
+-                     int j;
+-                     int k;
+-                     if (enumfacing1 == enumfacing2) {
+-                        k = 0;
+-                        i = 0;
+-                        j = 255;
++                  if (block.canSetFacing(world, blockPos, spin, event.getPlayer())) {
++                     int green;
++                     int red;
++                     int blue;
++                     if (hoveredSpin == spin) {
++                        blue = 0;
++                        red = 0;
++                        green = 255;
+                      } else {
+-                        j = 0;
+-                        i = 0;
+-                        k = 255;
++                        green = 0;
++                        red = 0;
++                        blue = 255;
+                      }
+-
+-                     EnhancedOverlay.forFace(enumfacing).drawArea(enhancedoverlay$segment, Tessellator.getInstance().getBuffer(), i, j, k);
+-                     if (enumfacing1 == enumfacing2) {
+-                        if (enumfacing.getOpposite() == enumfacing2) {
+-                           EnumFacing[] aenumfacing = null;
+-                           EnumFacing[] aenumfacing1 = null;
+-                           switch(enumfacing.getAxis()) {
+-                           case X:
+-                              aenumfacing = new EnumFacing[]{EnumFacing.DOWN, EnumFacing.UP, EnumFacing.NORTH, EnumFacing.SOUTH};
++                     EnhancedOverlay.forFace(side).drawArea(segment, Tessellator.getInstance().getBuffer(), red, green, blue);
++                     if (hoveredSpin != spin) continue;
++                     if (side.getOpposite() == spin) {
++                        EnumFacing[] edges = null;
++                        EnumFacing[] sides = null;
++                        switch (side.getAxis()) {
++                           case X: {
++                              edges = new EnumFacing[]{EnumFacing.DOWN, EnumFacing.UP, EnumFacing.NORTH, EnumFacing.SOUTH};
+                               break;
+-                           case Y:
+-                              aenumfacing1 = Plane.HORIZONTAL.facings();
++                           }
++                           case Y: {
++                              sides = EnumFacing.Plane.HORIZONTAL.facings();
+                               break;
+-                           case Z:
+-                              aenumfacing1 = Plane.VERTICAL.facings();
+-                              aenumfacing = new EnumFacing[]{EnumFacing.WEST, EnumFacing.EAST};
+                            }
+-
+-                           if (aenumfacing != null) {
+-                              for(EnumFacing enumfacing3 : aenumfacing) {
+-                                 map.put(enumfacing3, () -> {
+-                                    GlStateManager.color((float)red / 255.0F, (float)green / 255.0F, (float)blue / 255.0F, 0.5F);
+-                                    EnhancedOverlay.drawArea(face, EnhancedOverlay.Segment.TOP_LEFT, EnhancedOverlay.Segment.TOP, EnhancedOverlay.Segment.TOP_RIGHT, EnhancedOverlay.Segment.BOTTOM_LEFT, EnhancedOverlay.Segment.BOTTOM, EnhancedOverlay.Segment.BOTTOM_RIGHT);
+-                                 });
+-                              }
++                           case Z: {
++                              sides = EnumFacing.Plane.VERTICAL.facings();
++                              edges = new EnumFacing[]{EnumFacing.WEST, EnumFacing.EAST};
+                            }
+-
+-                           if (aenumfacing1 != null) {
+-                              for(EnumFacing enumfacing4 : aenumfacing1) {
+-                                 map.put(enumfacing4, () -> {
+-                                    GlStateManager.color((float)red / 255.0F, (float)green / 255.0F, (float)blue / 255.0F, 0.5F);
+-                                    EnhancedOverlay.drawArea(face, EnhancedOverlay.Segment.TOP_LEFT, EnhancedOverlay.Segment.LEFT, EnhancedOverlay.Segment.BOTTOM_LEFT, EnhancedOverlay.Segment.TOP_RIGHT, EnhancedOverlay.Segment.RIGHT, EnhancedOverlay.Segment.BOTTOM_RIGHT);
+-                                 });
+-                              }
++                        }
++                        if (edges != null) {
++                           for (EnumFacing face : edges) {
++                              additionalRenders.put(face, () -> {
++                                 GlStateManager.color((float)((float)red / 255.0f), (float)((float)green / 255.0f), (float)((float)blue / 255.0f), (float)0.5f);
++                                 EnhancedOverlay.drawArea(face, EnhancedOverlay.Segment.TOP_LEFT, EnhancedOverlay.Segment.TOP, EnhancedOverlay.Segment.TOP_RIGHT, EnhancedOverlay.Segment.BOTTOM_LEFT, EnhancedOverlay.Segment.BOTTOM, EnhancedOverlay.Segment.BOTTOM_RIGHT);
++                              });
+                            }
+-                        } else if (enhancedoverlay$segment == EnhancedOverlay.Segment.CENTRE) {
+-                           map.put(enumfacing2, () -> {
+-                              GlStateManager.color((float)red / 255.0F, (float)green / 255.0F, (float)blue / 255.0F, 0.5F);
+-                              EnhancedOverlay.drawArea(spin, (EnhancedOverlay.Segment[])skippedSegments.toArray(new EnhancedOverlay.Segment[skippedSegments.size()]));
++                        }
++                        if (sides == null) continue;
++                        for (EnumFacing face : sides) {
++                           additionalRenders.put(face, () -> {
++                              GlStateManager.color((float)((float)red / 255.0f), (float)((float)green / 255.0f), (float)((float)blue / 255.0f), (float)0.5f);
++                              EnhancedOverlay.drawArea(face, EnhancedOverlay.Segment.TOP_LEFT, EnhancedOverlay.Segment.LEFT, EnhancedOverlay.Segment.BOTTOM_LEFT, EnhancedOverlay.Segment.TOP_RIGHT, EnhancedOverlay.Segment.RIGHT, EnhancedOverlay.Segment.BOTTOM_RIGHT);
+                            });
+-                        } else {
+-                           map.put(enumfacing2, () -> {
+-                              EnhancedOverlay.forFace(spin).drawSide(Tessellator.getInstance().getBuffer(), red, green, blue);
+-                           });
+                         }
++                        continue;
+                      }
+-                  } else {
+-                     list.add(enhancedoverlay$segment);
++                     if (segment == EnhancedOverlay.Segment.CENTRE) {
++                        additionalRenders.put(spin, () -> {
++                           GlStateManager.color((float)((float)red / 255.0f), (float)((float)green / 255.0f), (float)((float)blue / 255.0f), (float)0.5f);
++                           EnhancedOverlay.drawArea(spin, skippedSegments.toArray(new EnhancedOverlay.Segment[skippedSegments.size()]));
++                        });
++                        continue;
++                     }
++                     additionalRenders.put(spin, () -> EnhancedOverlay.forFace(spin).drawSide(Tessellator.getInstance().getBuffer(), red, green, blue));
++                     continue;
+                   }
++                  skippedSegments.add(segment);
+                }
++            } else {
++               EnhancedOverlay.forFace(side).drawArea(EnhancedOverlay.Segment.forRayTrace(event.getTarget()), Tessellator.getInstance().getBuffer(), 0, 0, 0);
+             }
+-
+-            Runnable runnable = map.remove(enumfacing);
+-            if (runnable != null) {
+-               runnable.run();
++            Runnable r = (Runnable)additionalRenders.remove(side);
++            if (r != null) {
++               r.run();
+             }
+-
+             GL11.glPopMatrix();
+-
+-            for(Entry<EnumFacing, Runnable> entry : map.entrySet()) {
++            for (Map.Entry entry : additionalRenders.entrySet()) {
+                GlStateManager.pushMatrix();
+-               EnhancedOverlay.transformToFace(event.getPlayer(), blockpos, entry.getKey(), event.getPartialTicks());
++               EnhancedOverlay.transformToFace((Entity)event.getPlayer(), blockPos, (EnumFacing)entry.getKey(), event.getPartialTicks());
+                ((Runnable)entry.getValue()).run();
+                GlStateManager.popMatrix();
+             }
+-
+-            GlStateManager.depthMask(true);
++            GlStateManager.depthMask((boolean)true);
+             GlStateManager.enableTexture2D();
+             GlStateManager.disableBlend();
+          }
+       }
+-
+    }
+ 
+    public static ResourceLocation getIdentifier(String name) {

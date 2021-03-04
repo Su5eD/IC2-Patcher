@@ -1,0 +1,16 @@
+[
+	{
+		"modid": "ic2patcher",
+		"name": "IC2 Patcher",
+		"description": "Patches IC2",
+		"version": "${version}",
+		"mcversion": "${mcversion}",
+		"credits": "",
+		"authorList": ["Su5eD"],
+		"logoFile": "",
+		"url": "",
+		"updateUrl": "",
+		"parent": "",
+		"screenshots": []
+	}
+]

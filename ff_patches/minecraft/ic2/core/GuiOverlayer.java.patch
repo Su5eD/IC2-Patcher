@@ -1,0 +1,20 @@
+--- ../src-base/minecraft/ic2/core/GuiOverlayer.java
++++ ../src-work/minecraft/ic2/core/GuiOverlayer.java
+@@ -109,7 +109,7 @@
+                         i1 = i1 + (list.size() + 1) * 14;
+                      } else {
+                         list.addAll(itemstack5.getTooltip(this.mc.player, () -> {
+-                           return hudMode == HudMode.ADVANCED;
++                           return hudmode == HudMode.ADVANCED;
+                         }));
+                         if (list.size() > 1) {
+                            for(int j1 = 1; j1 < list.size(); ++j1) {
+@@ -136,7 +136,7 @@
+                         }
+                      } else {
+                         list1.addAll(itemstack6.getTooltip(this.mc.player, () -> {
+-                           return hudMode == HudMode.ADVANCED;
++                           return hudmode == HudMode.ADVANCED;
+                         }));
+                         if (list1.size() > 1) {
+                            for(int l1 = 1; l1 < list1.size(); ++l1) {

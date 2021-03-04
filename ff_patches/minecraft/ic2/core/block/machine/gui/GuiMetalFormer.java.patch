@@ -1,0 +1,16 @@
+--- ../src-base/minecraft/ic2/core/block/machine/gui/GuiMetalFormer.java
++++ ../src-work/minecraft/ic2/core/block/machine/gui/GuiMetalFormer.java
+@@ -57,10 +57,11 @@
+          }
+       }));
+       if (RecipeButton.canUse()) {
+-         for(final int i = 0; i < 3; ++i) {
++         for(int i = 0; i < 3; ++i) {
++            int finalI = i;
+             this.addElement((new RecipeButton(this, 52, 39, 46, 9, new String[]{"metal_former" + i})).withEnableHandler(new IEnableHandler() {
+                public boolean isEnabled() {
+-                  return ((TileEntityMetalFormer)container.base).getMode() == i;
++                  return ((TileEntityMetalFormer)container.base).getMode() == finalI;
+                }
+             }));
+          }

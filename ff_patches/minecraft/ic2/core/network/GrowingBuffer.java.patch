@@ -1,0 +1,11 @@
+--- ../src-base/minecraft/ic2/core/network/GrowingBuffer.java
++++ ../src-work/minecraft/ic2/core/network/GrowingBuffer.java
+@@ -214,7 +214,7 @@
+          throw new IllegalArgumentException("only positive numbers are supported");
+       } else {
+          while(true) {
+-            int i = i & 127;
++            i = i & 127;
+             i >>>= 7;
+             if (i != 0) {
+                i |= 128;

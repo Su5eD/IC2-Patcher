@@ -1,0 +1,11 @@
+--- ../src-base/minecraft/ic2/core/crop/IC2Crops.java
++++ ../src-work/minecraft/ic2/core/crop/IC2Crops.java
+@@ -375,7 +375,7 @@
+          }).findFirst();
+          Map map1 = this.baseSeeds;
+          this.baseSeeds.getClass();
+-         return (BaseSeed)optional.map(map1::get).orElse((Object)null);
++         return (BaseSeed)optional.map(map1::get).orElse(null);
+       }
+    }
+ }

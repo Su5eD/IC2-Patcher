@@ -1,0 +1,958 @@
+--- ../src-base/minecraft/ic2/core/util/Util.java
++++ ../src-work/minecraft/ic2/core/util/Util.java
+@@ -8,7 +8,6 @@
+ import java.util.Collections;
+ import java.util.EnumSet;
+ import java.util.IdentityHashMap;
+-import java.util.List;
+ import java.util.Map;
+ import java.util.Set;
+ import net.minecraft.block.Block;
+@@ -27,8 +26,8 @@
+ import net.minecraft.util.math.BlockPos;
+ import net.minecraft.util.math.ChunkPos;
+ import net.minecraft.util.math.RayTraceResult;
+-import net.minecraft.util.math.Vec3d;
+ import net.minecraft.util.math.RayTraceResult.Type;
++import net.minecraft.util.math.Vec3d;
+ import net.minecraft.world.IBlockAccess;
+ import net.minecraft.world.World;
+ import net.minecraft.world.chunk.Chunk;
+@@ -38,89 +37,111 @@
+ import net.minecraftforge.oredict.OreDictionary;
+ 
+ public final class Util {
+-   private static final Map<Class<? extends IBlockAccess>, Field> worldFieldCache = new IdentityHashMap<Class<? extends IBlockAccess>, Field>();
+-   public static Set<EnumFacing> noFacings = Collections.<EnumFacing>emptySet();
+-   public static Set<EnumFacing> onlyNorth = Collections.<EnumFacing>unmodifiableSet(EnumSet.of(EnumFacing.NORTH));
+-   public static Set<EnumFacing> horizontalFacings = Collections.<EnumFacing>unmodifiableSet(EnumSet.copyOf(Arrays.asList(EnumFacing.HORIZONTALS)));
+-   public static Set<EnumFacing> verticalFacings = Collections.<EnumFacing>unmodifiableSet(EnumSet.of(EnumFacing.DOWN, EnumFacing.UP));
+-   public static Set<EnumFacing> downSideFacings = Collections.<EnumFacing>unmodifiableSet(EnumSet.complementOf(EnumSet.of(EnumFacing.UP)));
+-   public static Set<EnumFacing> allFacings = Collections.<EnumFacing>unmodifiableSet(EnumSet.allOf(EnumFacing.class));
+-   private static final boolean inDev = System.getProperty("INDEV") != null;
+-   private static final boolean includeWorldHash = System.getProperty("ic2.debug.includeworldhash") != null;
+-   private static final Map<Class<?>, Boolean> checkedClasses = new IdentityHashMap<Class<?>, Boolean>();
++   static final /* synthetic */ boolean $assertionsDisabled;
++   public static Set<EnumFacing> allFacings = Collections.unmodifiableSet(EnumSet.allOf(EnumFacing.class));
++   private static final Map<Class<?>, Boolean> checkedClasses = new IdentityHashMap();
++   public static Set<EnumFacing> downSideFacings = Collections.unmodifiableSet(EnumSet.complementOf(EnumSet.of(EnumFacing.UP)));
++   public static Set<EnumFacing> horizontalFacings = Collections.unmodifiableSet(EnumSet.copyOf(Arrays.asList(EnumFacing.HORIZONTALS)));
++   private static final boolean inDev = (System.getProperty("INDEV") != null);
++   private static final boolean includeWorldHash;
++   public static Set<EnumFacing> noFacings = Collections.emptySet();
++   public static Set<EnumFacing> onlyNorth = Collections.unmodifiableSet(EnumSet.of(EnumFacing.NORTH));
++   public static Set<EnumFacing> verticalFacings = Collections.unmodifiableSet(EnumSet.of(EnumFacing.DOWN, EnumFacing.UP));
++   private static final Map<Class<? extends IBlockAccess>, Field> worldFieldCache = new IdentityHashMap();
+ 
+-   public static int roundToNegInf(float x) {
+-      int i = (int)x;
+-      if ((float)i > x) {
+-         --i;
++   static {
++      boolean z;
++      boolean z2 = true;
++      if (!Util.class.desiredAssertionStatus()) {
++         z = true;
++      } else {
++         z = false;
+       }
++      $assertionsDisabled = z;
++      if (System.getProperty("ic2.debug.includeworldhash") == null) {
++         z2 = false;
++      }
++      includeWorldHash = z2;
++   }
+ 
+-      return i;
++   public static int roundToNegInf(float x) {
++      int ret = (int) x;
++      if (((float) ret) > x) {
++         return ret - 1;
++      }
++      return ret;
+    }
+ 
+    public static int roundToNegInf(double x) {
+-      int i = (int)x;
+-      if ((double)i > x) {
+-         --i;
++      int ret = (int) x;
++      if (((double) ret) > x) {
++         return ret - 1;
+       }
+-
+-      return i;
++      return ret;
+    }
+ 
+    public static int saturatedCast(double x) {
+-      if (x > 2.147483647E9D) {
++      if (x > 2.147483647E9d) {
+          return Integer.MAX_VALUE;
+-      } else {
+-         return x < -2.147483648E9D ? Integer.MIN_VALUE : (int)x;
+       }
++      if (x < -2.147483648E9d) {
++         return Integer.MIN_VALUE;
++      }
++      return (int) x;
+    }
+ 
+    public static int limit(int value, int min, int max) {
+       if (value <= min) {
+          return min;
+-      } else {
+-         return value >= max ? max : value;
+       }
++      if (value >= max) {
++         return max;
++      }
++      return value;
+    }
+ 
+    public static float limit(float value, float min, float max) {
+-      if (!Float.isNaN(value) && value > min) {
+-         return value >= max ? max : value;
+-      } else {
++      if (Float.isNaN(value) || value <= min) {
+          return min;
+       }
++      if (value < max) {
++         return value;
++      }
++      return max;
+    }
+ 
+    public static double limit(double value, double min, double max) {
+-      if (!Double.isNaN(value) && value > min) {
+-         return value >= max ? max : value;
+-      } else {
++      if (Double.isNaN(value) || value <= min) {
+          return min;
+       }
++      if (value < max) {
++         return value;
++      }
++      return max;
+    }
+ 
+    public static double map(double value, double srcMax, double dstMax) {
+-      if (value < 0.0D || Double.isNaN(value)) {
+-         value = 0.0D;
++      if (value < 0.0d || Double.isNaN(value)) {
++         value = 0.0d;
+       }
+-
+       if (value > srcMax) {
+          value = srcMax;
+       }
+-
+-      return value / srcMax * dstMax;
++      return (value / srcMax) * dstMax;
+    }
+ 
+    public static double lerp(double start, double end, double fraction) {
+-      assert fraction >= 0.0D && fraction <= 1.0D;
+-
+-      return start + (end - start) * fraction;
++      if ($assertionsDisabled || (fraction >= 0.0d && fraction <= 1.0d)) {
++         return ((end - start) * fraction) + start;
++      }
++      throw new AssertionError();
+    }
+ 
+    public static float lerp(float start, float end, float fraction) {
+-      assert fraction >= 0.0F && fraction <= 1.0F;
+-
+-      return start + (end - start) * fraction;
++      if ($assertionsDisabled || (fraction >= 0.0f && fraction <= 1.0f)) {
++         return ((end - start) * fraction) + start;
++      }
++      throw new AssertionError();
+    }
+ 
+    public static int square(int x) {
+@@ -136,37 +157,33 @@
+    }
+ 
+    public static boolean isSimilar(float a, float b) {
+-      return Math.abs(a - b) < 1.0E-5F;
++      return Math.abs(a - b) < 1.0E-5f;
+    }
+ 
+    public static boolean isSimilar(double a, double b) {
+-      return Math.abs(a - b) < 1.0E-5D;
++      return Math.abs(a - b) < 1.0E-5d;
+    }
+ 
+    public static int countInArray(Object[] oa, Class<?>... clsz) {
+-      int i = 0;
+-
+-      for(Object object : oa) {
+-         for(Class<?> oclass : clsz) {
+-            if (oclass.isAssignableFrom(object.getClass())) {
+-               ++i;
++      int ret = 0;
++      for (Object o : oa) {
++         for (Class<?> cls : clsz) {
++            if (cls.isAssignableFrom(o.getClass())) {
++               ret++;
+             }
+          }
+       }
+-
+-      return i;
++      return ret;
+    }
+ 
+    public static int countInArray(Object[] oa, Class<?> cls) {
+-      int i = 0;
+-
+-      for(Object object : oa) {
+-         if (cls.isAssignableFrom(object.getClass())) {
+-            ++i;
++      int ret = 0;
++      for (Object o : oa) {
++         if (cls.isAssignableFrom(o.getClass())) {
++            ret++;
+          }
+       }
+-
+-      return i;
++      return ret;
+    }
+ 
+    public static boolean inDev() {
+@@ -174,41 +191,44 @@
+    }
+ 
+    public static boolean hasAssertions() {
+-      boolean flag = false;
++      boolean ret = false;
+       if (!$assertionsDisabled) {
+-         flag = true;
+-         if (false) {
++         ret = true;
++         if (1 == 0) {
+             throw new AssertionError();
+          }
+       }
+-
+-      return flag;
++      return ret;
+    }
+ 
+    public static boolean matchesOD(ItemStack stack, Object match) {
+-      if (!(match instanceof ItemStack)) {
+-         if (match instanceof String) {
+-            if (StackUtil.isEmpty(stack)) {
+-               return false;
+-            } else {
+-               for(int i : OreDictionary.getOreIDs(stack)) {
+-                  if (OreDictionary.getOreName(i).equals(match)) {
+-                     return true;
+-                  }
+-               }
+-
+-               return false;
++      if (match instanceof ItemStack) {
++         if (StackUtil.isEmpty(stack) || !stack.isItemEqual((ItemStack) match)) {
++            return false;
++         }
++         return true;
++      } else if (match instanceof String) {
++         if (StackUtil.isEmpty(stack)) {
++            return false;
++         }
++         for (int oreId : OreDictionary.getOreIDs(stack)) {
++            if (OreDictionary.getOreName(oreId).equals(match)) {
++               return true;
+             }
+-         } else {
+-            return stack == match;
+          }
++         return false;
++      } else if (stack != match) {
++         return false;
+       } else {
+-         return !StackUtil.isEmpty(stack) && stack.isItemEqual((ItemStack)match);
++         return true;
+       }
+    }
+ 
+    public static String toString(TileEntity te) {
+-      return te == null ? "null" : toString(te, te.getWorld(), te.getPos());
++      if (te == null) {
++         return "null";
++      }
++      return toString(te, te.getWorld(), te.getPos());
+    }
+ 
+    public static String toString(Object o, IBlockAccess world, BlockPos pos) {
+@@ -216,19 +236,18 @@
+    }
+ 
+    public static String toString(Object o, IBlockAccess world, int x, int y, int z) {
+-      StringBuilder stringbuilder = new StringBuilder(64);
++      StringBuilder ret = new StringBuilder(64);
+       if (o == null) {
+-         stringbuilder.append("null");
++         ret.append("null");
+       } else {
+-         stringbuilder.append(o.getClass().getName());
+-         stringbuilder.append('@');
+-         stringbuilder.append(Integer.toHexString(System.identityHashCode(o)));
++         ret.append(o.getClass().getName());
++         ret.append('@');
++         ret.append(Integer.toHexString(System.identityHashCode(o)));
+       }
+-
+-      stringbuilder.append(" (");
+-      stringbuilder.append(formatPosition(world, x, y, z));
+-      stringbuilder.append(")");
+-      return stringbuilder.toString();
++      ret.append(" (");
++      ret.append(formatPosition(world, x, y, z));
++      ret.append(")");
++      return ret.toString();
+    }
+ 
+    public static String formatPosition(TileEntity te) {
+@@ -240,14 +259,16 @@
+    }
+ 
+    public static String formatPosition(IBlockAccess world, int x, int y, int z) {
+-      int i;
+-      if (world instanceof World && ((World)world).provider != null) {
+-         i = ((World)world).provider.getDimension();
++      int dimId;
++      if (!(world instanceof World) || ((World) world).provider == null) {
++         dimId = Integer.MIN_VALUE;
+       } else {
+-         i = Integer.MIN_VALUE;
++         dimId = ((World) world).provider.getDimension();
+       }
+-
+-      return !includeWorldHash ? formatPosition(i, x, y, z) : String.format("dim %d (@%x): %d/%d/%d", i, System.identityHashCode(world), x, y, z);
++      if (!includeWorldHash) {
++         return formatPosition(dimId, x, y, z);
++      }
++      return String.format("dim %d (@%x): %d/%d/%d", new Object[]{Integer.valueOf(dimId), Integer.valueOf(System.identityHashCode(world)), Integer.valueOf(x), Integer.valueOf(y), Integer.valueOf(z)});
+    }
+ 
+    public static String formatPosition(int dimId, int x, int y, int z) {
+@@ -263,151 +284,143 @@
+    }
+ 
+    public static String toSiString(double value, int digits) {
+-      if (value == 0.0D) {
++      double mul;
++      String si;
++      if (value == 0.0d) {
+          return "0 ";
+-      } else if (Double.isNaN(value)) {
++      }
++      if (Double.isNaN(value)) {
+          return "NaN ";
++      }
++      String ret = "";
++      if (value < 0.0d) {
++         ret = "-";
++         value = -value;
++      }
++      if (Double.isInfinite(value)) {
++         return ret + "âˆž ";
++      }
++      double log = Math.log10(value);
++      if (log < 0.0d) {
++         int expand = (int) Math.ceil((-log) / 3.0d);
++         mul = Math.pow(10.0d, (double) (expand * 3));
++         switch (expand) {
++            case 0:
++               si = "";
++               break;
++            case 1:
++               si = "m";
++               break;
++            case 2:
++               si = "Âµ";
++               break;
++            case 3:
++               si = "n";
++               break;
++            case 4:
++               si = "p";
++               break;
++            case 5:
++               si = "f";
++               break;
++            case 6:
++               si = "a";
++               break;
++            case 7:
++               si = "z";
++               break;
++            case 8:
++               si = "y";
++               break;
++            default:
++               si = "E-" + (expand * 3);
++               break;
++         }
+       } else {
+-         String s = "";
+-         if (value < 0.0D) {
+-            s = "-";
+-            value = -value;
++         int reduce = (int) Math.floor(log / 3.0d);
++         mul = 1.0d / Math.pow(10.0d, (double) (reduce * 3));
++         switch (reduce) {
++            case 0:
++               si = "";
++               break;
++            case 1:
++               si = "k";
++               break;
++            case 2:
++               si = "M";
++               break;
++            case 3:
++               si = "G";
++               break;
++            case 4:
++               si = "T";
++               break;
++            case 5:
++               si = "P";
++               break;
++            case 6:
++               si = "E";
++               break;
++            case 7:
++               si = "Z";
++               break;
++            case 8:
++               si = "Y";
++               break;
++            default:
++               si = "E" + (reduce * 3);
++               break;
+          }
+-
+-         if (Double.isInfinite(value)) {
+-            return s + "\u221e ";
+-         } else {
+-            double d0 = Math.log10(value);
+-            double d1;
+-            String s1;
+-            if (d0 >= 0.0D) {
+-               int i = (int)Math.floor(d0 / 3.0D);
+-               d1 = 1.0D / Math.pow(10.0D, (double)(i * 3));
+-               switch(i) {
+-               case 0:
+-                  s1 = "";
+-                  break;
+-               case 1:
+-                  s1 = "k";
+-                  break;
+-               case 2:
+-                  s1 = "M";
+-                  break;
+-               case 3:
+-                  s1 = "G";
+-                  break;
+-               case 4:
+-                  s1 = "T";
+-                  break;
+-               case 5:
+-                  s1 = "P";
+-                  break;
+-               case 6:
+-                  s1 = "E";
+-                  break;
+-               case 7:
+-                  s1 = "Z";
+-                  break;
+-               case 8:
+-                  s1 = "Y";
+-                  break;
+-               default:
+-                  s1 = "E" + i * 3;
+-               }
+-            } else {
+-               int l = (int)Math.ceil(-d0 / 3.0D);
+-               d1 = Math.pow(10.0D, (double)(l * 3));
+-               switch(l) {
+-               case 0:
+-                  s1 = "";
+-                  break;
+-               case 1:
+-                  s1 = "m";
+-                  break;
+-               case 2:
+-                  s1 = "\u00b5";
+-                  break;
+-               case 3:
+-                  s1 = "n";
+-                  break;
+-               case 4:
+-                  s1 = "p";
+-                  break;
+-               case 5:
+-                  s1 = "f";
+-                  break;
+-               case 6:
+-                  s1 = "a";
+-                  break;
+-               case 7:
+-                  s1 = "z";
+-                  break;
+-               case 8:
+-                  s1 = "y";
+-                  break;
+-               default:
+-                  s1 = "E-" + l * 3;
+-               }
+-            }
+-
+-            value = value * d1;
+-            int i1 = (int)Math.floor(value);
+-            value = value - (double)i1;
+-            int j = 1;
+-            if (i1 > 0) {
+-               j = (int)((double)j + Math.floor(Math.log10((double)i1)));
+-            }
+-
+-            d1 = Math.pow(10.0D, (double)(digits - j));
+-            int k = (int)Math.round(value * d1);
+-            if ((double)k >= d1) {
+-               ++i1;
+-               k = (int)((double)k - d1);
+-               j = 1;
+-               if (i1 > 0) {
+-                  j = (int)((double)j + Math.floor(Math.log10((double)i1)));
+-               }
+-            }
+-
+-            s = s + Integer.toString(i1);
+-            if (digits > j && k != 0) {
+-               s = s + String.format(".%0" + (digits - j) + "d", k);
+-            }
+-
+-            s = s.replaceFirst("(\\.\\d*?)0+$", "$1");
+-            return s + " " + s1;
++      }
++      double value2 = value * mul;
++      int iVal = (int) Math.floor(value2);
++      double value3 = value2 - ((double) iVal);
++      int iDigits = 1;
++      if (iVal > 0) {
++         iDigits = (int) (((double) 1) + Math.floor(Math.log10((double) iVal)));
++      }
++      double mul2 = Math.pow(10.0d, (double) (digits - iDigits));
++      int dVal = (int) Math.round(value3 * mul2);
++      if (((double) dVal) >= mul2) {
++         iVal++;
++         dVal = (int) (((double) dVal) - mul2);
++         iDigits = 1;
++         if (iVal > 0) {
++            iDigits = (int) (((double) 1) + Math.floor(Math.log10((double) iVal)));
+          }
+       }
++      String ret2 = ret + Integer.toString(iVal);
++      if (digits > iDigits && dVal != 0) {
++         ret2 = ret2 + String.format(".%0" + (digits - iDigits) + "d", new Object[]{Integer.valueOf(dVal)});
++      }
++      return ret2.replaceFirst("(\\.\\d*?)0+$", "$1") + " " + si;
+    }
+ 
+    public static void exit(int status) {
+-      Method method = null;
+-
++      Method exit;
+       try {
+-         method = Class.forName("java.lang.Shutdown").getDeclaredMethod("exit", Integer.TYPE);
+-         method.setAccessible(true);
+-      } catch (Exception exception2) {
+-         IC2.log.warn(LogCategory.General, exception2, "Method lookup failed.");
+-
++         exit = Class.forName("java.lang.Shutdown").getDeclaredMethod("exit", new Class[]{Integer.TYPE});
++         exit.setAccessible(true);
++      } catch (Exception e) {
++         IC2.log.warn(LogCategory.General, e, "Method lookup failed.");
+          try {
+-            Field field = System.class.getDeclaredField("security");
+-            field.setAccessible(true);
+-            field.set((Object)null, (Object)null);
+-            method = System.class.getMethod("exit", Integer.TYPE);
+-         } catch (Exception exception1) {
+-            throw new Error(exception1);
++            Field security = System.class.getDeclaredField("security");
++            security.setAccessible(true);
++            security.set(null, null);
++            exit = System.class.getMethod("exit", new Class[]{Integer.TYPE});
++         } catch (Exception f) {
++            throw new Error(f);
+          }
+       }
+-
+       try {
+-         method.invoke((Object)null, status);
+-      } catch (Exception exception) {
+-         throw new Error(exception);
++         exit.invoke(null, new Object[]{Integer.valueOf(status)});
++      } catch (Exception e2) {
++         throw new Error(e2);
+       }
+    }
+ 
+    public static Vector3 getEyePosition(Entity entity) {
+-      return new Vector3(entity.posX, entity.posY + (double)entity.getEyeHeight(), entity.posZ);
++      return new Vector3(entity.posX, entity.posY + ((double) entity.getEyeHeight()), entity.posZ);
+    }
+ 
+    public static Vector3 getLook(Entity entity) {
+@@ -419,7 +432,10 @@
+    }
+ 
+    public static double getReachDistance(Entity entity) {
+-      return entity instanceof EntityPlayerMP ? ((EntityPlayerMP)entity).interactionManager.getBlockReachDistance() : 5.0D;
++      if (entity instanceof EntityPlayerMP) {
++         return ((EntityPlayerMP) entity).interactionManager.getBlockReachDistance();
++      }
++      return 5.0d;
+    }
+ 
+    public static RayTraceResult traceBlocks(EntityPlayer player, boolean liquid) {
+@@ -427,14 +443,13 @@
+    }
+ 
+    public static RayTraceResult traceBlocks(EntityPlayer player, boolean liquid, boolean ignoreBlockWithoutBoundingBox, boolean returnLastUncollidableBlock) {
+-      Vector3 vector3 = getEyePosition(player);
+-      Vector3 vector31 = getLookScaled(player).add(vector3);
+-      return player.getEntityWorld().rayTraceBlocks(vector3.toVec3(), vector31.toVec3(), liquid, ignoreBlockWithoutBoundingBox, returnLastUncollidableBlock);
++      Vector3 start = getEyePosition(player);
++      return player.getEntityWorld().rayTraceBlocks(start.toVec3(), getLookScaled(player).add(start).toVec3(), liquid, ignoreBlockWithoutBoundingBox, returnLastUncollidableBlock);
+    }
+ 
+    public static RayTraceResult traceEntities(EntityPlayer player, boolean alwaysCollide) {
+-      Vector3 vector3 = getEyePosition(player);
+-      return traceEntities(player.getEntityWorld(), vector3.toVec3(), getLookScaled(player).add(vector3).toVec3(), player, alwaysCollide);
++      Vector3 start = getEyePosition(player);
++      return traceEntities(player.getEntityWorld(), start.toVec3(), getLookScaled(player).add(start).toVec3(), player, alwaysCollide);
+    }
+ 
+    public static RayTraceResult traceEntities(EntityPlayer player, Vec3d end, boolean alwaysCollide) {
+@@ -442,86 +457,86 @@
+    }
+ 
+    public static RayTraceResult traceEntities(World world, Vec3d start, Vec3d end, Entity exclude, boolean alwaysCollide) {
+-      AxisAlignedBB axisalignedbb = new AxisAlignedBB(Math.min(start.x, end.x), Math.min(start.y, end.y), Math.min(start.z, end.z), Math.max(start.x, end.x), Math.max(start.y, end.y), Math.max(start.z, end.z));
+-      List<Entity> list = world.getEntitiesWithinAABBExcludingEntity(exclude, axisalignedbb);
+-      RayTraceResult raytraceresult = null;
+-      double d0 = Double.POSITIVE_INFINITY;
+-
+-      for(Entity entity : list) {
++      RayTraceResult closest = null;
++      double minDist = Double.POSITIVE_INFINITY;
++      for (Entity entity : world.getEntitiesWithinAABBExcludingEntity(exclude, new AxisAlignedBB(Math.min(start.x, end.x), Math.min(start.y, end.y), Math.min(start.z, end.z), Math.max(start.x, end.x), Math.max(start.y, end.y), Math.max(start.z, end.z)))) {
+          if (alwaysCollide || entity.canBeCollidedWith()) {
+-            RayTraceResult raytraceresult1 = entity.getEntityBoundingBox().calculateIntercept(start, end);
+-            if (raytraceresult1 != null) {
+-               double d1 = start.squareDistanceTo(raytraceresult1.hitVec);
+-               if (d1 < d0) {
+-                  raytraceresult1.entityHit = entity;
+-                  raytraceresult1.typeOfHit = Type.ENTITY;
+-                  d0 = d1;
+-                  raytraceresult = raytraceresult1;
++            RayTraceResult pos = entity.getEntityBoundingBox().calculateIntercept(start, end);
++            if (pos != null) {
++               double distance = start.squareDistanceTo(pos.hitVec);
++               if (distance < minDist) {
++                  pos.entityHit = entity;
++                  pos.typeOfHit = Type.ENTITY;
++                  minDist = distance;
++                  closest = pos;
+                }
+             }
+          }
+       }
+-
+-      return raytraceresult;
++      return closest;
+    }
+ 
+    public static boolean isFakePlayer(EntityPlayer entity, boolean fuzzy) {
+       if (entity == null) {
+          return false;
+-      } else if (!(entity instanceof EntityPlayerMP)) {
++      }
++      if (!(entity instanceof EntityPlayerMP)) {
+          return true;
+-      } else if (fuzzy) {
++      }
++      if (fuzzy) {
+          return entity instanceof FakePlayer;
+-      } else {
+-         return entity.getClass() != EntityPlayerMP.class;
+       }
++      if (entity.getClass() == EntityPlayerMP.class) {
++         return false;
++      }
++      return true;
+    }
+ 
+    public static World getWorld(IBlockAccess world) {
++      Field field;
+       if (world == null) {
+          return null;
+-      } else if (world instanceof World) {
+-         return (World)world;
+-      } else {
+-         Class<? extends IBlockAccess> oclass = world.getClass();
+-         Field field;
+-         synchronized(worldFieldCache) {
+-            field = worldFieldCache.get(oclass);
+-            if (field == null && !worldFieldCache.containsKey(oclass)) {
+-               field = ReflectionUtil.getFieldRecursive(world.getClass(), World.class, false);
+-               worldFieldCache.put(oclass, field);
+-            }
++      }
++      if (world instanceof World) {
++         return (World) world;
++      }
++      Class<? extends IBlockAccess> cls = world.getClass();
++      synchronized (worldFieldCache) {
++         field = (Field) worldFieldCache.get(cls);
++         if (field == null && !worldFieldCache.containsKey(cls)) {
++            field = ReflectionUtil.getFieldRecursive(world.getClass(), World.class, false);
++            worldFieldCache.put(cls, field);
+          }
+-
+-         if (field != null) {
+-            try {
+-               return (World)field.get(world);
+-            } catch (Exception exception) {
+-               throw new RuntimeException(exception);
+-            }
+-         } else {
+-            return null;
+-         }
+       }
++      if (field == null) {
++         return null;
++      }
++      try {
++         return (World) field.get(world);
++      } catch (Exception e) {
++         throw new RuntimeException(e);
++      }
+    }
+ 
+    public static Chunk getLoadedChunk(World world, int chunkX, int chunkZ) {
+       Chunk chunk = null;
+       if (world.getChunkProvider() instanceof ChunkProviderServer) {
+-         ChunkProviderServer chunkproviderserver = (ChunkProviderServer)world.getChunkProvider();
+-
++         ChunkProviderServer cps = (ChunkProviderServer)world.getChunkProvider();
+          try {
+-            chunk = (Chunk)chunkproviderserver.id2ChunkMap.get(ChunkPos.asLong(chunkX, chunkZ));
+-         } catch (NoSuchFieldError var6) {
+-            if (chunkproviderserver.chunkExists(chunkX, chunkZ)) {
+-               chunk = chunkproviderserver.provideChunk(chunkX, chunkZ);
++            chunk = (Chunk)cps.id2ChunkMap.get(ChunkPos.asLong((int)chunkX, (int)chunkZ));
++         }
++         catch (NoSuchFieldError e) {
++            if (cps.chunkExists(chunkX, chunkZ)) {
++               chunk = cps.provideChunk(chunkX, chunkZ);
+             }
+          }
+       } else {
+          chunk = world.getChunkFromChunkCoords(chunkX, chunkZ);
+       }
+-
+-      return chunk instanceof EmptyChunk ? null : chunk;
++      if (chunk instanceof EmptyChunk) {
++         return null;
++      }
++      return chunk;
+    }
+ 
+    public static boolean checkMcCoordBounds(int x, int y, int z) {
+@@ -533,118 +548,103 @@
+    }
+ 
+    public static boolean checkInterfaces(Class<?> cls) {
+-      Boolean obool = checkedClasses.get(cls);
+-      if (obool != null) {
+-         return obool.booleanValue();
+-      } else {
+-         Set<Class<?>> set = Collections.<Class<?>>newSetFromMap(new IdentityHashMap());
+-         Class<?> oclass = cls;
+-
+-         while(true) {
+-            for(Class<?> oclass1 : oclass.getInterfaces()) {
+-               set.add(oclass1);
+-            }
+-
+-            oclass = oclass.getSuperclass();
+-            if (oclass == null) {
+-               break;
+-            }
++      Method[] methods;
++      Boolean cached = (Boolean) checkedClasses.get(cls);
++      if (cached != null) {
++         return cached.booleanValue();
++      }
++      Set<Class<?>> interfaces = Collections.newSetFromMap(new IdentityHashMap());
++      Class<?> c = cls;
++      do {
++         for (Class<?> i : c.getInterfaces()) {
++            interfaces.add(i);
+          }
+-
+-         boolean flag1 = true;
+-
+-         for(Class<?> oclass2 : set) {
+-            for(Method method : oclass2.getMethods()) {
+-               boolean flag = false;
+-               oclass = cls;
+-
+-               while(true) {
+-                  try {
+-                     Method method1 = oclass.getDeclaredMethod(method.getName(), method.getParameterTypes());
+-                     if (method.getReturnType().isAssignableFrom(method1.getReturnType())) {
+-                        flag = true;
+-                        break;
+-                     }
+-                  } catch (NoSuchMethodException var13) {
+-                     ;
+-                  }
+-
+-                  oclass = oclass.getSuperclass();
+-                  if (oclass == null) {
++         c = c.getSuperclass();
++      } while (c != null);
++      boolean result = true;
++      for (Class<?> iface : interfaces) {
++         for (Method method : iface.getMethods()) {
++            boolean found = false;
++            Class<?> c2 = cls;
++            while (true) {
++               try {
++                  if (method.getReturnType().isAssignableFrom(c2.getDeclaredMethod(method.getName(), method.getParameterTypes()).getReturnType())) {
++                     found = true;
+                      break;
+                   }
++               } catch (NoSuchMethodException e) {
+                }
+-
+-               if (!flag) {
+-                  IC2.log.info(LogCategory.General, "Can't find method %s.%s in %s.", method.getDeclaringClass().getName(), method.getName(), cls.getName());
+-                  flag1 = false;
++               c2 = c2.getSuperclass();
++               if (c2 == null) {
++                  break;
+                }
+             }
++            if (!found) {
++               IC2.log.info(LogCategory.General, "Can't find method %s.%s in %s.", new Object[]{method.getDeclaringClass().getName(), method.getName(), cls.getName()});
++               result = false;
++            }
+          }
+-
+-         checkedClasses.put(cls, Boolean.valueOf(flag1));
+-         return flag1;
+       }
++      checkedClasses.put(cls, Boolean.valueOf(result));
++      return result;
+    }
+ 
+    public static IBlockState getBlockState(IBlockAccess world, BlockPos pos) {
+-      IBlockState iblockstate = world.getBlockState(pos);
+-      return iblockstate.getActualState(world, pos);
++      return world.getBlockState(pos).getActualState(world, pos);
+    }
+ 
+    public static Block getBlock(String name) {
+-      if (name == null) {
+-         throw new NullPointerException("null name");
+-      } else {
++      if (name != null) {
+          return getBlock(new ResourceLocation(name));
+       }
++      throw new NullPointerException("null name");
+    }
+ 
+    public static Block getBlock(ResourceLocation loc) {
+-      Block block = (Block)Block.REGISTRY.getObject(loc);
+-      if (block != Blocks.AIR) {
+-         return block;
+-      } else {
+-         return loc.getResourceDomain().equals("minecraft") && loc.getResourcePath().equals("air") ? block : null;
++      Block ret = (Block) Block.REGISTRY.getObject(loc);
++      if (ret != Blocks.AIR) {
++         return ret;
+       }
++      if (!loc.getResourceDomain().equals("minecraft") || !loc.getResourcePath().equals("air")) {
++         return null;
++      }
++      return ret;
+    }
+ 
+    public static ResourceLocation getName(Block block) {
+-      return (ResourceLocation)Block.REGISTRY.getNameForObject(block);
++      return (ResourceLocation) Block.REGISTRY.getNameForObject(block);
+    }
+ 
+    public static Item getItem(String name) {
+-      if (name == null) {
+-         throw new NullPointerException("null name");
+-      } else {
++      if (name != null) {
+          return getItem(new ResourceLocation(name));
+       }
++      throw new NullPointerException("null name");
+    }
+ 
+    public static Item getItem(ResourceLocation loc) {
+-      return (Item)Item.REGISTRY.getObject(loc);
++      return (Item) Item.REGISTRY.getObject(loc);
+    }
+ 
+    public static ResourceLocation getName(Item item) {
+-      return (ResourceLocation)Item.REGISTRY.getNameForObject(item);
++      return (ResourceLocation) Item.REGISTRY.getNameForObject(item);
+    }
+ 
+    public static boolean harvestBlock(World world, BlockPos pos) {
+       if (world.isRemote) {
+          return false;
+-      } else {
+-         IBlockState iblockstate = world.getBlockState(pos);
+-         Block block = iblockstate.getBlock();
+-         TileEntity tileentity = world.getTileEntity(pos);
+-         EntityPlayer entityplayer = Ic2Player.get(world);
+-         boolean flag = block.canHarvestBlock(world, pos, entityplayer);
+-         block.onBlockHarvested(world, pos, iblockstate, entityplayer);
+-         boolean flag1 = block.removedByPlayer(iblockstate, world, pos, entityplayer, flag);
+-         if (flag && flag1) {
+-            block.harvestBlock(world, entityplayer, pos, iblockstate, tileentity, new ItemStack(Items.DIAMOND_PICKAXE));
+-         }
+-
+-         return flag1;
+       }
++      IBlockState state = world.getBlockState(pos);
++      Block block = state.getBlock();
++      TileEntity te = world.getTileEntity(pos);
++      EntityPlayer player = Ic2Player.get(world);
++      boolean canHarvest = block.canHarvestBlock(world, pos, player);
++      block.onBlockHarvested(world, pos, state, player);
++      boolean removed = block.removedByPlayer(state, world, pos, player, canHarvest);
++      if (!canHarvest || !removed) {
++         return removed;
++      }
++      block.harvestBlock(world, player, pos, state, te, new ItemStack(Items.DIAMOND_PICKAXE));
++      return removed;
+    }
+ }

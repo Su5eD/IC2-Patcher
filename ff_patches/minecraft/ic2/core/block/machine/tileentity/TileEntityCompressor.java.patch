@@ -1,0 +1,11 @@
+--- ../src-base/minecraft/ic2/core/block/machine/tileentity/TileEntityCompressor.java
++++ ../src-work/minecraft/ic2/core/block/machine/tileentity/TileEntityCompressor.java
+@@ -78,7 +78,7 @@
+ 
+                if (fluidstack.amount <= 0) {
+                   this.usingPumpRecipe = true;
+-                  machinereciperesult = (new MachineRecipe((Object)null, Collections.singletonList(new ItemStack(Items.SNOWBALL)))).getResult((Object)null);
++                  machinereciperesult = (new MachineRecipe(null, Collections.singletonList(new ItemStack(Items.SNOWBALL)))).getResult(null);
+                   break;
+                }
+             }

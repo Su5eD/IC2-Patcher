@@ -1,0 +1,15 @@
+--- ../src-base/minecraft/ic2/core/block/personal/TradingMarket.java
++++ ../src-work/minecraft/ic2/core/block/personal/TradingMarket.java
+@@ -79,10 +79,8 @@
+    }
+ 
+    public Stream<BlockPos> tradersAround(BlockPos position, int radius) {
+-      long i = (long)(radius * radius);
+-      return this.traders.stream().filter((pos) -> {
+-         return position.distanceSq(pos) <= (double)squareRadius;
+-      });
++      long i = (long) radius * radius;
++      return this.traders.stream().filter((pos) -> position.distanceSq(pos) <= (double)i);
+    }
+ 
+    public interface MarketWatcher {

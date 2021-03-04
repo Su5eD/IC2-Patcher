@@ -1,0 +1,11 @@
+--- ../src-base/minecraft/ic2/core/item/tool/ItemToolWrench.java
++++ ../src-work/minecraft/ic2/core/item/tool/ItemToolWrench.java
+@@ -119,7 +119,7 @@
+                   }
+ 
+                   block.onBlockDestroyedByPlayer(world, pos, iblockstate);
+-                  List drops = iwrenchable.getWrenchDrops(world, pos, iblockstate, tileentity, player, 0);
++                  List<ItemStack> drops = iwrenchable.getWrenchDrops(world, pos, iblockstate, tileentity, player, 0);
+                   if (drops != null && !drops.isEmpty()) {
+                      for(ItemStack itemstack : drops) {
+                         StackUtil.dropAsEntity(world, pos, itemstack);

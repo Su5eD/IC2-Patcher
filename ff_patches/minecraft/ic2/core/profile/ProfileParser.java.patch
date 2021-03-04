@@ -1,0 +1,11 @@
+--- ../src-base/minecraft/ic2/core/profile/ProfileParser.java
++++ ../src-work/minecraft/ic2/core/profile/ProfileParser.java
+@@ -244,7 +244,7 @@
+                throw new RuntimeException("Non-replacement changes made alongside replacement: " + profileparser$node);
+             }
+ 
+-            list.add((Object)null);
++            list.add(null);
+             break;
+          default:
+             assert parent.getType().validChildren.contains(profileparser$node.getType());

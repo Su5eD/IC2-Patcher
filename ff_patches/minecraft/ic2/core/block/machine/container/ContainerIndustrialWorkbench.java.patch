@@ -1,0 +1,13 @@
+--- ../src-base/minecraft/ic2/core/block/machine/container/ContainerIndustrialWorkbench.java
++++ ../src-work/minecraft/ic2/core/block/machine/container/ContainerIndustrialWorkbench.java
+@@ -131,8 +131,8 @@
+    }
+ 
+    public boolean canMergeSlot(ItemStack stack, Slot slot) {
+-      for(Slot slot : this.outputs) {
+-         if (slot.inventory == slot.inventory) {
++      for(Slot output : this.outputs) {
++         if (output.inventory == slot.inventory) {
+             return false;
+          }
+       }

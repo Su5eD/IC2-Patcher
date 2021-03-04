@@ -1,0 +1,11 @@
+--- ../src-base/minecraft/ic2/core/util/LiquidUtil.java
++++ ../src-work/minecraft/ic2/core/util/LiquidUtil.java
+@@ -40,7 +40,7 @@
+ 
+    public static List<Fluid> getAllFluids() {
+       Set<Fluid> set = new HashSet<Fluid>(FluidRegistry.getRegisteredFluids().values());
+-      set.remove((Object)null);
++      set.remove(null);
+       List<Fluid> list = new ArrayList<Fluid>(set);
+       Collections.sort(list, new Comparator<Fluid>() {
+          public int compare(Fluid a, Fluid b) {

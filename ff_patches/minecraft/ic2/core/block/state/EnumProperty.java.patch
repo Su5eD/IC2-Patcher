@@ -1,0 +1,11 @@
+--- ../src-base/minecraft/ic2/core/block/state/EnumProperty.java
++++ ../src-work/minecraft/ic2/core/block/state/EnumProperty.java
+@@ -56,7 +56,7 @@
+       boolean flag = Version.shouldEnable(oclass);
+       return (List)this.values.stream().filter((value) -> {
+          try {
+-            return Version.shouldEnable(valueClass.getField(value.name()), defaultState);
++            return Version.shouldEnable(oclass.getField(value.name()), flag);
+          } catch (NoSuchFieldException nosuchfieldexception) {
+             throw new RuntimeException("Impossible missing enum field!", nosuchfieldexception);
+          }

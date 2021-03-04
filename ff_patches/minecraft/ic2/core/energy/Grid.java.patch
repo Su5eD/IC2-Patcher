@@ -1,0 +1,1992 @@
+--- ../src-base/minecraft/ic2/core/energy/Grid.java
++++ ../src-work/minecraft/ic2/core/energy/Grid.java
+@@ -9,25 +9,6 @@
+ import ic2.core.energy.grid.NodeType;
+ import ic2.core.util.LogCategory;
+ import ic2.core.util.Util;
+-import java.io.FileWriter;
+-import java.io.IOException;
+-import java.io.PrintStream;
+-import java.util.ArrayList;
+-import java.util.Arrays;
+-import java.util.Collection;
+-import java.util.Collections;
+-import java.util.HashMap;
+-import java.util.HashSet;
+-import java.util.Iterator;
+-import java.util.LinkedList;
+-import java.util.List;
+-import java.util.ListIterator;
+-import java.util.Map;
+-import java.util.Queue;
+-import java.util.Set;
+-import java.util.concurrent.ExecutionException;
+-import java.util.concurrent.Future;
+-import java.util.concurrent.RunnableFuture;
+ import net.minecraft.util.EnumFacing;
+ import net.minecraft.util.math.BlockPos;
+ import org.apache.logging.log4j.Level;
+@@ -39,8 +20,17 @@
+ import org.ejml.interfaces.decomposition.EigenDecomposition;
+ import org.ejml.ops.MatrixIO;
+ 
++import java.io.FileWriter;
++import java.io.IOException;
++import java.io.OutputStreamWriter;
++import java.io.PrintStream;
++import java.util.*;
++import java.util.concurrent.ExecutionException;
++import java.util.concurrent.Future;
++import java.util.concurrent.RunnableFuture;
++
+ class Grid {
+-   private final int uid = EnergyNetLocal.getNextGridUid();
++   private final int uid;
+    private final EnergyNetLocal energyNet;
+    private final Map<Integer, Node> nodes = new HashMap<Integer, Node>();
+    private boolean hasNonZeroVoltages = false;
+@@ -53,6 +43,7 @@
+    private boolean failed;
+ 
+    Grid(EnergyNetLocal energyNet1) {
++      this.uid = EnergyNetLocal.getNextGridUid();
+       this.energyNet = energyNet1;
+       energyNet1.grids.add(this);
+    }
+@@ -65,413 +56,330 @@
+       if (EnergyNetGlobal.debugGrid) {
+          IC2.log.debug(LogCategory.EnergyNet, "%d Add %s to %s neighbors: %s.", this.uid, node, this, neighbors);
+       }
+-
+       this.invalidate();
+-
+-      assert !this.nodes.isEmpty() || neighbors.isEmpty();
+-
+-      assert this.nodes.isEmpty() || !neighbors.isEmpty() || node.isExtraNode();
+-
+-      assert node.links.isEmpty();
+-
++      assert (!this.nodes.isEmpty() || neighbors.isEmpty());
++      assert (this.nodes.isEmpty() || !neighbors.isEmpty() || node.isExtraNode());
++      assert (node.links.isEmpty());
+       this.add(node);
+-
+-      for(Node node : neighbors) {
+-         assert node != node;
+-
+-         assert this.nodes.containsKey(Integer.valueOf(node.uid));
+-
+-         double d0 = (node.getInnerLoss() + node.getInnerLoss()) / 2.0D;
+-         NodeLink nodelink = new NodeLink(node, node, d0);
+-         node.links.add(nodelink);
+-         node.links.add(nodelink);
++      for (Node neighbor : neighbors) {
++         assert (neighbor != node);
++         assert (this.nodes.containsKey(neighbor.uid));
++         double loss = (node.getInnerLoss() + neighbor.getInnerLoss()) / 2.0;
++         NodeLink link = new NodeLink(node, neighbor, loss);
++         node.links.add(link);
++         neighbor.links.add(link);
+       }
+-
+    }
+ 
+    void remove(Node node) {
++      Node neighbor;
+       if (EnergyNetGlobal.debugGrid) {
+          IC2.log.debug(LogCategory.EnergyNet, "%d Remove Node %s from %s with %d nodes.", this.uid, node, this, this.nodes.size());
+       }
+-
+       this.invalidate();
+-      Iterator<NodeLink> iterator = node.links.iterator();
+-
+-      while(iterator.hasNext()) {
+-         NodeLink nodelink = iterator.next();
+-         Node node = nodelink.getNeighbor(node);
+-         boolean flag = false;
+-         Iterator<NodeLink> iterator1 = node.links.iterator();
+-
+-         while(iterator1.hasNext()) {
+-            if (iterator1.next() == nodelink) {
+-               iterator1.remove();
+-               flag = true;
+-               break;
+-            }
++      Iterator<NodeLink> it = node.links.iterator();
++      while (it.hasNext()) {
++         NodeLink link = it.next();
++         neighbor = link.getNeighbor(node);
++         boolean found = false;
++         Iterator<NodeLink> it2 = neighbor.links.iterator();
++         while (it2.hasNext()) {
++            if (it2.next() != link) continue;
++            it2.remove();
++            found = true;
++            break;
+          }
+-
+-         assert flag;
+-
+-         if (node.links.isEmpty() && node.tile.removeExtraNode(node)) {
+-            iterator.remove();
+-            this.nodes.remove(Integer.valueOf(node.uid));
+-            node.clearGrid();
+-         }
++         assert (found);
++         if (!neighbor.links.isEmpty() || !neighbor.tile.removeExtraNode(neighbor)) continue;
++         it.remove();
++         this.nodes.remove(neighbor.uid);
++         neighbor.clearGrid();
+       }
+-
+-      this.nodes.remove(Integer.valueOf(node.uid));
++      this.nodes.remove(node.uid);
+       node.clearGrid();
+       if (node.links.isEmpty()) {
+          this.energyNet.grids.remove(this);
+       } else if (node.links.size() > 1 && node.nodeType == NodeType.Conductor) {
+-         iterator = new ArrayList<NodeLink>();
+-
+-         for(int j = 0; j < node.links.size(); ++j) {
+-            Node node3 = ((NodeLink)node.links.get(j)).getNeighbor(node);
+-            Set<Node> set2 = new HashSet<Node>();
+-            Queue<Node> queue = new LinkedList<Node>(Arrays.asList(node3));
+-
+-            Node node1;
+-            while((node1 = queue.poll()) != null) {
+-               if (set2.add(node1) && node1.nodeType == NodeType.Conductor) {
+-                  for(NodeLink nodelink1 : node1.links) {
+-                     Node node2 = nodelink1.getNeighbor(node1);
+-                     if (!set2.contains(node2)) {
+-                        queue.add(node2);
+-                     }
+-                  }
++         int i;
++         ArrayList nodeTable = new ArrayList();
++         for (i = 0; i < node.links.size(); ++i) {
++            Node cNode;
++            neighbor = node.links.get(i).getNeighbor(node);
++            HashSet<Node> connectedNodes = new HashSet<Node>();
++            LinkedList<Node> nodesToCheck = new LinkedList<Node>(Arrays.asList(neighbor));
++            while ((cNode = (Node)nodesToCheck.poll()) != null) {
++               if (!connectedNodes.add(cNode) || cNode.nodeType != NodeType.Conductor) continue;
++               for (NodeLink link : cNode.links) {
++                  Node nNode = link.getNeighbor(cNode);
++                  if (connectedNodes.contains(nNode)) continue;
++                  nodesToCheck.add(nNode);
+                }
+             }
+-
+-            iterator.add(set2);
++            nodeTable.add(connectedNodes);
+          }
+-
+-         assert iterator.size() == node.links.size();
+-
+-         for(int k = 1; k < node.links.size(); ++k) {
++         assert (nodeTable.size() == node.links.size());
++         for (i = 1; i < node.links.size(); ++i) {
+             if (EnergyNetGlobal.debugGrid) {
+-               IC2.log.debug(LogCategory.EnergyNet, "%d Checking net %d with %d nodes.", this.uid, k, ((Set)iterator.get(k)).size());
++               IC2.log.debug(LogCategory.EnergyNet, "%d Checking net %d with %d nodes.", this.uid, i, ((Set)nodeTable.get(i)).size());
+             }
+-
+-            Set<Node> set1 = (Set)iterator.get(k);
+-            Node node4 = ((NodeLink)node.links.get(k)).getNeighbor(node);
+-
+-            assert set1.contains(node4);
+-
+-            boolean flag1 = true;
+-
+-            for(int l = 0; l < k; ++l) {
+-               Set<Node> set3 = (Set)iterator.get(l);
+-               if (set3.contains(node4)) {
+-                  if (EnergyNetGlobal.debugGrid) {
+-                     IC2.log.debug(LogCategory.EnergyNet, "%d Same as %d.", this.uid, l);
+-                  }
+-
+-                  flag1 = false;
+-                  break;
++            Set<Node> connectedNodes = (Set)nodeTable.get(i);
++            Node neighbor2 = node.links.get(i).getNeighbor(node);
++            assert (connectedNodes.contains(neighbor2));
++            boolean split = true;
++            for (int j = 0; j < i; ++j) {
++               Set cmpList = (Set)nodeTable.get(j);
++               if (!cmpList.contains(neighbor2)) continue;
++               if (EnergyNetGlobal.debugGrid) {
++                  IC2.log.debug(LogCategory.EnergyNet, "%d Same as %d.", this.uid, j);
+                }
++               split = false;
++               break;
+             }
+-
+-            if (flag1) {
+-               if (EnergyNetGlobal.debugGrid) {
+-                  IC2.log.debug(LogCategory.EnergyNet, "%d Moving nodes %s.", this.uid, set1);
++            if (!split) continue;
++            if (EnergyNetGlobal.debugGrid) {
++               IC2.log.debug(LogCategory.EnergyNet, "%d Moving nodes %s.", this.uid, connectedNodes);
++            }
++            Grid grid = new Grid(this.energyNet);
++            for (Node cNode : connectedNodes) {
++               boolean needsExtraNode = false;
++               if (!cNode.links.isEmpty() && cNode.nodeType != NodeType.Conductor) {
++                  for (int j = 0; j < i; ++j) {
++                     Set cmpList = (Set)nodeTable.get(j);
++                     if (!cmpList.contains(cNode)) continue;
++                     needsExtraNode = true;
++                     break;
++                  }
+                }
+-
+-               Grid grid = new Grid(this.energyNet);
+-
+-               for(Node node5 : set1) {
+-                  boolean flag2 = false;
+-                  if (!node5.links.isEmpty() && node5.nodeType != NodeType.Conductor) {
+-                     for(int i = 0; i < k; ++i) {
+-                        Set<Node> set = (Set)iterator.get(i);
+-                        if (set.contains(node5)) {
+-                           flag2 = true;
+-                           break;
+-                        }
+-                     }
++               if (needsExtraNode) {
++                  if (EnergyNetGlobal.debugGrid) {
++                     IC2.log.debug(LogCategory.EnergyNet, "%s Create extra Node for %s.", this.uid, cNode);
+                   }
+-
+-                  if (flag2) {
+-                     if (EnergyNetGlobal.debugGrid) {
+-                        IC2.log.debug(LogCategory.EnergyNet, "%s Create extra Node for %s.", this.uid, node5);
+-                     }
+-
+-                     Node node6 = new Node(this.energyNet, node5.tile, node5.nodeType);
+-                     node5.tile.addExtraNode(node6);
+-                     Iterator<NodeLink> iterator2 = node5.links.iterator();
+-
+-                     while(iterator2.hasNext()) {
+-                        NodeLink nodelink2 = iterator2.next();
+-                        if (set1.contains(nodelink2.getNeighbor(node5))) {
+-                           nodelink2.replaceNode(node5, node6);
+-                           node6.links.add(nodelink2);
+-                           iterator2.remove();
+-                        }
+-                     }
+-
+-                     assert !node6.links.isEmpty();
+-
+-                     grid.add(node6);
+-
+-                     assert node6.getGrid() != null;
+-                  } else {
+-                     if (EnergyNetGlobal.debugGrid) {
+-                        IC2.log.debug(LogCategory.EnergyNet, "%d Move Node %s.", this.uid, node5);
+-                     }
+-
+-                     assert this.nodes.containsKey(Integer.valueOf(node5.uid));
+-
+-                     this.nodes.remove(Integer.valueOf(node5.uid));
+-                     node5.clearGrid();
+-                     grid.add(node5);
+-
+-                     assert node5.getGrid() != null;
++                  Node extraNode = new Node(this.energyNet, cNode.tile, cNode.nodeType);
++                  cNode.tile.addExtraNode(extraNode);
++                  Iterator<NodeLink> it2 = cNode.links.iterator();
++                  while (it2.hasNext()) {
++                     NodeLink link = it2.next();
++                     if (!connectedNodes.contains(link.getNeighbor(cNode))) continue;
++                     link.replaceNode(cNode, extraNode);
++                     extraNode.links.add(link);
++                     it2.remove();
+                   }
++                  assert (!extraNode.links.isEmpty());
++                  grid.add(extraNode);
++                  assert (extraNode.getGrid() != null);
++                  continue;
+                }
++               if (EnergyNetGlobal.debugGrid) {
++                  IC2.log.debug(LogCategory.EnergyNet, "%d Move Node %s.", this.uid, cNode);
++               }
++               assert (this.nodes.containsKey(cNode.uid));
++               this.nodes.remove(cNode.uid);
++               cNode.clearGrid();
++               grid.add(cNode);
++               assert (cNode.getGrid() != null);
+             }
+          }
+       }
+-
+    }
+ 
+    void merge(Grid grid, Map<Node, Node> nodeReplacements) {
+       if (EnergyNetGlobal.debugGrid) {
+          IC2.log.debug(LogCategory.EnergyNet, "%d Merge %s -> %s.", this.uid, grid, this);
+       }
+-
+-      assert this.energyNet.grids.contains(grid);
+-
++      assert (this.energyNet.grids.contains(grid));
+       this.invalidate();
+-
+-      for(Node node : grid.nodes.values()) {
+-         boolean flag = false;
++      for (Node node : grid.nodes.values()) {
++         boolean found = false;
+          if (node.nodeType != NodeType.Conductor) {
+-            for(Node node1 : this.nodes.values()) {
+-               if (node1.tile == node.tile && node1.nodeType == node.nodeType) {
+-                  if (EnergyNetGlobal.debugGrid) {
+-                     IC2.log.debug(LogCategory.EnergyNet, "%d Merge Node %s -> %s.", this.uid, node, node1);
+-                  }
+-
+-                  flag = true;
+-
+-                  for(NodeLink nodelink : node.links) {
+-                     nodelink.replaceNode(node, node1);
+-                     node1.links.add(nodelink);
+-                  }
+-
+-                  node1.tile.removeExtraNode(node);
+-                  nodeReplacements.put(node, node1);
+-                  break;
++            for (Node node2 : this.nodes.values()) {
++               if (node2.tile != node.tile || node2.nodeType != node.nodeType) continue;
++               if (EnergyNetGlobal.debugGrid) {
++                  IC2.log.debug(LogCategory.EnergyNet, "%d Merge Node %s -> %s.", this.uid, node, node2);
+                }
++               found = true;
++               for (NodeLink link : node.links) {
++                  link.replaceNode(node, node2);
++                  node2.links.add(link);
++               }
++               node2.tile.removeExtraNode(node);
++               nodeReplacements.put(node, node2);
++               break;
+             }
+          }
+-
+-         if (!flag) {
+-            if (EnergyNetGlobal.debugGrid) {
+-               IC2.log.debug(LogCategory.EnergyNet, "%d Add Node %s.", this.uid, node);
+-            }
+-
+-            node.clearGrid();
+-            this.add(node);
+-
+-            assert node.getGrid() != null;
++         if (found) continue;
++         if (EnergyNetGlobal.debugGrid) {
++            IC2.log.debug(LogCategory.EnergyNet, "%d Add Node %s.", this.uid, node);
+          }
++         node.clearGrid();
++         this.add(node);
++         assert (node.getGrid() != null);
+       }
+-
+       if (EnergyNetGlobal.debugGrid) {
+          IC2.log.debug(LogCategory.EnergyNet, "Remove %s.", grid);
+       }
+-
+       this.energyNet.grids.remove(grid);
+    }
+ 
+    void prepareCalculation() {
+-      assert this.calculation == null;
+-
++      assert (this.calculation == null);
+       if (!this.activeSources.isEmpty()) {
+          this.activeSources.clear();
+       }
+-
+       if (!this.activeSinks.isEmpty()) {
+          this.activeSinks.clear();
+       }
+-
+-      List<Node> list = new ArrayList<Node>();
+-      int i = 0;
+-
+-      for(Node node : this.nodes.values()) {
+-         assert node.getGrid() == this;
+-
+-         switch(node.nodeType) {
+-         case Source:
+-            IEnergySource ienergysource = (IEnergySource)node.tile.mainTile;
+-            node.setTier(ienergysource.getSourceTier());
+-            node.setAmount(ienergysource.getOfferedEnergy());
+-            if (node.getAmount() > 0.0D) {
+-               this.activeSources.add(Integer.valueOf(node.uid));
+-               i = Math.max(node.getTier(), i);
+-            } else {
+-               node.setAmount(0.0D);
++      ArrayList<Node> dynamicTierNodes = new ArrayList<Node>();
++      int maxSourceTier = 0;
++      for (Node node : this.nodes.values()) {
++         assert (node.getGrid() == this);
++         switch (node.nodeType) {
++            case Source: {
++               IEnergySource source = (IEnergySource)node.tile.mainTile;
++               node.setTier(source.getSourceTier());
++               node.setAmount(source.getOfferedEnergy());
++               if (node.getAmount() > 0.0) {
++                  this.activeSources.add(node.uid);
++                  maxSourceTier = Math.max(node.getTier(), maxSourceTier);
++                  break;
++               }
++               node.setAmount(0.0);
++               break;
+             }
+-            break;
+-         case Sink:
+-            IEnergySink ienergysink = (IEnergySink)node.tile.mainTile;
+-            node.setTier(ienergysink.getSinkTier());
+-            node.setAmount(ienergysink.getDemandedEnergy());
+-            if (node.getAmount() > 0.0D) {
+-               this.activeSinks.add(Integer.valueOf(node.uid));
+-               if (node.getTier() == Integer.MAX_VALUE) {
+-                  list.add(node);
++            case Sink: {
++               IEnergySink sink = (IEnergySink)node.tile.mainTile;
++               node.setTier(sink.getSinkTier());
++               node.setAmount(sink.getDemandedEnergy());
++               if (node.getAmount() > 0.0) {
++                  this.activeSinks.add(node.uid);
++                  if (node.getTier() != Integer.MAX_VALUE) break;
++                  dynamicTierNodes.add(node);
++                  break;
+                }
+-            } else {
+-               node.setAmount(0.0D);
++               node.setAmount(0.0);
++               break;
+             }
+-            break;
+-         case Conductor:
+-            node.setAmount(0.0D);
++            case Conductor: {
++               node.setAmount(0.0);
++            }
+          }
+-
+-         assert node.getAmount() >= 0.0D;
++         assert (node.getAmount() >= 0.0);
+       }
+-
+-      for(Node node1 : list) {
+-         node1.setTier(i);
++      for (Node node : dynamicTierNodes) {
++         node.setTier(maxSourceTier);
+       }
+-
+    }
+ 
+    Runnable startCalculation() {
+-      assert this.calculation == null;
+-
++      assert (this.calculation == null);
+       if (this.failed) {
+          IC2.log.warn(LogCategory.EnergyNet, "Calculation failed previously, skipping calculation.");
+          return null;
+-      } else {
+-         boolean flag = this.hasNonZeroVoltages;
+-         if (!this.activeSinks.isEmpty() && !this.activeSources.isEmpty()) {
+-            flag = true;
+-            Iterator task = this.activeSources.iterator();
+-
+-            while(task.hasNext()) {
+-               int i = ((Integer)task.next()).intValue();
+-               Node node = this.nodes.get(Integer.valueOf(i));
+-               int j = 1;
+-
+-               for(Node node1 : node.tile.nodes) {
+-                  if (node1.uid != i && node1.nodeType == NodeType.Source && !node1.getGrid().activeSinks.isEmpty()) {
+-                     assert node1.getGrid().activeSources.contains(Integer.valueOf(node1.uid));
+-
+-                     assert node1.getGrid() != this;
+-
+-                     ++j;
+-                  }
+-               }
+-
+-               node.setAmount(node.getAmount() / (double)j);
+-               IEnergySource ienergysource = (IEnergySource)node.tile.mainTile;
+-               ienergysource.drawEnergy(node.getAmount());
+-               if (EnergyNetGlobal.debugGrid) {
+-                  IC2.log.debug(LogCategory.EnergyNet, "%d %s %f EU", this.uid, node, -node.getAmount());
+-               }
++      }
++      boolean run = this.hasNonZeroVoltages;
++      if (!this.activeSinks.isEmpty() && !this.activeSources.isEmpty()) {
++         run = true;
++         for (int nodeId : this.activeSources) {
++            Node node = this.nodes.get(nodeId);
++            int shareCount = 1;
++            for (Node shared : node.tile.nodes) {
++               if (shared.uid == nodeId || shared.nodeType != NodeType.Source || shared.getGrid().activeSinks.isEmpty()) continue;
++               assert (shared.getGrid().activeSources.contains(shared.uid));
++               assert (shared.getGrid() != this);
++               ++shareCount;
+             }
++            node.setAmount(node.getAmount() / (double)shareCount);
++            IEnergySource source = (IEnergySource)node.tile.mainTile;
++            source.drawEnergy(node.getAmount());
++            if (!EnergyNetGlobal.debugGrid) continue;
++            IC2.log.debug(LogCategory.EnergyNet, "%d %s %f EU", this.uid, node, -node.getAmount());
+          }
+-
+-         if (flag) {
+-            RunnableFuture<Iterable<Node>> runnablefuture = IC2.getInstance().threadPool.<Iterable<Node>>makeTask(new GridCalculation(this));
+-            this.calculation = runnablefuture;
+-            return runnablefuture;
+-         } else {
+-            return null;
+-         }
+       }
++      if (run) {
++         RunnableFuture<Iterable<Node>> task = IC2.getInstance().threadPool.makeTask(new GridCalculation(this));
++         this.calculation = task;
++         return task;
++      }
++      return null;
+    }
+ 
+    void finishCalculation() {
+-      if (this.calculation != null) {
+-         try {
+-            for(Node node : this.calculation.get()) {
+-               EnumFacing enumfacing;
+-               if (!node.links.isEmpty()) {
+-                  enumfacing = ((NodeLink)node.links.get(0)).getDirFrom(node);
+-               } else {
+-                  enumfacing = null;
+-                  if (EnergyNetGlobal.debugGrid) {
+-                     IC2.log.warn(LogCategory.EnergyNet, "Can't determine direction for %s.", node);
+-                     this.dumpNodeInfo(IC2.log.getPrintStream(LogCategory.EnergyNet, Level.DEBUG), false, node);
+-                     this.dumpGraph(false);
+-                  }
++      if (this.calculation == null) {
++         return;
++      }
++      try {
++         Iterable<Node> result = this.calculation.get();
++         for (Node node : result) {
++            EnumFacing dir;
++            if (!node.links.isEmpty()) {
++               dir = node.links.get(0).getDirFrom(node);
++            } else {
++               dir = null;
++               if (EnergyNetGlobal.debugGrid) {
++                  IC2.log.warn(LogCategory.EnergyNet, "Can't determine direction for %s.", node);
++                  this.dumpNodeInfo(IC2.log.getPrintStream(LogCategory.EnergyNet, Level.DEBUG), false, node);
++                  this.dumpGraph(false);
+                }
+-
+-               this.energyNet.addChange(node, enumfacing, node.getAmount(), node.getVoltage());
+             }
+-         } catch (InterruptedException interruptedexception) {
+-            IC2.log.debug(LogCategory.EnergyNet, interruptedexception, "Calculation interrupted.");
+-         } catch (ExecutionException executionexception) {
+-            IC2.log.warn(LogCategory.EnergyNet, executionexception, "Calculation failed.");
+-            PrintStream printstream = IC2.log.getPrintStream(LogCategory.EnergyNet, Level.WARN);
+-            this.dumpStats(printstream, false);
+-            this.dumpMatrix(printstream, false, true, true);
+-            this.dumpGraph(false);
+-            this.failed = true;
++            this.energyNet.addChange(node, dir, node.getAmount(), node.getVoltage());
+          }
+-
+-         this.calculation = null;
+       }
++      catch (InterruptedException e) {
++         IC2.log.debug(LogCategory.EnergyNet, e, "Calculation interrupted.");
++      }
++      catch (ExecutionException e) {
++         IC2.log.warn(LogCategory.EnergyNet, e, "Calculation failed.");
++         PrintStream ps = IC2.log.getPrintStream(LogCategory.EnergyNet, Level.WARN);
++         this.dumpStats(ps, false);
++         this.dumpMatrix(ps, false, true, true);
++         this.dumpGraph(false);
++         this.failed = true;
++      }
++      this.calculation = null;
+    }
+ 
+    void updateStats() {
+       if (this.lastVoltagesNeedUpdate) {
+          this.lastVoltagesNeedUpdate = false;
+-
+-         for(Node node : this.nodes.values()) {
++         for (Node node : this.nodes.values()) {
+             node.updateStats();
+          }
+       }
+-
+    }
+ 
+    Iterable<Node> calculate() {
+       this.lastVoltagesNeedUpdate = true;
+-      if (!this.activeSources.isEmpty() && !this.activeSinks.isEmpty()) {
+-         StructureCache.Data structurecache$data = this.calculateDistribution();
+-         this.calculateEffects(structurecache$data);
+-         this.activeSources.clear();
+-         this.activeSinks.clear();
+-         List<Node> list = new ArrayList<Node>();
+-
+-         for(Node node1 : structurecache$data.activeNodes) {
+-            if (node1.nodeType == NodeType.Sink || node1.nodeType == NodeType.Source) {
+-               list.add(node1.getTop());
+-            }
+-         }
+-
+-         this.hasNonZeroVoltages = true;
+-         return list;
+-      } else {
+-         for(Node node : this.nodes.values()) {
+-            node.setVoltage(0.0D);
++      if (this.activeSources.isEmpty() || this.activeSinks.isEmpty()) {
++         for (Node node : this.nodes.values()) {
++            node.setVoltage(0.0);
+             node.resetCurrents();
+          }
+-
+          if (!this.activeSources.isEmpty()) {
+             this.activeSources.clear();
+          }
+-
+          if (!this.activeSinks.isEmpty()) {
+             this.activeSinks.clear();
+          }
+-
+          this.hasNonZeroVoltages = false;
+          return new ArrayList<Node>();
+       }
++      StructureCache.Data data = this.calculateDistribution();
++      this.calculateEffects(data);
++      this.activeSources.clear();
++      this.activeSinks.clear();
++      ArrayList<Node> ret = new ArrayList<Node>();
++      for (Node node : data.activeNodes) {
++         if (node.nodeType != NodeType.Sink && node.nodeType != NodeType.Source) continue;
++         ret.add(node.getTop());
++      }
++      this.hasNonZeroVoltages = true;
++      return ret;
+    }
+ 
+    private void add(Node node) {
+       node.setGrid(this);
+-      Node node = this.nodes.put(Integer.valueOf(node.uid), node);
+-      if (node != null) {
+-         throw new IllegalStateException("duplicate node uid, new " + node + ", old " + node);
++      Node prev = this.nodes.put(node.uid, node);
++      if (prev != null) {
++         throw new IllegalStateException("duplicate node uid, new " + node + ", old " + prev);
+       }
+    }
+ 
+@@ -481,853 +389,651 @@
+    }
+ 
+    private StructureCache.Data calculateDistribution() {
+-      long i = System.nanoTime();
+-      StructureCache.Data structurecache$data = this.cache.get(this.activeSources, this.activeSinks);
+-      this.lastData = structurecache$data;
+-      if (!structurecache$data.isInitialized) {
+-         this.copyForOptimize(structurecache$data);
+-         this.optimize(structurecache$data);
+-         determineEmittingNodes(structurecache$data);
+-         int j = structurecache$data.activeNodes.size();
+-         structurecache$data.networkMatrix = new DenseMatrix64F(j, j);
+-         structurecache$data.sourceMatrix = new DenseMatrix64F(j, 1);
+-         structurecache$data.resultMatrix = new DenseMatrix64F(j, 1);
+-         structurecache$data.solver = LinearSolverFactory.symmPosDef(j);
++      StructureCache.Data data;
++      long time = System.nanoTime();
++      this.lastData = data = this.cache.get(this.activeSources, this.activeSinks);
++      if (!data.isInitialized) {
++         this.copyForOptimize(data);
++         this.optimize(data);
++         Grid.determineEmittingNodes(data);
++         int size = data.activeNodes.size();
++         data.networkMatrix = new DenseMatrix64F(size, size);
++         data.sourceMatrix = new DenseMatrix64F(size, 1);
++         data.resultMatrix = new DenseMatrix64F(size, 1);
++         data.solver = LinearSolverFactory.symmPosDef(size);
+          if (!EnergyNetLocal.useLinearTransferModel) {
+-            populateNetworkMatrix(structurecache$data);
+-            initializeSolver(structurecache$data);
+-            if (structurecache$data.solver instanceof LinearSolver_B64_to_D64) {
+-               structurecache$data.networkMatrix = null;
++            Grid.populateNetworkMatrix(data);
++            Grid.initializeSolver(data);
++            if (data.solver instanceof LinearSolver_B64_to_D64) {
++               data.networkMatrix = null;
+             }
+          }
+-
+-         structurecache$data.isInitialized = true;
++         data.isInitialized = true;
+       }
+-
+       if (EnergyNetLocal.useLinearTransferModel) {
+-         populateNetworkMatrix(structurecache$data);
+-         initializeSolver(structurecache$data);
++         Grid.populateNetworkMatrix(data);
++         Grid.initializeSolver(data);
+       }
+-
+-      this.populateSourceMatrix(structurecache$data);
++      this.populateSourceMatrix(data);
+       if (EnergyNetGlobal.debugGridVerbose) {
+          this.dumpMatrix(IC2.log.getPrintStream(LogCategory.EnergyNet, Level.TRACE), false, true, false);
+       }
+-
+-      structurecache$data.solver.solve(structurecache$data.sourceMatrix, structurecache$data.resultMatrix);
+-
+-      assert !structurecache$data.solver.modifiesB();
+-
++      data.solver.solve(data.sourceMatrix, data.resultMatrix);
++      assert (!data.solver.modifiesB());
+       if (EnergyNetGlobal.debugGridVerbose) {
+          this.dumpMatrix(IC2.log.getPrintStream(LogCategory.EnergyNet, Level.TRACE), false, false, true);
+       }
+-
+       if (EnergyNetGlobal.debugGrid) {
+-         i = System.nanoTime() - i;
+-         IC2.log.debug(LogCategory.EnergyNet, "%d The distribution calculation took %d us.", this.uid, i / 1000L);
++         time = System.nanoTime() - time;
++         IC2.log.debug(LogCategory.EnergyNet, "%d The distribution calculation took %d us.", this.uid, time / 1000L);
+       }
+-
+-      return structurecache$data;
++      return data;
+    }
+ 
+    private static void initializeSolver(StructureCache.Data data) {
+       if (!data.solver.setA(data.networkMatrix)) {
+-         int i = data.networkMatrix.numCols;
++         int size = data.networkMatrix.numCols;
+          if (data.solver.modifiesA()) {
+-            populateNetworkMatrix(data);
++            Grid.populateNetworkMatrix(data);
+          }
+-
+-         data.solver = LinearSolverFactory.linear(i);
++         data.solver = LinearSolverFactory.linear(size);
+          if (!data.solver.setA(data.networkMatrix)) {
++            EigenDecomposition<DenseMatrix64F> ed;
+             if (data.solver.modifiesA()) {
+-               populateNetworkMatrix(data);
++               Grid.populateNetworkMatrix(data);
+             }
+-
+-            EigenDecomposition<DenseMatrix64F> eigendecomposition = DecompositionFactory.eig(i, false);
+-            if (eigendecomposition.decompose(data.networkMatrix)) {
+-               int j = i;
+-               int k = i;
+-               StringBuilder stringbuilder = new StringBuilder("Eigen values: ");
+-
+-               for(int l = 0; l < i; ++l) {
+-                  Complex64F complex64f = eigendecomposition.getEigenvalue(l);
+-                  if (complex64f.isReal()) {
+-                     --j;
++            if ((ed = DecompositionFactory.eig(size, false)).decompose(data.networkMatrix)) {
++               int complex = size;
++               int nonPositive = size;
++               StringBuilder sb = new StringBuilder("Eigen values: ");
++               for (int i = 0; i < size; ++i) {
++                  Complex64F ev = ed.getEigenvalue(i);
++                  if (ev.isReal()) {
++                     --complex;
+                   }
+-
+-                  if (complex64f.real > 0.0D) {
+-                     --k;
++                  if (ev.real > 0.0) {
++                     --nonPositive;
+                   }
+-
+-                  if (l != 0) {
+-                     stringbuilder.append(", ");
++                  if (i != 0) {
++                     sb.append(", ");
+                   }
+-
+-                  stringbuilder.append((Object)complex64f);
++                  sb.append(ev);
+                }
+-
+-               IC2.log.info(LogCategory.EnergyNet, stringbuilder.toString());
+-               IC2.log.info(LogCategory.EnergyNet, "Total: %d, complex: %d, non positive: %d", i, j, k);
++               IC2.log.info(LogCategory.EnergyNet, sb.toString());
++               IC2.log.info(LogCategory.EnergyNet, "Total: %d, complex: %d, non positive: %d", size, complex, nonPositive);
+             } else {
+                IC2.log.info(LogCategory.EnergyNet, "Unable to compute the eigen values.");
+             }
+-
+-            if (eigendecomposition.inputModified()) {
+-               populateNetworkMatrix(data);
++            if (ed.inputModified()) {
++               Grid.populateNetworkMatrix(data);
+             }
+-
+             throw new RuntimeException("Can't decompose network matrix.");
+          }
+       }
+-
+    }
+ 
+    private void calculateEffects(StructureCache.Data data) {
+-      long i = System.nanoTime();
+-
+-      for(Node node : this.nodes.values()) {
++      long time = System.nanoTime();
++      for (Node node : this.nodes.values()) {
+          node.setVoltage(Double.NaN);
+          node.resetCurrents();
+       }
+-
+-      for(int j = 0; j < data.activeNodes.size(); ++j) {
+-         Node node4 = data.activeNodes.get(j);
+-         node4.setVoltage(data.resultMatrix.get(j));
+-         switch(node4.nodeType) {
+-         case Source:
+-            double d3;
+-            if (EnergyNetLocal.useLinearTransferModel) {
+-               d3 = data.sourceMatrix.get(j) - node4.getVoltage() / node4.getResistance();
+-               double d1 = d3 * node4.getVoltage();
+-
+-               assert d1 >= 0.0D : d1 + " (u=" + node4.getVoltage() + ")";
+-
+-               assert d1 <= node4.getAmount() : d1 + " <= " + node4.getAmount() + " (u=" + node4.getVoltage() + ")";
+-
+-               node4.setAmount(d1 - node4.getAmount());
+-            } else {
+-               d3 = node4.getAmount();
+-               node4.setAmount(0.0D);
++      block5: for (int row = 0; row < data.activeNodes.size(); ++row) {
++         Node node;
++         node = data.activeNodes.get(row);
++         node.setVoltage(data.resultMatrix.get(row));
++         switch (node.nodeType) {
++            case Source: {
++               double current;
++               if (EnergyNetLocal.useLinearTransferModel) {
++                  current = data.sourceMatrix.get(row) - node.getVoltage() / node.getResistance();
++                  double actualAmount = current * node.getVoltage();
++                  assert (actualAmount >= 0.0) : actualAmount + " (u=" + node.getVoltage() + ")";
++                  assert (actualAmount <= node.getAmount()) : actualAmount + " <= " + node.getAmount() + " (u=" + node.getVoltage() + ")";
++                  node.setAmount(actualAmount - node.getAmount());
++               } else {
++                  current = node.getAmount();
++                  node.setAmount(0.0);
++               }
++               assert (node.getAmount() <= 0.0);
++               if (!EnergyNetGlobal.debugGrid) continue block5;
++               IC2.log.debug(LogCategory.EnergyNet, "%d %s %f EU, %f V, %f A.", this.uid, node, -node.getAmount(), node.getVoltage(), -current);
++               continue block5;
+             }
+-
+-            assert node4.getAmount() <= 0.0D;
+-
+-            if (EnergyNetGlobal.debugGrid) {
+-               IC2.log.debug(LogCategory.EnergyNet, "%d %s %f EU, %f V, %f A.", this.uid, node4, -node4.getAmount(), node4.getVoltage(), -d3);
++            case Sink: {
++               double current;
++               if (EnergyNetLocal.useLinearTransferModel) {
++                  current = node.getVoltage() / node.getResistance();
++                  node.setAmount(node.getVoltage() * current);
++               } else {
++                  current = node.getVoltage();
++                  node.setAmount(current);
++               }
++               assert (node.getAmount() >= 0.0);
++               if (!EnergyNetGlobal.debugGrid) continue block5;
++               IC2.log.debug(LogCategory.EnergyNet, "%d %s %f EU, %f V, %f A.", this.uid, node, node.getAmount(), node.getVoltage(), current);
++               continue block5;
+             }
+-            break;
+-         case Sink:
+-            double d0;
+-            if (EnergyNetLocal.useLinearTransferModel) {
+-               d0 = node4.getVoltage() / node4.getResistance();
+-               node4.setAmount(node4.getVoltage() * d0);
+-            } else {
+-               d0 = node4.getVoltage();
+-               node4.setAmount(d0);
+-            }
+-
+-            assert node4.getAmount() >= 0.0D;
+-
+-            if (EnergyNetGlobal.debugGrid) {
+-               IC2.log.debug(LogCategory.EnergyNet, "%d %s %f EU, %f V, %f A.", this.uid, node4, node4.getAmount(), node4.getVoltage(), d0);
+-            }
+-         case Conductor:
+          }
+       }
+-
+-      Set<NodeLink> set = EnergyNetGlobal.verifyGrid() ? new HashSet() : null;
+-
+-      for(Node node5 : data.activeNodes) {
+-         for(NodeLink nodelink1 : node5.links) {
+-            if (nodelink1.nodeA == node5) {
+-               Node node1 = nodelink1.nodeA.getTop();
+-               Node node2 = nodelink1.nodeB.getTop();
+-               double d2 = nodelink1.loss;
+-
+-               for(Node node3 : nodelink1.skippedNodes) {
+-                  assert node3.nodeType == NodeType.Conductor;
+-
+-                  node3 = node3.getTop();
+-                  if (!Double.isNaN(node3.getVoltage())) {
+-                     assert false;
+-                     break;
+-                  }
+-
+-                  NodeLink nodelink = node1.getConnectionTo(node3);
+-
+-                  assert nodelink != null;
+-
+-                  assert !EnergyNetGlobal.verifyGrid() || set.add(nodelink);
+-
+-                  node3.setVoltage(Util.lerp(node1.getVoltage(), node2.getVoltage(), nodelink.loss / d2));
+-                  nodelink.updateCurrent();
+-                  node1 = node3;
+-                  d2 -= nodelink.loss;
++      HashSet<NodeLink> visitedLinks = EnergyNetGlobal.verifyGrid() ? new HashSet<NodeLink>() : null;
++      for (Node node : data.activeNodes) {
++         for (NodeLink link : node.links) {
++            if (link.nodeA != node) continue;
++            Node nodeA = link.nodeA.getTop();
++            Node nodeB = link.nodeB.getTop();
++            double totalLoss = link.loss;
++            for (Node skipped : link.skippedNodes) {
++               assert (skipped.nodeType == NodeType.Conductor);
++               if (!Double.isNaN((skipped = skipped.getTop()).getVoltage())) {
++                  assert (false);
++                  break;
+                }
+-
+-               node1.getConnectionTo(node2).updateCurrent();
++               NodeLink link2 = nodeA.getConnectionTo(skipped);
++               assert (link2 != null);
++               if (EnergyNetGlobal.verifyGrid()) assert (visitedLinks.add(link2));
++               skipped.setVoltage(Util.lerp(nodeA.getVoltage(), nodeB.getVoltage(), link2.loss / totalLoss));
++               link2.updateCurrent();
++               nodeA = skipped;
++               totalLoss -= link2.loss;
+             }
++            nodeA.getConnectionTo(nodeB).updateCurrent();
+          }
+       }
+-
+-      i = System.nanoTime() - i;
++      time = System.nanoTime() - time;
+       if (EnergyNetGlobal.debugGrid) {
+-         IC2.log.debug(LogCategory.EnergyNet, "%d The effect calculation took %d us.", this.uid, i / 1000L);
++         IC2.log.debug(LogCategory.EnergyNet, "%d The effect calculation took %d us.", this.uid, time / 1000L);
+       }
+-
+    }
+ 
+    private void copyForOptimize(StructureCache.Data data) {
+       data.optimizedNodes = new HashMap<Integer, Node>();
+-
+-      for(Node node : this.nodes.values()) {
+-         assert !node.links.isEmpty();
+-
+-         if (node.getAmount() > 0.0D || node.nodeType == NodeType.Conductor) {
+-            assert node.nodeType != NodeType.Sink || this.activeSinks.contains(Integer.valueOf(node.uid));
+-
+-            assert node.nodeType != NodeType.Source || this.activeSources.contains(Integer.valueOf(node.uid));
+-
+-            assert node.getGrid() != null;
+-
+-            data.optimizedNodes.put(Integer.valueOf(node.uid), new Node(node));
+-         }
++      for (Node node : this.nodes.values()) {
++         assert (!node.links.isEmpty());
++         if (!(node.getAmount() > 0.0) && node.nodeType != NodeType.Conductor) continue;
++         assert (node.nodeType != NodeType.Sink || this.activeSinks.contains(node.uid));
++         assert (node.nodeType != NodeType.Source || this.activeSources.contains(node.uid));
++         assert (node.getGrid() != null);
++         data.optimizedNodes.put(node.uid, new Node(node));
+       }
+-
+-      for(Node node2 : data.optimizedNodes.values()) {
+-         assert !node2.links.isEmpty();
+-
+-         assert node2.getGrid() == this;
+-
+-         ListIterator<NodeLink> listiterator = node2.links.listIterator();
+-
+-         while(listiterator.hasNext()) {
+-            NodeLink nodelink = listiterator.next();
+-            Node node1 = nodelink.getNeighbor(node2.uid);
+-
+-            assert node1.getGrid() == this;
+-
+-            if ((node1.nodeType == NodeType.Sink || node1.nodeType == NodeType.Source) && node1.getAmount() <= 0.0D) {
+-               listiterator.remove();
+-            } else if (nodelink.nodeA.uid == node2.uid) {
+-               nodelink.nodeA = data.optimizedNodes.get(Integer.valueOf(nodelink.nodeA.uid));
+-               nodelink.nodeB = data.optimizedNodes.get(Integer.valueOf(nodelink.nodeB.uid));
+-
+-               assert nodelink.nodeA != null && nodelink.nodeB != null;
+-
+-               List<Node> list = new ArrayList<Node>();
+-
+-               for(Node node4 : nodelink.skippedNodes) {
+-                  list.add(data.optimizedNodes.get(Integer.valueOf(node4.uid)));
++      for (Node node : data.optimizedNodes.values()) {
++         assert (!node.links.isEmpty());
++         assert (node.getGrid() == this);
++         ListIterator<NodeLink> it = node.links.listIterator();
++         while (it.hasNext()) {
++            NodeLink link = it.next();
++            Node neighbor = link.getNeighbor(node.uid);
++            assert (neighbor.getGrid() == this);
++            if ((neighbor.nodeType == NodeType.Sink || neighbor.nodeType == NodeType.Source) && neighbor.getAmount() <= 0.0) {
++               it.remove();
++               continue;
++            }
++            if (link.nodeA.uid == node.uid) {
++               link.nodeA = data.optimizedNodes.get(link.nodeA.uid);
++               link.nodeB = data.optimizedNodes.get(link.nodeB.uid);
++               assert (link.nodeA != null && link.nodeB != null);
++               ArrayList<Node> newSkippedNodes = new ArrayList<Node>();
++               for (Node skippedNode : link.skippedNodes) {
++                  newSkippedNodes.add(data.optimizedNodes.get(skippedNode.uid));
+                }
+-
+-               nodelink.skippedNodes = list;
+-            } else {
+-               assert nodelink.nodeB.uid == node2.uid;
+-
+-               boolean flag = false;
+-
+-               for(NodeLink nodelink1 : (data.optimizedNodes.get(Integer.valueOf(nodelink.nodeA.uid))).links) {
+-                  assert nodelink1.nodeA.uid != node2.uid;
+-
+-                  if (nodelink1.nodeB.uid == node2.uid && !node2.links.contains(nodelink1)) {
+-                     assert nodelink1.nodeA.uid == nodelink.nodeA.uid;
+-
+-                     flag = true;
+-                     listiterator.set(nodelink1);
+-                     break;
+-                  }
+-               }
+-
+-               assert flag;
++               link.skippedNodes = newSkippedNodes;
++               continue;
+             }
++            assert (link.nodeB.uid == node.uid);
++            boolean foundReverseLink = false;
++            for (NodeLink reverseLink : data.optimizedNodes.get((Object)Integer.valueOf((int)link.nodeA.uid)).links) {
++               assert (reverseLink.nodeA.uid != node.uid);
++               if (reverseLink.nodeB.uid != node.uid || node.links.contains(reverseLink)) continue;
++               assert (reverseLink.nodeA.uid == link.nodeA.uid);
++               foundReverseLink = true;
++               it.set(reverseLink);
++               break;
++            }
++            assert (foundReverseLink);
+          }
+       }
+-
+       if (EnergyNetGlobal.verifyGrid()) {
+-         label177:
+-         for(Node node3 : data.optimizedNodes.values()) {
+-            assert !node3.links.isEmpty();
+-
+-            Iterator iterator1 = node3.links.iterator();
+-
+-            while(true) {
+-               if (!iterator1.hasNext()) {
+-                  continue label177;
++         for (Node node : data.optimizedNodes.values()) {
++            assert (!node.links.isEmpty());
++            for (NodeLink link : node.links) {
++               if (!data.optimizedNodes.containsValue(link.nodeA)) {
++                  IC2.log.debug(LogCategory.EnergyNet, "%d Link %s is broken.", this.uid, link);
+                }
+-
+-               NodeLink nodelink2 = (NodeLink)iterator1.next();
+-               if (!data.optimizedNodes.containsValue(nodelink2.nodeA)) {
+-                  IC2.log.debug(LogCategory.EnergyNet, "%d Link %s is broken.", this.uid, nodelink2);
+-               }
+-
+-               assert data.optimizedNodes.containsValue(nodelink2.nodeA);
+-
+-               assert data.optimizedNodes.containsValue(nodelink2.nodeB);
+-
+-               assert nodelink2.nodeA != nodelink2.nodeB;
+-
+-               if (!$assertionsDisabled && !nodelink2.getNeighbor(node3).links.contains(nodelink2)) {
+-                  break;
+-               }
++               assert (data.optimizedNodes.containsValue(link.nodeA));
++               assert (data.optimizedNodes.containsValue(link.nodeB));
++               assert (link.nodeA != link.nodeB);
++               assert (link.getNeighbor((Node)node).links.contains(link));
+             }
+-
+-            throw new AssertionError();
+          }
+-
+-         Iterator iterator = this.activeSources.iterator();
+-
+-         while(iterator.hasNext()) {
+-            int i = ((Integer)iterator.next()).intValue();
+-
+-            assert data.optimizedNodes.containsKey(Integer.valueOf(i));
++         Iterator<Integer> iterator = this.activeSources.iterator();
++         while (iterator.hasNext()) {
++            int uid = (Integer)iterator.next();
++            assert (data.optimizedNodes.containsKey(uid));
+          }
+-
+          iterator = this.activeSinks.iterator();
+-
+-         while(iterator.hasNext()) {
+-            int j = ((Integer)iterator.next()).intValue();
+-
+-            assert data.optimizedNodes.containsKey(Integer.valueOf(j));
++         while (iterator.hasNext()) {
++            int uid = (Integer)iterator.next();
++            assert (data.optimizedNodes.containsKey(uid));
+          }
+       }
+-
+    }
+ 
+    private void optimize(StructureCache.Data data) {
+-      while(true) {
+-         int i = 0;
+-         Iterator<Node> iterator = data.optimizedNodes.values().iterator();
+-
+-         label314:
+-         while(iterator.hasNext()) {
+-            Node node = iterator.next();
+-            if (node.nodeType == NodeType.Conductor) {
+-               if (node.links.size() >= 2) {
+-                  if (node.links.size() == 2) {
+-                     iterator.remove();
+-                     ++i;
+-                     NodeLink nodelink1 = node.links.get(0);
+-                     NodeLink nodelink2 = node.links.get(1);
+-                     Node node2 = nodelink1.getNeighbor(node);
+-                     Node node4 = nodelink2.getNeighbor(node);
+-                     if (node2 != node4) {
+-                        nodelink1.loss += nodelink2.loss;
+-                        if (nodelink1.nodeA == node) {
+-                           nodelink1.nodeA = node4;
+-                           nodelink1.dirFromA = nodelink2.getDirFrom(node4);
+-                           if (nodelink2.nodeA == node) {
+-                              assert nodelink2.nodeB == node4;
+-
+-                              Collections.reverse(nodelink2.skippedNodes);
+-                           } else {
+-                              assert nodelink2.nodeB == node && nodelink2.nodeA == node4;
+-                           }
+-
+-                           nodelink2.skippedNodes.add(node);
+-                           nodelink2.skippedNodes.addAll(nodelink1.skippedNodes);
+-                           nodelink1.skippedNodes = nodelink2.skippedNodes;
+-                        } else {
+-                           nodelink1.nodeB = node4;
+-                           nodelink1.dirFromB = nodelink2.getDirFrom(node4);
+-                           if (nodelink2.nodeB == node) {
+-                              assert nodelink2.nodeA == node4;
+-
+-                              Collections.reverse(nodelink2.skippedNodes);
+-                           } else {
+-                              assert nodelink2.nodeA == node && nodelink2.nodeB == node4;
+-                           }
+-
+-                           nodelink1.skippedNodes.add(node);
+-                           nodelink1.skippedNodes.addAll(nodelink2.skippedNodes);
+-                        }
+-
+-                        assert nodelink1.nodeA != nodelink1.nodeB;
+-
+-                        assert nodelink1.nodeA == node2 || nodelink1.nodeB == node2;
+-
+-                        assert nodelink1.nodeA == node4 || nodelink1.nodeB == node4;
+-
+-                        boolean flag1 = false;
+-                        ListIterator<NodeLink> listiterator = node4.links.listIterator();
+-
+-                        while(listiterator.hasNext()) {
+-                           if (listiterator.next() == nodelink2) {
+-                              flag1 = true;
+-                              listiterator.set(nodelink1);
+-                              break;
+-                           }
+-                        }
+-
+-                        assert flag1;
+-                     } else {
+-                        node2.links.remove(nodelink1);
+-                        node4.links.remove(nodelink2);
+-                     }
++      int removed;
++      do {
++         removed = 0;
++         Iterator<Node> it = data.optimizedNodes.values().iterator();
++         while (it.hasNext()) {
++            Node node = it.next();
++            if (node.nodeType != NodeType.Conductor) continue;
++            if (node.links.size() < 2) {
++               it.remove();
++               ++removed;
++               for (NodeLink link : node.links) {
++                  boolean found = false;
++                  Iterator<NodeLink> it2 = link.getNeighbor((Node)node).links.iterator();
++                  while (it2.hasNext()) {
++                     if (it2.next() != link) continue;
++                     found = true;
++                     it2.remove();
++                     break;
+                   }
+-               } else {
+-                  iterator.remove();
+-                  ++i;
+-                  Iterator linkA = node.links.iterator();
+-
+-                  while(true) {
+-                     if (!linkA.hasNext()) {
+-                        continue label314;
+-                     }
+-
+-                     NodeLink nodelink = (NodeLink)linkA.next();
+-                     boolean flag = false;
+-                     Iterator<NodeLink> iterator2 = nodelink.getNeighbor(node).links.iterator();
+-
+-                     while(iterator2.hasNext()) {
+-                        if (iterator2.next() == nodelink) {
+-                           flag = true;
+-                           iterator2.remove();
+-                           break;
+-                        }
+-                     }
+-
+-                     if (!$assertionsDisabled && !flag) {
+-                        break;
+-                     }
+-                  }
+-
+-                  throw new AssertionError();
++                  assert (found);
+                }
++               continue;
+             }
++            if (node.links.size() != 2) continue;
++            it.remove();
++            ++removed;
++            NodeLink linkA = node.links.get(0);
++            NodeLink linkB = node.links.get(1);
++            Node neighborA = linkA.getNeighbor(node);
++            Node neighborB = linkB.getNeighbor(node);
++            if (neighborA == neighborB) {
++               neighborA.links.remove(linkA);
++               neighborB.links.remove(linkB);
++               continue;
++            }
++            linkA.loss += linkB.loss;
++            if (linkA.nodeA == node) {
++               linkA.nodeA = neighborB;
++               linkA.dirFromA = linkB.getDirFrom(neighborB);
++               if (linkB.nodeA == node) {
++                  assert (linkB.nodeB == neighborB);
++                  Collections.reverse(linkB.skippedNodes);
++               } else assert (linkB.nodeB == node && linkB.nodeA == neighborB);
++               linkB.skippedNodes.add(node);
++               linkB.skippedNodes.addAll(linkA.skippedNodes);
++               linkA.skippedNodes = linkB.skippedNodes;
++            } else {
++               linkA.nodeB = neighborB;
++               linkA.dirFromB = linkB.getDirFrom(neighborB);
++               if (linkB.nodeB == node) {
++                  assert (linkB.nodeA == neighborB);
++                  Collections.reverse(linkB.skippedNodes);
++               } else assert (linkB.nodeA == node && linkB.nodeB == neighborB);
++               linkA.skippedNodes.add(node);
++               linkA.skippedNodes.addAll(linkB.skippedNodes);
++            }
++            assert (linkA.nodeA != linkA.nodeB);
++            assert (linkA.nodeA == neighborA || linkA.nodeB == neighborA);
++            assert (linkA.nodeA == neighborB || linkA.nodeB == neighborB);
++            boolean found = false;
++            ListIterator<NodeLink> it2 = neighborB.links.listIterator();
++            while (it2.hasNext()) {
++               if (it2.next() != linkB) continue;
++               found = true;
++               it2.set(linkA);
++               break;
++            }
++            assert (found);
+          }
+-
+-         if (i <= 0) {
+-            break;
+-         }
+-      }
+-
++      } while (removed > 0);
+       if (EnergyNetGlobal.verifyGrid()) {
+-         label249:
+-         for(Node node1 : data.optimizedNodes.values()) {
+-            assert !node1.links.isEmpty();
+-
+-            Iterator iterator4 = node1.links.iterator();
+-
+-            NodeLink nodelink3;
+-            Node node3;
+-            while(true) {
+-               if (!iterator4.hasNext()) {
+-                  continue label249;
++         for (Node node : data.optimizedNodes.values()) {
++            assert (!node.links.isEmpty());
++            for (NodeLink link : node.links) {
++               List<Node> skippedNodes;
++               if (!data.optimizedNodes.containsValue(link.nodeA)) {
++                  IC2.log.debug(LogCategory.EnergyNet, "%d Link %s is broken.", this.uid, link);
+                }
+-
+-               nodelink3 = (NodeLink)iterator4.next();
+-               if (!data.optimizedNodes.containsValue(nodelink3.nodeA)) {
+-                  IC2.log.debug(LogCategory.EnergyNet, "%d Link %s is broken.", this.uid, nodelink3);
+-               }
+-
+-               assert data.optimizedNodes.containsValue(nodelink3.nodeA);
+-
+-               assert data.optimizedNodes.containsValue(nodelink3.nodeB);
+-
+-               assert !this.nodes.containsValue(nodelink3.nodeA);
+-
+-               assert !this.nodes.containsValue(nodelink3.nodeB);
+-
+-               assert this.nodes.containsValue(nodelink3.nodeA.getTop());
+-
+-               assert this.nodes.containsValue(nodelink3.nodeB.getTop());
+-
+-               assert nodelink3.nodeA != nodelink3.nodeB;
+-
+-               assert nodelink3.getNeighbor(node1).links.contains(nodelink3);
+-
+-               assert nodelink3.getNeighbor(node1).links.contains(nodelink3);
+-
+-               assert !nodelink3.skippedNodes.contains(nodelink3.nodeA);
+-
+-               assert !nodelink3.skippedNodes.contains(nodelink3.nodeB);
+-
+-               assert Collections.disjoint(nodelink3.skippedNodes, data.optimizedNodes.values());
+-
+-               assert Collections.disjoint(nodelink3.skippedNodes, this.nodes.values());
+-
+-               assert (new HashSet(nodelink3.skippedNodes)).size() == nodelink3.skippedNodes.size();
+-
+-               node3 = node1.getTop();
+-               List<Node> list;
+-               if (nodelink3.nodeA == node1) {
+-                  list = nodelink3.skippedNodes;
++               assert (data.optimizedNodes.containsValue(link.nodeA));
++               assert (data.optimizedNodes.containsValue(link.nodeB));
++               assert (!this.nodes.containsValue(link.nodeA));
++               assert (!this.nodes.containsValue(link.nodeB));
++               assert (this.nodes.containsValue(link.nodeA.getTop()));
++               assert (this.nodes.containsValue(link.nodeB.getTop()));
++               assert (link.nodeA != link.nodeB);
++               assert (link.nodeA == node || link.nodeB == node);
++               assert (link.getNeighbor((Node)node).links.contains(link));
++               assert (!link.skippedNodes.contains(link.nodeA));
++               assert (!link.skippedNodes.contains(link.nodeB));
++               assert (Collections.disjoint(link.skippedNodes, data.optimizedNodes.values()));
++               assert (Collections.disjoint(link.skippedNodes, this.nodes.values()));
++               assert (new HashSet<Node>(link.skippedNodes).size() == link.skippedNodes.size());
++               Node start = node.getTop();
++               if (link.nodeA == node) {
++                  skippedNodes = link.skippedNodes;
+                } else {
+-                  list = new ArrayList<Node>(nodelink3.skippedNodes);
+-                  Collections.reverse(list);
++                  skippedNodes = new ArrayList<Node>(link.skippedNodes);
++                  Collections.reverse(skippedNodes);
+                }
+-
+-               for(Node node5 : list) {
+-                  assert node3.getConnectionTo(node5.getTop()) != null : node3 + " -> " + node5.getTop() + " not in " + node3.links + " (skipped " + list + ")";
+-
+-                  node3 = node5.getTop();
++               for (Node skipped : skippedNodes) {
++                  assert (start.getConnectionTo(skipped.getTop()) != null) : start + " -> " + skipped.getTop() + " not in " + start.links + " (skipped " + skippedNodes + ")";
++                  start = skipped.getTop();
+                }
+-
+-               if (!$assertionsDisabled && node3.getConnectionTo(nodelink3.getNeighbor(node1).getTop()) == null) {
+-                  break;
+-               }
++               assert (start.getConnectionTo(link.getNeighbor(node).getTop()) != null) : start + " -> " + link.getNeighbor(node).getTop() + " not in " + start.links;
+             }
+-
+-            throw new AssertionError(node3 + " -> " + nodelink3.getNeighbor(node1).getTop() + " not in " + node3.links);
+          }
+-
+-         Iterator iterator3 = this.activeSources.iterator();
+-
+-         while(iterator3.hasNext()) {
+-            int j = ((Integer)iterator3.next()).intValue();
+-
+-            assert data.optimizedNodes.containsKey(Integer.valueOf(j));
++         Iterator<Integer> iterator = this.activeSources.iterator();
++         while (iterator.hasNext()) {
++            int uid = (Integer)iterator.next();
++            assert (data.optimizedNodes.containsKey(uid));
+          }
+-
+-         iterator3 = this.activeSinks.iterator();
+-
+-         while(iterator3.hasNext()) {
+-            int k = ((Integer)iterator3.next()).intValue();
+-
+-            assert data.optimizedNodes.containsKey(Integer.valueOf(k));
++         iterator = this.activeSinks.iterator();
++         while (iterator.hasNext()) {
++            int uid = (Integer)iterator.next();
++            assert (data.optimizedNodes.containsKey(uid));
+          }
+       }
+-
+    }
+ 
+    private static void determineEmittingNodes(StructureCache.Data data) {
+       data.activeNodes = new ArrayList<Node>();
+-      int i = 0;
+-
+-      for(Node node : data.optimizedNodes.values()) {
+-         switch(node.nodeType) {
+-         case Source:
+-            if (EnergyNetGlobal.debugGrid) {
+-               IC2.log.debug(LogCategory.EnergyNet, "%d %d %s.", node.getGrid().uid, i++, node);
++      int index = 0;
++      for (Node node : data.optimizedNodes.values()) {
++         switch (node.nodeType) {
++            case Source: {
++               if (EnergyNetGlobal.debugGrid) {
++                  IC2.log.debug(LogCategory.EnergyNet, "%d %d %s.", node.getGrid().uid, index++, node);
++               }
++               data.activeNodes.add(node);
++               break;
+             }
+-
+-            data.activeNodes.add(node);
+-            break;
+-         case Sink:
+-            if (EnergyNetGlobal.debugGrid) {
+-               IC2.log.debug(LogCategory.EnergyNet, "%d %d %s.", node.getGrid().uid, i++, node);
++            case Sink: {
++               if (EnergyNetGlobal.debugGrid) {
++                  IC2.log.debug(LogCategory.EnergyNet, "%d %d %s.", node.getGrid().uid, index++, node);
++               }
++               data.activeNodes.add(node);
++               break;
+             }
+-
+-            data.activeNodes.add(node);
+-            break;
+-         case Conductor:
+-            if (EnergyNetGlobal.debugGrid) {
+-               IC2.log.debug(LogCategory.EnergyNet, "%d %d %s.", node.getGrid().uid, i++, node);
++            case Conductor: {
++               if (EnergyNetGlobal.debugGrid) {
++                  IC2.log.debug(LogCategory.EnergyNet, "%d %d %s.", node.getGrid().uid, index++, node);
++               }
++               data.activeNodes.add(node);
+             }
+-
+-            data.activeNodes.add(node);
+          }
+       }
+-
+    }
+ 
+    private static void populateNetworkMatrix(StructureCache.Data data) {
+-      for(int i = 0; i < data.activeNodes.size(); ++i) {
+-         Node node = data.activeNodes.get(i);
+-
+-         for(int j = 0; j < data.activeNodes.size(); ++j) {
+-            double d0 = 0.0D;
+-            if (i != j) {
+-               Node node2 = data.activeNodes.get(j);
+-
+-               for(NodeLink nodelink1 : node.links) {
+-                  Node node1 = nodelink1.getNeighbor(node);
+-                  if (node1 != node && node1 == node2) {
+-                     d0 -= 1.0D / nodelink1.loss;
+-
+-                     assert nodelink1.loss >= 0.0D;
++      for (int row = 0; row < data.activeNodes.size(); ++row) {
++         Node node = data.activeNodes.get(row);
++         for (int col = 0; col < data.activeNodes.size(); ++col) {
++            double value;
++            block11: {
++               block8: {
++                  block9: {
++                     block10: {
++                        value = 0.0;
++                        if (row != col) break block8;
++                        for (NodeLink link : node.links) {
++                           if (link.getNeighbor(node) == node) continue;
++                           value += 1.0 / link.loss;
++                           assert (link.loss >= 0.0);
++                        }
++                        if (!EnergyNetLocal.useLinearTransferModel) break block9;
++                        if (node.nodeType != NodeType.Source) break block10;
++                        double openCircuitVoltage = EnergyNet.instance.getPowerFromTier(node.getTier());
++                        double resistance = Util.square(openCircuitVoltage) / (node.getAmount() * 4.0);
++                        assert (resistance > 0.0);
++                        value += 1.0 / resistance;
++                        node.setResistance(resistance);
++                        break block11;
++                     }
++                     if (node.nodeType != NodeType.Sink) break block11;
++                     double resistance = EnergyNet.instance.getPowerFromTier(node.getTier());
++                     assert (resistance > 0.0);
++                     value += 1.0 / resistance;
++                     node.setResistance(resistance);
++                     break block11;
+                   }
++                  if (node.nodeType != NodeType.Sink) break block11;
++                  value += 1.0;
++                  break block11;
+                }
+-            } else {
+-               for(NodeLink nodelink : node.links) {
+-                  if (nodelink.getNeighbor(node) != node) {
+-                     d0 += 1.0D / nodelink.loss;
+-
+-                     assert nodelink.loss >= 0.0D;
+-                  }
++               Node possibleNeighbor = data.activeNodes.get(col);
++               for (NodeLink link : node.links) {
++                  Node neighbor = link.getNeighbor(node);
++                  if (neighbor == node || neighbor != possibleNeighbor) continue;
++                  value -= 1.0 / link.loss;
++                  assert (link.loss >= 0.0);
+                }
+-
+-               if (EnergyNetLocal.useLinearTransferModel) {
+-                  if (node.nodeType == NodeType.Source) {
+-                     double d2 = EnergyNet.instance.getPowerFromTier(node.getTier());
+-                     double d1 = Util.square(d2) / (node.getAmount() * 4.0D);
+-
+-                     assert d1 > 0.0D;
+-
+-                     d0 += 1.0D / d1;
+-                     node.setResistance(d1);
+-                  } else if (node.nodeType == NodeType.Sink) {
+-                     double d3 = EnergyNet.instance.getPowerFromTier(node.getTier());
+-
+-                     assert d3 > 0.0D;
+-
+-                     d0 += 1.0D / d3;
+-                     node.setResistance(d3);
+-                  }
+-               } else if (node.nodeType == NodeType.Sink) {
+-                  ++d0;
+-               }
+             }
+-
+-            data.networkMatrix.set(i, j, d0);
++            data.networkMatrix.set(row, col, value);
+          }
+       }
+-
+    }
+ 
+    private void populateSourceMatrix(StructureCache.Data data) {
+-      for(int i = 0; i < data.activeNodes.size(); ++i) {
+-         Node node = data.activeNodes.get(i);
+-         double d0 = 0.0D;
++      for (int row = 0; row < data.activeNodes.size(); ++row) {
++         Node node = data.activeNodes.get(row);
++         double input = 0.0;
+          if (node.nodeType == NodeType.Source) {
+             if (EnergyNetLocal.useLinearTransferModel) {
+-               double d1 = EnergyNet.instance.getPowerFromTier(node.getTier());
+-               d0 = d1 / node.getResistance();
++               double openCircuitVoltage = EnergyNet.instance.getPowerFromTier(node.getTier());
++               input = openCircuitVoltage / node.getResistance();
+             } else {
+-               d0 = node.getAmount();
++               input = node.getAmount();
+             }
+-
+-            assert d0 > 0.0D;
++            assert (input > 0.0);
+          }
+-
+-         data.sourceMatrix.set(i, 0, d0);
++         data.sourceMatrix.set(row, 0, input);
+       }
+-
+    }
+ 
+    void dumpNodeInfo(PrintStream ps, boolean waitForFinish, Node node) {
+       if (waitForFinish) {
+          this.finishCalculation();
+       }
+-
+       ps.println("Node " + node + " info:");
+-      ps.println(" type: " + node.nodeType);
+-      switch(node.nodeType) {
+-      case Source:
+-         IEnergySource ienergysource = (IEnergySource)node.tile.mainTile;
+-         ps.println(" offered: " + ienergysource.getOfferedEnergy());
+-         ps.println(" tier: " + ienergysource.getSourceTier());
+-         break;
+-      case Sink:
+-         IEnergySink ienergysink = (IEnergySink)node.tile.mainTile;
+-         ps.println(" demanded: " + ienergysink.getDemandedEnergy());
+-         ps.println(" tier: " + ienergysink.getSinkTier());
+-      case Conductor:
++      ps.println(" type: " + (Object)((Object)node.nodeType));
++      switch (node.nodeType) {
++         case Conductor: {
++            break;
++         }
++         case Sink: {
++            IEnergySink sink = (IEnergySink)node.tile.mainTile;
++            ps.println(" demanded: " + sink.getDemandedEnergy());
++            ps.println(" tier: " + sink.getSinkTier());
++            break;
++         }
++         case Source: {
++            IEnergySource source = (IEnergySource)node.tile.mainTile;
++            ps.println(" offered: " + source.getOfferedEnergy());
++            ps.println(" tier: " + source.getSourceTier());
++            break;
++         }
+       }
+-
+       ps.println(node.links.size() + " neighbor links:");
+-
+-      for(NodeLink nodelink : node.links) {
+-         ps.println(" " + nodelink.getNeighbor(node) + " " + nodelink.loss + " " + nodelink.skippedNodes);
++      for (NodeLink link : node.links) {
++         ps.println(" " + link.getNeighbor(node) + " " + link.loss + " " + link.skippedNodes);
+       }
+-
+-      StructureCache.Data structurecache$data = this.lastData;
+-      if (structurecache$data != null && structurecache$data.isInitialized && structurecache$data.optimizedNodes != null) {
+-         if (!structurecache$data.optimizedNodes.containsKey(Integer.valueOf(node.uid))) {
+-            ps.println("Optimized away");
+-         } else {
+-            Node node = structurecache$data.optimizedNodes.get(Integer.valueOf(node.uid));
+-            ps.println(node.links.size() + " optimized neighbor links:");
+-
+-            for(NodeLink nodelink1 : node.links) {
+-               ps.println(" " + nodelink1.getNeighbor(node) + " " + nodelink1.loss + " " + nodelink1.skippedNodes);
+-            }
+-         }
+-      } else {
++      StructureCache.Data data = this.lastData;
++      if (data == null || !data.isInitialized || data.optimizedNodes == null) {
+          ps.println("No optimized data");
++      } else if (!data.optimizedNodes.containsKey(node.uid)) {
++         ps.println("Optimized away");
++      } else {
++         Node optimizedNode = data.optimizedNodes.get(node.uid);
++         ps.println(optimizedNode.links.size() + " optimized neighbor links:");
++         for (NodeLink link : optimizedNode.links) {
++            ps.println(" " + link.getNeighbor(optimizedNode) + " " + link.loss + " " + link.skippedNodes);
++         }
+       }
+-
+    }
+ 
+    void dumpMatrix(PrintStream ps, boolean waitForFinish, boolean dumpNodesNetSrcMatrices, boolean dumpResultMatrix) {
++      StructureCache.Data data;
+       if (waitForFinish) {
+          this.finishCalculation();
+       }
+-
+       if (dumpNodesNetSrcMatrices) {
+          ps.println("Dumping matrices for " + this + ".");
+       }
+-
+-      StructureCache.Data structurecache$data = this.lastData;
+-      if (structurecache$data == null) {
++      if ((data = this.lastData) == null) {
+          ps.println("Matrices unavailable");
+       } else if (dumpNodesNetSrcMatrices || dumpResultMatrix) {
+-         if (!structurecache$data.isInitialized) {
++         if (!data.isInitialized) {
+             ps.println("Matrices potentially outdated");
+          }
+-
+          if (dumpNodesNetSrcMatrices) {
+             ps.println("Emitting node indizes:");
+-
+-            for(int i = 0; i < structurecache$data.activeNodes.size(); ++i) {
+-               Node node = structurecache$data.activeNodes.get(i);
++            for (int i = 0; i < data.activeNodes.size(); ++i) {
++               Node node = data.activeNodes.get(i);
+                ps.println(i + " " + node + " (amount=" + node.getAmount() + ", tier=" + node.getTier() + ")");
+             }
+-
+             ps.println("Network matrix:");
+-            printMatrix(structurecache$data.networkMatrix, ps);
++            Grid.printMatrix(data.networkMatrix, ps);
+             ps.println("Source matrix:");
+-            printMatrix(structurecache$data.sourceMatrix, ps);
++            Grid.printMatrix(data.sourceMatrix, ps);
+          }
+-
+          if (dumpResultMatrix) {
+             ps.println("Result matrix:");
+-            printMatrix(structurecache$data.resultMatrix, ps);
++            Grid.printMatrix(data.resultMatrix, ps);
+          }
+       }
+-
+    }
+ 
+    private static void printMatrix(DenseMatrix64F matrix, PrintStream ps) {
+       if (matrix == null) {
+          ps.println("null");
+-      } else {
+-         boolean flag = true;
+-
+-         for(int i = 0; i < matrix.numRows; ++i) {
+-            for(int j = 0; j < matrix.numCols; ++j) {
+-               if (matrix.get(i, j) != 0.0D) {
+-                  flag = false;
+-                  break;
+-               }
+-            }
++         return;
++      }
++      boolean isZero = true;
++      block0: for (int i = 0; i < matrix.numRows; ++i) {
++         for (int j = 0; j < matrix.numCols; ++j) {
++            if (matrix.get(i, j) == 0.0) continue;
++            isZero = false;
++            continue block0;
+          }
+-
+-         if (flag) {
+-            ps.println(matrix.numRows + "x" + matrix.numCols + ", all zero");
+-         } else {
+-            MatrixIO.print(ps, matrix, "%.6f");
+-         }
+-
+       }
++      if (isZero) {
++         ps.println(matrix.numRows + "x" + matrix.numCols + ", all zero");
++      } else {
++         MatrixIO.print(ps, matrix, "%.6f");
++      }
+    }
+ 
+    void dumpStats(PrintStream ps, boolean waitForFinish) {
+       if (waitForFinish) {
+          this.finishCalculation();
+       }
+-
+       ps.println("Grid " + this.uid + " info:");
+       ps.println(this.nodes.size() + " nodes");
+-      StructureCache.Data structurecache$data = this.lastData;
+-      if (structurecache$data != null && structurecache$data.isInitialized) {
+-         if (structurecache$data.activeNodes != null) {
+-            int i = 0;
+-            int j = 0;
+-
+-            for(Node node : structurecache$data.activeNodes) {
++      StructureCache.Data data = this.lastData;
++      if (data != null && data.isInitialized) {
++         if (data.activeNodes != null) {
++            int srcCount = 0;
++            int dstCount = 0;
++            for (Node node : data.activeNodes) {
+                if (node.nodeType == NodeType.Source) {
+-                  ++i;
+-               } else if (node.nodeType == NodeType.Sink) {
+-                  ++j;
++                  ++srcCount;
++                  continue;
+                }
++               if (node.nodeType != NodeType.Sink) continue;
++               ++dstCount;
+             }
+-
+-            ps.println("Active: " + i + " sources -> " + j + " sinks");
++            ps.println("Active: " + srcCount + " sources -> " + dstCount + " sinks");
+          }
+-
+-         if (structurecache$data.optimizedNodes != null) {
+-            ps.println(structurecache$data.optimizedNodes.size() + " nodes after optimization");
++         if (data.optimizedNodes != null) {
++            ps.println(data.optimizedNodes.size() + " nodes after optimization");
+          }
+-
+-         if (structurecache$data.activeNodes != null) {
+-            ps.println(structurecache$data.activeNodes.size() + " emitting nodes");
++         if (data.activeNodes != null) {
++            ps.println(data.activeNodes.size() + " emitting nodes");
+          }
+       }
+-
+-      ps.printf("%d entries in cache, hitrate %.2f%%", this.cache.size(), 100.0D * (double)this.cache.hits / (double)(this.cache.hits + this.cache.misses));
++      ps.printf("%d entries in cache, hitrate %.2f%%", this.cache.size(), 100.0 * (double)this.cache.hits / (double)(this.cache.hits + this.cache.misses));
+       ps.println();
+    }
+ 
++   /*
++    * WARNING - Removed try catching itself - possible behaviour change.
++    */
+    void dumpGraph(boolean waitForFinish) {
+       if (waitForFinish) {
+          this.finishCalculation();
+       }
+-
+-      StructureCache.Data structurecache$data = this.lastData;
+-
+-      for(int i = 0; i < 2 && (i != 1 || structurecache$data != null && structurecache$data.isInitialized && structurecache$data.optimizedNodes != null); ++i) {
+-         FileWriter filewriter = null;
+-
++      StructureCache.Data data = this.lastData;
++      for (int i = 0; i < 2 && (i != 1 || data != null && data.isInitialized && data.optimizedNodes != null); ++i) {
++         OutputStreamWriter out = null;
+          try {
+-            filewriter = new FileWriter("graph_" + this.uid + "_" + (i == 0 ? "raw" : "optimized") + ".txt");
+-            filewriter.write("graph nodes {\n  overlap=false;\n");
+-            Collection<Node> collection = (i == 0 ? this.nodes : structurecache$data.optimizedNodes).values();
+-            Set<Node> set = new HashSet<Node>();
+-
+-            for(Node node : collection) {
+-               filewriter.write("  \"" + node + "\";\n");
+-
+-               for(NodeLink nodelink : node.links) {
+-                  Node node1 = nodelink.getNeighbor(node);
+-                  if (!set.contains(node1)) {
+-                     filewriter.write("  \"" + node + "\" -- \"" + node1 + "\" [label=\"" + nodelink.loss + "\"];\n");
+-                  }
++            out = new FileWriter("graph_" + this.uid + "_" + (i == 0 ? "raw" : "optimized") + ".txt");
++            out.write("graph nodes {\n  overlap=false;\n");
++            Collection<Node> nodesToDump = (i == 0 ? this.nodes : data.optimizedNodes).values();
++            HashSet<Node> dumpedConnections = new HashSet<Node>();
++            for (Node node : nodesToDump) {
++               out.write("  \"" + node + "\";\n");
++               for (NodeLink link : node.links) {
++                  Node neighbor = link.getNeighbor(node);
++                  if (dumpedConnections.contains(neighbor)) continue;
++                  out.write("  \"" + node + "\" -- \"" + neighbor + "\" [label=\"" + link.loss + "\"];\n");
+                }
+-
+-               set.add(node);
++               dumpedConnections.add(node);
+             }
+-
+-            filewriter.write("}\n");
+-         } catch (IOException ioexception) {
+-            IC2.log.debug(LogCategory.EnergyNet, ioexception, "Graph saving failed.");
+-         } finally {
++            out.write("}\n");
++            continue;
++         }
++         catch (IOException e) {
++            IC2.log.debug(LogCategory.EnergyNet, e, "Graph saving failed.");
++            continue;
++         }
++         finally {
+             try {
+-               if (filewriter != null) {
+-                  filewriter.close();
++               if (out != null) {
++                  out.close();
+                }
+-            } catch (IOException var19) {
+-               ;
+             }
+-
++            catch (IOException iOException) {}
+          }
+       }
+-
+    }
+ 
+    GridInfo getInfo() {
+-      int i = 0;
+-      int j = Integer.MAX_VALUE;
+-      int k = Integer.MAX_VALUE;
+-      int l = Integer.MAX_VALUE;
+-      int i1 = Integer.MIN_VALUE;
+-      int j1 = Integer.MIN_VALUE;
+-      int k1 = Integer.MIN_VALUE;
+-
+-      for(Node node : this.nodes.values()) {
++      int complexNodes = 0;
++      int minX = Integer.MAX_VALUE;
++      int minY = Integer.MAX_VALUE;
++      int minZ = Integer.MAX_VALUE;
++      int maxX = Integer.MIN_VALUE;
++      int maxY = Integer.MIN_VALUE;
++      int maxZ = Integer.MIN_VALUE;
++      for (Node node : this.nodes.values()) {
+          if (node.links.size() > 2) {
+-            ++i;
++            ++complexNodes;
+          }
+-
+-         for(IEnergyTile ienergytile : node.tile.subTiles) {
+-            BlockPos blockpos = EnergyNet.instance.getPos(ienergytile);
+-            if (blockpos.getX() < j) {
+-               j = blockpos.getX();
++         for (IEnergyTile tile : node.tile.subTiles) {
++            BlockPos pos = EnergyNet.instance.getPos(tile);
++            if (pos.getX() < minX) {
++               minX = pos.getX();
+             }
+-
+-            if (blockpos.getY() < k) {
+-               k = blockpos.getY();
++            if (pos.getY() < minY) {
++               minY = pos.getY();
+             }
+-
+-            if (blockpos.getZ() < l) {
+-               l = blockpos.getZ();
++            if (pos.getZ() < minZ) {
++               minZ = pos.getZ();
+             }
+-
+-            if (blockpos.getX() > i1) {
+-               i1 = blockpos.getX();
++            if (pos.getX() > maxX) {
++               maxX = pos.getX();
+             }
+-
+-            if (blockpos.getY() > j1) {
+-               j1 = blockpos.getY();
++            if (pos.getY() > maxY) {
++               maxY = pos.getY();
+             }
+-
+-            if (blockpos.getZ() > k1) {
+-               k1 = blockpos.getZ();
+-            }
++            if (pos.getZ() <= maxZ) continue;
++            maxZ = pos.getZ();
+          }
+       }
+-
+-      return new GridInfo(this.uid, this.nodes.size(), i, j, k, l, i1, j1, k1);
++      return new GridInfo(this.uid, this.nodes.size(), complexNodes, minX, minY, minZ, maxX, maxY, maxZ);
+    }
+ }
++
