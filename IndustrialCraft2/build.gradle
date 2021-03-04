@@ -46,9 +46,9 @@ repositories {
 }
 
 dependencies {
-    deobfProvided group: 'mezz.jei', name: 'jei_1.12.2', version: '4.15.0.293'
-    deobfProvided group: "com.mod-buildcraft", name: "buildcraft-lib", version: "7.99.24.7"
-    deobfProvided group: "com.mod-buildcraft", name: "buildcraft-main", version: "7.99.24.7"
+    deobfProvided group: 'mezz.jei', name: 'jei_1.12.2', version: VERSION_JEI
+    deobfProvided group: "com.mod-buildcraft", name: "buildcraft-lib", version: VERSION_BUILDCRAFT
+    deobfProvided group: "com.mod-buildcraft", name: "buildcraft-main", version: VERSION_BUILDCRAFT
 
     def ejml = "com.googlecode.efficient-java-matrix-library:core:0.26"
     implementation ejml

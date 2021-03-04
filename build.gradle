@@ -11,7 +11,7 @@ buildscript {
 apply plugin: 'net.minecraftforge.gradle.forge'
 apply from: 'gradle/scripts/setup.gradle'
 
-version = "1.0"
+version = VERSION_MAJOR+'.'+VERSION_MINOR+(VERSION_REVISION != '0' ? '.'+VERSION_REVISION : '')
 group = "mods.su5ed"
 archivesBaseName = "ic2patcher"
 
@@ -64,12 +64,13 @@ processResources {
 
 task releaseJar (type: Jar) {
     classifier ''
+    dependsOn 'genBinIC2Patches'
 
     from (project.tasks.getByName('genBinIC2Patches').outputs.files)
     from sourceSets.main.output
 
     manifest {
-        attributes "FMLCorePlugin": "mods.su5ed.patcher.asm.PatcherFMLPlugin"
+        attributes "FMLCorePlugin": "mods.su5ed.patcher.asm.PatcherFMLPlugin", "FMLCorePluginContainsFMLMod": true
     }
 }
 
@@ -82,9 +83,10 @@ build {
 }
 
 jar {
+    dependsOn 'genBinIC2DevPatches'
     from (project.tasks.getByName('genBinIC2DevPatches').outputs.files)
     manifest {
-        attributes "FMLCorePlugin": "mods.su5ed.patcher.asm.PatcherFMLPlugin", "FMLCorePluginContainsFMLMod": "true"
+        attributes "FMLCorePlugin": "mods.su5ed.patcher.asm.PatcherFMLPlugin", "FMLCorePluginContainsFMLMod": true
     }
 }
 
