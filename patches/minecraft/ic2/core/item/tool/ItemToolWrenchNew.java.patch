@@ -1,0 +1,18 @@
+--- ../src-base/minecraft/ic2/core/item/tool/ItemToolWrenchNew.java
++++ ../src-work/minecraft/ic2/core/item/tool/ItemToolWrenchNew.java
+@@ -7,6 +7,7 @@
+ import ic2.core.IHitSoundOverride;
+ import ic2.core.audio.PositionSpec;
+ import ic2.core.item.ItemToolIC2;
++import ic2.core.profile.NotClassic;
+ import ic2.core.ref.ItemName;
+ import ic2.core.util.RotationUtil;
+ import ic2.core.util.StackUtil;
+@@ -32,6 +33,7 @@
+ import net.minecraftforge.fml.relauncher.Side;
+ import net.minecraftforge.fml.relauncher.SideOnly;
+ 
++@NotClassic
+ public class ItemToolWrenchNew extends ItemToolIC2 implements IEnhancedOverlayProvider, IHitSoundOverride {
+    public ItemToolWrenchNew() {
+       super(ItemName.wrench_new, HarvestLevel.Iron, EnumSet.of(ToolClass.Wrench));

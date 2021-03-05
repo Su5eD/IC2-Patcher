@@ -1,0 +1,11 @@
+--- ../src-base/minecraft/ic2/core/block/storage/tank/TileEntityBronzeTank.java
++++ ../src-work/minecraft/ic2/core/block/storage/tank/TileEntityBronzeTank.java
+@@ -1,5 +1,8 @@
+ package ic2.core.block.storage.tank;
+ 
++import ic2.core.profile.NotClassic;
++
++@NotClassic
+ public class TileEntityBronzeTank extends TileEntityTank {
+    public TileEntityBronzeTank() {
+       super(32);

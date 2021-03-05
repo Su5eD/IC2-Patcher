@@ -1,0 +1,11 @@
+--- ../src-base/minecraft/ic2/core/block/storage/box/TileEntityIronStorageBox.java
++++ ../src-work/minecraft/ic2/core/block/storage/box/TileEntityIronStorageBox.java
+@@ -1,5 +1,8 @@
+ package ic2.core.block.storage.box;
+ 
++import ic2.core.profile.NotClassic;
++
++@NotClassic
+ public class TileEntityIronStorageBox extends TileEntityStorageBox {
+    public TileEntityIronStorageBox() {
+       super(45);

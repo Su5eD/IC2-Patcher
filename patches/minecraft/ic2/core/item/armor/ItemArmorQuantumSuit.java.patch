@@ -10,7 +10,7 @@
 +            boolean disabled = !nbttagcompound.getBoolean("jetpackDisabled");
 +            if (IC2.platform.isSimulating()) {
 +               nbttagcompound.setBoolean("jetpackDisabled", disabled);
-+               IC2.platform.messagePlayer(player, "Jetpack "+(disabled ? "off" : "on"));
++               IC2.platform.messagePlayer(player, "Jetpack "+(disabled ? "disabled" : "enabled"));
 +               if (disabled) nbttagcompound.setBoolean("hoverMode", false);
 +            } else if (disabled) {
 +               IC2.audioManager.removeSources(player);

@@ -1,0 +1,18 @@
+--- ../src-base/minecraft/ic2/core/item/logistics/ItemPumpCover.java
++++ ../src-work/minecraft/ic2/core/item/logistics/ItemPumpCover.java
+@@ -8,6 +8,7 @@
+ import ic2.core.block.transport.cover.IFluidConsumingCover;
+ import ic2.core.init.Localization;
+ import ic2.core.item.ItemMulti;
++import ic2.core.profile.NotClassic;
+ import ic2.core.ref.ItemName;
+ import ic2.core.util.LiquidUtil;
+ import ic2.core.util.RotationUtil;
+@@ -28,6 +29,7 @@
+ import net.minecraftforge.fml.relauncher.Side;
+ import net.minecraftforge.fml.relauncher.SideOnly;
+ 
++@NotClassic
+ public class ItemPumpCover extends ItemMulti<PumpCoverType> implements IFluidConsumingCover, IEnhancedOverlayProvider {
+    public ItemPumpCover() {
+       super(ItemName.cover, PumpCoverType.class);

@@ -131,6 +131,7 @@ task genBinIC2DevPatches {
 
     File dirtyJar = subproject.buildDir.toPath().resolve("libs/IndustrialCraft2-1.0-dev.jar").toFile()
     outputs.files(binPatches)
+    outputs.upToDateWhen { false }
 
     doLast {
         genBinPatches(jarDevIC2, dirtyJar, patchPath, patchDir, binPatches)
