@@ -1,0 +1,11 @@
+--- ../src-base/minecraft/ic2/core/block/machine/tileentity/TileEntityBatchCrafter.java
++++ ../src-work/minecraft/ic2/core/block/machine/tileentity/TileEntityBatchCrafter.java
+@@ -298,7 +298,7 @@
+    }
+ 
+    protected void doCrafting() {
+-      for(int j = 0; j < this.operationsPerTick; ++j) {
++      for(int j = 0; j < this.operationsPerTick && canCraft(); ++j) {
+          List<ItemStack> list = Collections.<ItemStack>singletonList(this.recipeOutput);
+ 
+          for(ItemStack itemstack : this.upgradeSlot) {
