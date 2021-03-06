@@ -129,8 +129,8 @@ public class BinPatchManager {
                 }
             }
         }
-        if (!ignoredError && DEBUG) {
-            LOG.debug("Successfully applied runtime patches for {} (new size {})", mappedName, inputData.length);
+        if (!ignoredError) {
+            LOG.info("Successfully applied runtime patches for {} (new size {})", mappedName, inputData.length);
         }
         if (dumpPatched) {
             try {

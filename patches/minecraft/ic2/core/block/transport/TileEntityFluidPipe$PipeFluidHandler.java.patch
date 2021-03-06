@@ -1,0 +1,12 @@
+--- ../src-base/minecraft/ic2/core/block/transport/TileEntityFluidPipe.java
++++ ../src-work/minecraft/ic2/core/block/transport/TileEntityFluidPipe.java
+@@ -467,7 +467,8 @@
+       public FluidStack drain(int maxDrain, boolean doDrain) {
+          if (TileEntityFluidPipe.this.coversComponent.hasCover(this.side)) {
+             ICoverItem icoveritem = TileEntityFluidPipe.this.coversComponent.getCoverItem(this.side);
+-            if (!icoveritem.allowsOutput(new FluidStack((FluidStack)Objects.requireNonNull(TileEntityFluidPipe.this.tank.getFluid()), maxDrain))) {
++            FluidStack fluid = TileEntityFluidPipe.this.tank.getFluid();
++            if (fluid != null && !icoveritem.allowsOutput(new FluidStack(fluid, maxDrain))) {
+                return null;
+             }
+          }
