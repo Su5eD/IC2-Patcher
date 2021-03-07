@@ -1,0 +1,40 @@
+--- ../src-base/minecraft/ic2/core/item/armor/ItemArmorNightvisionGoggles.java
++++ ../src-work/minecraft/ic2/core/item/armor/ItemArmorNightvisionGoggles.java
+@@ -4,8 +4,11 @@
+ import ic2.api.item.IElectricItem;
+ import ic2.api.item.IItemHudInfo;
+ import ic2.core.IC2;
++import ic2.core.item.BaseElectricItem;
+ import ic2.core.item.ElectricItemManager;
++import ic2.core.item.IPseudoDamageItem;
+ import ic2.core.ref.ItemName;
++import ic2.core.util.LogCategory;
+ import ic2.core.util.StackUtil;
+ import java.util.LinkedList;
+ import java.util.List;
+@@ -20,7 +23,7 @@
+ import net.minecraft.util.math.BlockPos;
+ import net.minecraft.world.World;
+ 
+-public class ItemArmorNightvisionGoggles extends ItemArmorUtility implements IElectricItem, IItemHudInfo {
++public class ItemArmorNightvisionGoggles extends ItemArmorUtility implements IElectricItem, IItemHudInfo, IPseudoDamageItem {
+    public ItemArmorNightvisionGoggles() {
+       super(ItemName.nightvision_goggles, "nightvision", EntityEquipmentSlot.HEAD);
+       this.setMaxDamage(27);
+@@ -100,4 +103,16 @@
+    public boolean getIsRepairable(ItemStack par1ItemStack, ItemStack par2ItemStack) {
+       return false;
+    }
++
++   public void setDamage(ItemStack stack, int damage) {
++      int i = this.getDamage(stack);
++      if (damage != i && BaseElectricItem.logIncorrectItemDamaging) {
++         IC2.log.warn(LogCategory.Armor, new Throwable(), "Detected invalid armor damage application (%d):", damage - i);
++      }
++   }
++
++   @Override
++   public void setStackDamage(ItemStack var1, int var2) {
++      super.setDamage(var1, var2);
++   }
+ }
