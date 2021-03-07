@@ -1,0 +1,24 @@
+--- ../src-base/minecraft/ic2/core/energy/leg/EnergyCalculatorLeg.java
++++ ../src-work/minecraft/ic2/core/energy/leg/EnergyCalculatorLeg.java
+@@ -523,9 +523,7 @@
+ 
+                   path.energySupplied += d1 - d2;
+                   path.maxPacketConducted = Math.max(d3, path.maxPacketConducted);
+-                  if (d3 > path.minEffectEnergy || d1 > EnergyNet.instance.getPowerFromTier(ienergysink.getSinkTier())) {
+-                     data.eventPaths.add(path);
+-                  }
++                  data.eventPaths.add(path);
+ 
+                   if (d1 >= mutabledouble.doubleValue() || d2 > 0.0D) {
+                      data.activeSinks.remove(path.target);
+@@ -603,7 +601,9 @@
+ 
+             Tile tile4 = energypath.target.getTile();
+             IEnergySink ienergysink = (IEnergySink)tile4.getMainTile();
+-            if (!flag && d0 > EnergyNet.instance.getPowerFromTier(ienergysink.getSinkTier())) {
++            Tile sourceTile = energypath.source.getTile();
++            IEnergySource source = (IEnergySource) sourceTile.getMainTile();
++            if (!flag && EnergyNet.instance.getPowerFromTier(source.getSourceTier()) > EnergyNet.instance.getPowerFromTier(ienergysink.getSinkTier())) {
+                MutableDouble mutabledouble1 = map.get(tile4);
+                if (mutabledouble1 == null) {
+                   map.put(tile4, new MutableDouble(d0));
