@@ -17,10 +17,6 @@ archivesBaseName = "ic2patcher"
 
 sourceCompatibility = targetCompatibility = '1.8'
 
-setupDecompWorkspace {
-    finalizedBy extractIC2Resources
-}
-
 compileJava {
     sourceCompatibility = targetCompatibility = '1.8'
 }

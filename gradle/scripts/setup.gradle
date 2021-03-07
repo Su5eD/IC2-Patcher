@@ -234,3 +234,8 @@ static byte[] compress(byte[] data) throws Exception {
     out.close()
     return out.toByteArray()
 }
+
+task setupIC2 {
+    dependsOn 'setupDecompWorkspace'
+    finalizedBy 'extractIC2Resources'
+}
