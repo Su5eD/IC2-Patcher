@@ -1,0 +1,5 @@
+ext {
+    subproject = project(":IndustrialCraft2")
+    jarIC2 = new File(buildDir, "tmp/industrialcraft-obf.jar")
+    jarDevIC2 = new File(buildDir, "tmp/industrialcraft.jar")
+}

@@ -10,6 +10,7 @@ buildscript {
 }
 apply plugin: 'net.minecraftforge.gradle.forge'
 apply from: 'gradle/scripts/setup.gradle'
+apply from: 'gradle/scripts/binpatches.gradle'
 
 version = VERSION_MAJOR+'.'+VERSION_MINOR+(VERSION_REVISION != '0' ? '.'+VERSION_REVISION : '')
 group = "mods.su5ed"
