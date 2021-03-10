@@ -1,4 +1,4 @@
-package mods.su5ed.patcher.asm;
+package mods.su5ed.ic2patcher.asm;
 
 import net.minecraft.launchwrapper.IClassTransformer;
 

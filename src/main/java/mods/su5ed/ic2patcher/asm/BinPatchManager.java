@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package mods.su5ed.patcher.asm;
+package mods.su5ed.ic2patcher.asm;
 
 import LZMA.LzmaInputStream;
 import com.google.common.base.Joiner;
@@ -31,7 +31,6 @@ import com.google.common.io.Files;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 import net.minecraftforge.fml.common.patcher.ClassPatch;
 import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
-import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.repackage.com.nothome.delta.GDiffPatcher;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
@@ -39,7 +38,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
@@ -49,7 +47,7 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipFile;
 
 /**
- * STOLEN from ForgeGradle 2.3
+ * STOLEN from MinecraftForge
  *
  * @author MinecraftForge
  */

@@ -1,17 +1,14 @@
-package mods.su5ed.patcher;
+package mods.su5ed.ic2patcher;
 
 import ic2.api.item.IC2Items;
 import ic2.core.IC2;
 import ic2.core.util.StackUtil;
-import mods.su5ed.patcher.util.RecipeUtil;
+import mods.su5ed.ic2patcher.util.RecipeUtil;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.world.ChunkEvent;
-import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.ModContainer;
 import net.minecraftforge.fml.common.event.FMLConstructionEvent;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
@@ -20,15 +17,6 @@ import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.registries.IForgeRegistryModifiable;
 import org.apache.logging.log4j.Logger;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Path;
-import java.util.Enumeration;
-import java.util.Map;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 
 @Mod(modid = "ic2patcher", name = "IC2 Patcher", dependencies = "required-after:ic2@[2.8.221-ex112,];")
 public final class Patcher {

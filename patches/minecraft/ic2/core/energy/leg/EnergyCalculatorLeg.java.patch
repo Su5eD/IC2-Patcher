@@ -18,7 +18,7 @@
 -            if (!flag && d0 > EnergyNet.instance.getPowerFromTier(ienergysink.getSinkTier())) {
 +            Tile sourceTile = energypath.source.getTile();
 +            IEnergySource source = (IEnergySource) sourceTile.getMainTile();
-+            if (!flag && EnergyNet.instance.getPowerFromTier(source.getSourceTier()) > EnergyNet.instance.getPowerFromTier(ienergysink.getSinkTier())) {
++            if (!flag && source.getSourceTier() > ienergysink.getSinkTier()) {
                 MutableDouble mutabledouble1 = map.get(tile4);
                 if (mutabledouble1 == null) {
                    map.put(tile4, new MutableDouble(d0));

@@ -1,4 +1,4 @@
-package mods.su5ed.patcher.util;
+package mods.su5ed.ic2patcher.util;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.profiler.Profiler;

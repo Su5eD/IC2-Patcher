@@ -1,6 +1,5 @@
-package mods.su5ed.patcher.asm;
+package mods.su5ed.ic2patcher.asm;
 
-import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 
 import java.io.File;

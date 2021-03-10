@@ -1,4 +1,4 @@
-package mods.su5ed.patcher.util;
+package mods.su5ed.ic2patcher.util;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
@@ -6,8 +6,6 @@ import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
-
-import java.util.Collection;
 
 public class RecipeUtil {
 
