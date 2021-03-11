@@ -6,7 +6,7 @@ import java.io.File;
 import java.util.Map;
 
 @IFMLLoadingPlugin.MCVersion("1.12.2")
-@IFMLLoadingPlugin.TransformerExclusions("mods.su5ed.patcher.asm")
+@IFMLLoadingPlugin.TransformerExclusions("mods.su5ed.ic2patcher.asm")
 @IFMLLoadingPlugin.SortingIndex(-1)
 public class PatcherFMLPlugin implements IFMLLoadingPlugin {
     @Override

@@ -67,7 +67,7 @@ task releaseJar (type: Jar) {
     from sourceSets.main.output
 
     manifest {
-        attributes "FMLCorePlugin": "mods.su5ed.patcher.asm.PatcherFMLPlugin", "FMLCorePluginContainsFMLMod": true
+        attributes "FMLCorePlugin": "mods.su5ed.ic2patcher.asm.PatcherFMLPlugin", "FMLCorePluginContainsFMLMod": true
     }
 }
 
@@ -83,7 +83,7 @@ jar {
     dependsOn 'genBinIC2DevPatches'
     from (project.tasks.getByName('genBinIC2DevPatches').outputs.files)
     manifest {
-        attributes "FMLCorePlugin": "mods.su5ed.patcher.asm.PatcherFMLPlugin", "FMLCorePluginContainsFMLMod": true
+        attributes "FMLCorePlugin": "mods.su5ed.ic2patcher.asm.PatcherFMLPlugin", "FMLCorePluginContainsFMLMod": true
     }
 }
 
