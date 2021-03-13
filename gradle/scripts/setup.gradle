@@ -24,14 +24,14 @@ task downloadIC2(type: Download) {
     group 'ic2-patcher'
     src "https://jenkins.ic2.player.to/job/IC2_112/221/artifact/build/libs/industrialcraft-2-${VERSION_IC2}-ex112.jar"
     dest rootProject.ext.jarIC2
-    overwrite false
+    overwrite !rootProject.ext.jarIC2.exists()
 }
 
 task downloadDevIC2(type: Download) {
     group 'ic2-patcher'
     src "https://jenkins.ic2.player.to/job/IC2_112/221/artifact/build/libs/industrialcraft-2-${VERSION_IC2}-ex112-dev.jar"
     dest rootProject.ext.jarDevIC2
-    overwrite false
+    overwrite !rootProject.ext.jarDevIC2.exists()
 }
 
 ApplyFernFlowerTask decompileIC2 = project.tasks.create("decompileIC2", ApplyFernFlowerTask.class)
