@@ -14,6 +14,7 @@ For more information, read IC2's license [here](https://forum.industrial-craft.n
 - Fixed bug [0002717](https://bt.industrial-craft.net/view.php?id=2717): Client crashed when connect a bronze fluid pipe with an ie fluid pipe
 - Fixed bug [0002586](https://bt.industrial-craft.net/view.php?id=2586): Nightvision Goggles can break
 - Night vision goggles now take away their effect immediately after disabling
+- Corrected the specs of the Energy Crystal and Lapotron Crystal in the classic profile
 
 ### Creating patches
 
@@ -30,7 +31,7 @@ This has to be done **manually** every time you make changes.
 
 #### Building & Exporting
 Run `gradlew build`to build the patcher. The resulting jar will be located in the `build/libs` folder. 
-Remember that the jar build by the `jar` task (ran with `runClient`) **will NOT work** outside the dev environment.
+Remember that the jar build by the `jar` task (ran with `runClient` or `runServer`) **will NOT work** outside the dev environment.
 
 <div>
   <img src="https://upload.wikimedia.org/wikipedia/commons/e/eb/PD-icon-black.svg" align="right" width="50">
