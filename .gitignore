@@ -20,5 +20,7 @@ build
 # other
 eclipse
 run
-IndustrialCraft2/run
-IndustrialCraft2/src
+
+# generated projects
+projects/IC2-Base/src
+projects/IC2-Patched/src

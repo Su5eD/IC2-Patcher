@@ -47,7 +47,7 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipFile;
 
 /**
- * STOLEN from MinecraftForge
+ * STOLEN from MinecraftForge's {@link net.minecraftforge.fml.common.patcher.ClassPatchManager ClassPatchManager}
  *
  * @author MinecraftForge
  */
@@ -64,6 +64,7 @@ public class BinPatchManager {
 
     private Map<String,byte[]> patchedClasses = Maps.newHashMap();
     private File tempDir;
+    
     private BinPatchManager() {
         if (dumpPatched) {
             tempDir = Files.createTempDir();
@@ -71,10 +72,7 @@ public class BinPatchManager {
         }
     }
 
-    public byte[] getPatchedResource(String name, String mappedName, LaunchClassLoader loader) throws IOException {
-        byte[] rawClassBytes = loader.getClassBytes(name);
-        return applyPatch(name, mappedName, rawClassBytes);
-    }
+    
     public byte[] applyPatch(String name, String mappedName, byte[] inputData) {
         if (patches == null) {
             return inputData;
@@ -148,7 +146,7 @@ public class BinPatchManager {
         try {
             try {
                 ZipFile zip = new ZipFile(modJar);
-                InputStream binpatchesCompressed = zip.getInputStream(zip.getEntry("binpatches.pack.lzma"));
+                InputStream binpatchesCompressed = zip.getInputStream(zip.getEntry("ic2patches.pack.lzma"));
                 if (binpatchesCompressed==null) {
                     if (!FMLLaunchHandler.isDeobfuscatedEnvironment()) {
                         LOG.fatal("The binary patch set is missing, things are not going to work!");
@@ -186,6 +184,7 @@ public class BinPatchManager {
                     }
                 }
                 catch (IOException e) {
+                    break;
                 }
             } while (true);
         }

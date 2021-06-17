@@ -1,0 +1,19 @@
+--- a/ic2/core/util/Util.java
++++ b/ic2/core/util/Util.java
+@@ -174,15 +174,7 @@
+    }
+ 
+    public static boolean hasAssertions() {
+-      boolean flag = false;
+-      if (!$assertionsDisabled) {
+-         flag = true;
+-         if (false) {
+-            throw new AssertionError();
+-         }
+-      }
+-
+-      return flag;
++      return !Util.class.desiredAssertionStatus();
+    }
+ 
+    public static boolean matchesOD(ItemStack stack, Object match) {

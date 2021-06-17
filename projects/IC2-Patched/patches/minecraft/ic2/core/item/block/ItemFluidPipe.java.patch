@@ -1,0 +1,18 @@
+--- a/ic2/core/item/block/ItemFluidPipe.java
++++ b/ic2/core/item/block/ItemFluidPipe.java
+@@ -7,6 +7,7 @@
+ import ic2.core.block.transport.items.PipeSize;
+ import ic2.core.block.transport.items.PipeType;
+ import ic2.core.item.ItemIC2;
++import ic2.core.profile.NotClassic;
+ import ic2.core.ref.BlockName;
+ import ic2.core.ref.IMultiItem;
+ import ic2.core.ref.ItemName;
+@@ -43,6 +44,7 @@
+ import net.minecraftforge.fml.relauncher.Side;
+ import net.minecraftforge.fml.relauncher.SideOnly;
+ 
++@NotClassic
+ public class ItemFluidPipe extends ItemIC2 implements IMultiItem<PipeType>, IBoxable {
+    private final List<ItemStack> variants = new ArrayList<ItemStack>();
+ 

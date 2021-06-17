@@ -1,0 +1,13 @@
+--- a/ic2/core/item/ItemCoke.java
++++ b/ic2/core/item/ItemCoke.java
+@@ -1,8 +1,10 @@
+ package ic2.core.item;
+ 
++import ic2.core.profile.NotClassic;
+ import ic2.core.ref.ItemName;
+ import net.minecraft.item.ItemStack;
+ 
++@NotClassic
+ public class ItemCoke extends ItemIC2 {
+    public ItemCoke() {
+       super(ItemName.coke);

@@ -1,0 +1,345 @@
+--- a/ic2/core/energy/grid/Grid.java
++++ b/ic2/core/energy/grid/Grid.java
+@@ -72,203 +72,156 @@
+       if (EnergyNetSettings.logGridUpdatesVerbose) {
+          IC2.log.debug(LogCategory.EnergyNet, "%d Add %s to %s neighbors: %s.", this.uid, node, this, neighbors);
+       }
+-
+       this.invalidate();
+-
+-      assert !this.nodes.isEmpty() || neighbors.isEmpty();
+-
+-      assert this.nodes.isEmpty() || !neighbors.isEmpty() || node.isExtraNode();
+-
+-      assert node.links.isEmpty();
+-
++      assert (!this.nodes.isEmpty() || neighbors.isEmpty());
++      assert (this.nodes.isEmpty() || !neighbors.isEmpty() || node.isExtraNode());
++      assert (node.links.isEmpty());
+       this.add(node);
+-
+-      for(Node node : neighbors) {
+-         assert node != node;
+-
+-         assert this.nodes.containsKey(Integer.valueOf(node.uid));
+-
+-         double d0 = (node.getInnerLoss() + node.getInnerLoss()) / 2.0D;
+-         NodeLink nodelink = new NodeLink(node, node, d0);
+-         node.links.add(nodelink);
+-         node.links.add(nodelink);
++      for (Node neighbor : neighbors) {
++         assert (neighbor != node);
++         assert (this.nodes.containsKey(neighbor.uid));
++         double loss = (node.getInnerLoss() + neighbor.getInnerLoss()) / 2.0;
++         NodeLink link = new NodeLink(node, neighbor, loss);
++         node.links.add(link);
++         neighbor.links.add(link);
+       }
+-
+    }
+ 
+    void remove(Node node) {
+       if (EnergyNetSettings.logGridUpdatesVerbose) {
+          IC2.log.debug(LogCategory.EnergyNet, "%d Remove Node %s from %s with %d nodes.", this.uid, node, this, this.nodes.size());
+       }
+-
+       this.invalidate();
+-      Iterator<NodeLink> iterator = node.links.iterator();
+-
+-      while(iterator.hasNext()) {
+-         NodeLink nodelink = iterator.next();
+-         Node node = nodelink.getNeighbor(node);
+-         boolean flag = false;
+-         Iterator<NodeLink> iterator1 = node.links.iterator();
+-
+-         while(iterator1.hasNext()) {
+-            if (iterator1.next() == nodelink) {
+-               iterator1.remove();
+-               flag = true;
+-               break;
+-            }
+-         }
+-
+-         assert flag;
+-
+-         if (node.links.isEmpty() && node.tile.removeExtraNode(node)) {
+-            if (EnergyNetSettings.logGridUpdatesVerbose) {
+-               IC2.log.debug(LogCategory.EnergyNet, "%d Removing isolated extra node %s.", this.uid, node);
+-            }
+-
+-            assert node.getType() != NodeType.Conductor;
+-
+-            iterator.remove();
+-            this.nodes.remove(Integer.valueOf(node.uid));
+-            node.clearGrid();
+-         }
++      Iterator<NodeLink> it = node.links.iterator();
++      while (it.hasNext()) {
++         NodeLink link = it.next();
++         Node neighbor = link.getNeighbor(node);
++         boolean found = false;
++         Iterator<NodeLink> it2 = neighbor.links.iterator();
++         while (it2.hasNext()) {
++            if (it2.next() != link) continue;
++            it2.remove();
++            found = true;
++            break;
++         }
++         assert (found);
++         if (!neighbor.links.isEmpty() || !neighbor.tile.removeExtraNode(neighbor)) continue;
++         if (EnergyNetSettings.logGridUpdatesVerbose) {
++            IC2.log.debug(LogCategory.EnergyNet, "%d Removing isolated extra node %s.", this.uid, neighbor);
++         }
++         assert (neighbor.getType() != NodeType.Conductor);
++         it.remove();
++         this.nodes.remove(neighbor.uid);
++         neighbor.clearGrid();
+       }
+-
+-      this.nodes.remove(Integer.valueOf(node.uid));
++      this.nodes.remove(node.uid);
+       node.clearGrid();
+-      int k = node.links.size();
+-      if (k == 0) {
+-         assert this.nodes.isEmpty();
+-
++      int linkCount = node.links.size();
++      if (linkCount == 0) {
++         assert (this.nodes.isEmpty());
+          this.enet.removeGrid(this);
+-      } else if (k > 1 && node.nodeType == NodeType.Conductor) {
+-         Set<Node>[] set2 = new Set[k];
+-         int[] aint = new int[k];
+-         int l = 0;
+-         Queue<Node> queue = new ArrayDeque<Node>();
+-
+-         label232:
+-         for(int i = 0; i < k; ++i) {
+-            Node node1 = ((NodeLink)node.links.get(i)).getNeighbor(node);
+-            if (node1.getType() != NodeType.Conductor) {
+-               if (node1.links.isEmpty()) {
+-                  set2[i] = Collections.singleton(node1);
+-                  ++l;
+-               } else {
+-                  aint[i] = -1;
+-               }
+-            } else {
+-               for(int j = 0; j < i; ++j) {
+-                  Set<Node> set = set2[j];
+-                  if (set != null && set.contains(node1)) {
+-                     aint[i] = j;
+-                     continue label232;
+-                  }
+-               }
+-
+-               Set<Node> set5 = Collections.<Node>newSetFromMap(new IdentityHashMap());
+-               queue.add(node1);
+-               set5.add(node1);
+-
+-               Node node4;
+-               while((node4 = queue.poll()) != null) {
+-                  for(NodeLink nodelink1 : node4.links) {
+-                     Node node2 = nodelink1.getNeighbor(node4);
+-                     if (set5.add(node2) && node2.getType() == NodeType.Conductor) {
+-                        queue.add(node2);
+-                     }
+-                  }
+-               }
+-
+-               assert !set5.contains(node);
+-
+-               set2[i] = set5;
+-               ++l;
+-            }
++      } else if (linkCount > 1 && node.nodeType == NodeType.Conductor) {
++         int i;
++         Set[] nodeTable = new Set[linkCount];
++         int[] mapping = new int[linkCount];
++         int gridCount = 0;
++         ArrayDeque<Node> nodesToCheck = new ArrayDeque<Node>();
++         block2: for (i = 0; i < linkCount; ++i) {
++            Node cNode;
++            Node neighbor = node.links.get(i).getNeighbor(node);
++            if (neighbor.getType() != NodeType.Conductor) {
++               if (neighbor.links.isEmpty()) {
++                  nodeTable[i] = Collections.singleton(neighbor);
++                  ++gridCount;
++                  continue;
++               }
++               mapping[i] = -1;
++               continue;
++            }
++            for (int j = 0; j < i; ++j) {
++               Set nodes = nodeTable[j];
++               if (nodes == null || !nodes.contains(neighbor)) continue;
++               mapping[i] = j;
++               continue block2;
++            }
++            Set connectedNodes = Collections.newSetFromMap(new IdentityHashMap());
++            nodesToCheck.add(neighbor);
++            connectedNodes.add(neighbor);
++            while ((cNode = (Node)nodesToCheck.poll()) != null) {
++               for (NodeLink link : cNode.links) {
++                  Node nNode = link.getNeighbor(cNode);
++                  if (!connectedNodes.add(nNode) || nNode.getType() != NodeType.Conductor) continue;
++                  nodesToCheck.add(nNode);
++               }
++            }
++            assert (!connectedNodes.contains(node));
++            nodeTable[i] = connectedNodes;
++            ++gridCount;
+          }
+-
+-         assert l > 0;
+-
++         assert (gridCount > 0);
+          if (EnergyNetSettings.logGridUpdatesVerbose) {
+-            IC2.log.debug(LogCategory.EnergyNet, "%d Neighbor connectivity (%d links, %d new grids):", this.uid, k, l);
+-
+-            for(int i1 = 0; i1 < k; ++i1) {
+-               Set<Node> set3 = set2[i1];
+-               if (set3 != null) {
+-                  IC2.log.debug(LogCategory.EnergyNet, "%d %d: %s: %s (%d).", this.uid, i1, ((NodeLink)node.links.get(i1)).getNeighbor(node), set3, set3.size());
+-               } else {
+-                  IC2.log.debug(LogCategory.EnergyNet, "%d %d: %s contained in %d.", this.uid, i1, ((NodeLink)node.links.get(i1)).getNeighbor(node), aint[i1]);
++            IC2.log.debug(LogCategory.EnergyNet, "%d Neighbor connectivity (%d links, %d new grids):", this.uid, linkCount, gridCount);
++            for (i = 0; i < linkCount; ++i) {
++               Set nodes = nodeTable[i];
++               if (nodes != null) {
++                  IC2.log.debug(LogCategory.EnergyNet, "%d %d: %s: %s (%d).", this.uid, i, node.links.get(i).getNeighbor(node), nodes, nodes.size());
++                  continue;
+                }
++               IC2.log.debug(LogCategory.EnergyNet, "%d %d: %s contained in %d.", this.uid, i, node.links.get(i).getNeighbor(node), mapping[i]);
+             }
+          }
+-
+-         if (l <= 1) {
++         if (gridCount <= 1) {
+             return;
+          }
+-
+-         for(int j1 = 1; j1 < k; ++j1) {
+-            Set<Node> set4 = set2[j1];
+-            if (set4 != null) {
+-               Grid grid = new Grid(this.enet);
++         for (i = 1; i < linkCount; ++i) {
++            Set<Node> connectedNodes = nodeTable[i];
++            if (connectedNodes == null) continue;
++            Grid grid = new Grid(this.enet);
++            if (EnergyNetSettings.logGridUpdatesVerbose) {
++               IC2.log.debug(LogCategory.EnergyNet, "%d Moving %d nodes from net %d to new grid %d.", this.uid, connectedNodes.size(), i, grid.uid);
++            }
++            for (Node cNode : connectedNodes) {
++               boolean needsExtraNode = false;
++               if (!cNode.links.isEmpty() && cNode.nodeType != NodeType.Conductor) {
++                  for (int j = 0; j < i; ++j) {
++                     Set nodes = nodeTable[j];
++                     if (nodes == null || !nodes.contains(cNode)) continue;
++                     needsExtraNode = true;
++                     break;
++                  }
++               }
++               if (needsExtraNode) {
++                  Node extraNode = new Node(this.enet.allocateNodeId(), cNode.tile, cNode.nodeType);
++                  if (EnergyNetSettings.logGridUpdatesVerbose) {
++                     IC2.log.debug(LogCategory.EnergyNet, "%s Create extra Node %d for %s in grid %d.", this.uid, extraNode.uid, cNode, grid.uid);
++                  }
++                  cNode.tile.addExtraNode(extraNode);
++                  Iterator<NodeLink> it2 = cNode.links.iterator();
++                  while (it2.hasNext()) {
++                     NodeLink link = it2.next();
++                     Node neighbor = link.getNeighbor(cNode);
++                     if (!connectedNodes.contains(neighbor)) continue;
++                     assert (neighbor.nodeType == NodeType.Conductor);
++                     link.replaceNode(cNode, extraNode);
++                     extraNode.links.add(link);
++                     it2.remove();
++                  }
++                  assert (!extraNode.links.isEmpty());
++                  grid.add(extraNode);
++                  assert (extraNode.getGrid() != null);
++                  continue;
++               }
+                if (EnergyNetSettings.logGridUpdatesVerbose) {
+-                  IC2.log.debug(LogCategory.EnergyNet, "%d Moving %d nodes from net %d to new grid %d.", this.uid, set4.size(), j1, grid.uid);
+-               }
+-
+-               for(Node node5 : set4) {
+-                  boolean flag1 = false;
+-                  if (!node5.links.isEmpty() && node5.nodeType != NodeType.Conductor) {
+-                     for(int k1 = 0; k1 < j1; ++k1) {
+-                        Set<Node> set1 = set2[k1];
+-                        if (set1 != null && set1.contains(node5)) {
+-                           flag1 = true;
+-                           break;
+-                        }
+-                     }
+-                  }
+-
+-                  if (flag1) {
+-                     Node node6 = new Node(this.enet.allocateNodeId(), node5.tile, node5.nodeType);
+-                     if (EnergyNetSettings.logGridUpdatesVerbose) {
+-                        IC2.log.debug(LogCategory.EnergyNet, "%s Create extra Node %d for %s in grid %d.", this.uid, node6.uid, node5, grid.uid);
+-                     }
+-
+-                     node5.tile.addExtraNode(node6);
+-                     Iterator<NodeLink> iterator2 = node5.links.iterator();
+-
+-                     while(iterator2.hasNext()) {
+-                        NodeLink nodelink2 = iterator2.next();
+-                        Node node3 = nodelink2.getNeighbor(node5);
+-                        if (set4.contains(node3)) {
+-                           assert node3.nodeType == NodeType.Conductor;
+-
+-                           nodelink2.replaceNode(node5, node6);
+-                           node6.links.add(nodelink2);
+-                           iterator2.remove();
+-                        }
+-                     }
+-
+-                     assert !node6.links.isEmpty();
+-
+-                     grid.add(node6);
+-
+-                     assert node6.getGrid() != null;
+-                  } else {
+-                     if (EnergyNetSettings.logGridUpdatesVerbose) {
+-                        IC2.log.debug(LogCategory.EnergyNet, "%d Move Node %s to grid %d.", this.uid, node5, grid.uid);
+-                     }
+-
+-                     assert this.nodes.containsKey(Integer.valueOf(node5.uid));
+-
+-                     this.nodes.remove(Integer.valueOf(node5.uid));
+-                     node5.clearGrid();
+-                     grid.add(node5);
+-
+-                     assert node5.getGrid() != null;
+-                  }
+-               }
++                  IC2.log.debug(LogCategory.EnergyNet, "%d Move Node %s to grid %d.", this.uid, cNode, grid.uid);
++               }
++               assert (this.nodes.containsKey(cNode.uid));
++               this.nodes.remove(cNode.uid);
++               cNode.clearGrid();
++               grid.add(cNode);
++               assert (cNode.getGrid() != null);
+             }
+          }
+       }
+-
+    }
+ 
+    void merge(Grid grid, Map<Node, Node> nodeReplacements) {
+@@ -324,9 +277,9 @@
+ 
+    private void add(Node node) {
+       node.setGrid(this);
+-      Node node = this.nodes.put(Integer.valueOf(node.uid), node);
+-      if (node != null) {
+-         throw new IllegalStateException("duplicate node uid, new " + node + ", old " + node);
++      Node prev = this.nodes.put(node.uid, node);
++      if (prev != null) {
++         throw new IllegalStateException("duplicate node uid, new " + node + ", old " + prev);
+       }
+    }
+ 

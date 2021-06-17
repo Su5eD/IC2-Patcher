@@ -1,0 +1,178 @@
+--- a/ic2/jeiIntegration/transferhandlers/TransferHandlerIndustrialWorkbench.java
++++ b/ic2/jeiIntegration/transferhandlers/TransferHandlerIndustrialWorkbench.java
+@@ -1,5 +1,6 @@
+ package ic2.jeiIntegration.transferhandlers;
+ 
++import ic2.core.block.invslot.InvSlot;
+ import ic2.core.block.machine.container.ContainerIndustrialWorkbench;
+ import java.util.ArrayList;
+ import java.util.Arrays;
+@@ -17,6 +18,7 @@
+ import mezz.jei.api.recipe.transfer.IRecipeTransferHandler;
+ import mezz.jei.api.recipe.transfer.IRecipeTransferHandlerHelper;
+ import mezz.jei.api.recipe.transfer.IRecipeTransferInfo;
++import mezz.jei.network.packets.PacketJei;
+ import mezz.jei.network.packets.PacketRecipeTransfer;
+ import mezz.jei.startup.StackHelper;
+ import mezz.jei.startup.StackHelper.MatchingItemsResult;
+@@ -64,94 +66,75 @@
+ 
+       @Nullable
+       public IRecipeTransferError transferRecipe(ContainerIndustrialWorkbench container, IRecipeLayout recipeLayout, EntityPlayer player, boolean maxTransfer, boolean doTransfer) {
+-         List<IGuiIngredient<ItemStack>> list = new ArrayList<IGuiIngredient<ItemStack>>();
+-         recipeLayout.getItemStacks().getGuiIngredients().values().stream().filter(IGuiIngredient::isInput).filter((i) -> {
+-            return !i.getAllIngredients().isEmpty();
+-         }).forEach(list::add);
+-         if (list.size() != 2) {
++         ArrayList ingredients = new ArrayList();
++         recipeLayout.getItemStacks().getGuiIngredients().values().stream().filter(IGuiIngredient::isInput).filter(i -> !i.getAllIngredients().isEmpty()).forEach(ingredients::add);
++         if (ingredients.size() != 2) {
+             return this.handlerHelper.createInternalError();
+-         } else {
+-            Slot slot = container.getSlot(container.indexOutputHammer - 2);
+-            Slot slot1 = container.getSlot(container.indexOutputCutter - 2);
+-            Slot slot2 = container.getSlot(container.indexOutputHammer - 1);
+-            Slot slot3 = container.getSlot(container.indexOutputCutter - 1);
+-            Slot[][] aslot = new Slot[][]{{slot, slot2}, {slot1, slot3}};
+-            int i = -1;
+-            int j = -1;
+-
+-            for(int k = 0; k < list.size(); ++k) {
+-               ItemStack itemstack = (ItemStack)((IGuiIngredient)list.get(k)).getDisplayedIngredient();
+-               if (slot.isItemValid(itemstack)) {
+-                  i = k;
+-                  j = 0;
+-                  break;
+-               }
+-
+-               if (slot1.isItemValid(itemstack)) {
+-                  i = k;
+-                  j = 1;
+-                  break;
+-               }
++         }
++         Slot toolLeft = container.getSlot(container.indexOutputHammer - 2);
++         Slot toolRight = container.getSlot(container.indexOutputCutter - 2);
++         Slot itemLeft = container.getSlot(container.indexOutputHammer - 1);
++         Slot itemRight = container.getSlot(container.indexOutputCutter - 1);
++         Slot[][] craftingSlots = new Slot[][]{{toolLeft, itemLeft}, {toolRight, itemRight}};
++         int toolIdx = -1;
++         int craftingIdx = -1;
++         for (int i2 = 0; i2 < ingredients.size(); ++i2) {
++            ItemStack stack = (ItemStack)((IGuiIngredient)ingredients.get(i2)).getDisplayedIngredient();
++            if (toolLeft.isItemValid(stack)) {
++               toolIdx = i2;
++               craftingIdx = 0;
++               break;
+             }
+-
+-            if (i == -1) {
++            if (!toolRight.isItemValid(stack)) continue;
++            toolIdx = i2;
++            craftingIdx = 1;
++            break;
++         }
++         if (toolIdx == -1) {
++            return this.handlerHelper.createInternalError();
++         }
++         HashMap adjustedIngredients = new HashMap();
++         adjustedIngredients.put(0, ingredients.get(toolIdx));
++         adjustedIngredients.put(1, ingredients.get(1 - toolIdx));
++         HashMap<Integer, ItemStack> availableItemStacks = new HashMap<Integer, ItemStack>();
++         int filledCraftSlotCount = 0;
++         int emptySlotCount = 0;
++         for (Slot slot : craftingSlots[craftingIdx]) {
++            ItemStack stack = slot.getStack();
++            if (stack.isEmpty()) continue;
++            if (!slot.canTakeStack(player)) {
++               Log.get().error("Recipe Transfer helper {} does not work for container {}. Player can't move item out of Crafting Slot number {}", this.transferHelper.getClass(), ((Object)((Object)container)).getClass(), (Object)slot.slotNumber);
+                return this.handlerHelper.createInternalError();
+-            } else {
+-               Map<Integer, IGuiIngredient<ItemStack>> map = new HashMap<Integer, IGuiIngredient<ItemStack>>();
+-               map.put(Integer.valueOf(0), list.get(i));
+-               map.put(Integer.valueOf(1), list.get(1 - i));
+-               Map<Integer, ItemStack> map1 = new HashMap<Integer, ItemStack>();
+-               int l = 0;
+-               int i1 = 0;
+-
+-               for(Slot slot4 : aslot[j]) {
+-                  ItemStack itemstack1 = slot4.getStack();
+-                  if (!itemstack1.isEmpty()) {
+-                     if (!slot4.canTakeStack(player)) {
+-                        Log.get().error("Recipe Transfer helper {} does not work for container {}. Player can't move item out of Crafting Slot number {}", this.transferHelper.getClass(), container.getClass(), Integer.valueOf(slot4.slotNumber));
+-                        return this.handlerHelper.createInternalError();
+-                     }
+-
+-                     ++l;
+-                     map1.put(Integer.valueOf(slot4.slotNumber), itemstack1.copy());
+-                  }
+-               }
+-
+-               List<Slot> list1 = this.transferHelper.getInventorySlots(container);
+-
+-               for(Slot slot5 : list1) {
+-                  ItemStack itemstack2 = slot5.getStack();
+-                  if (!itemstack2.isEmpty()) {
+-                     map1.put(Integer.valueOf(slot5.slotNumber), itemstack2.copy());
+-                  } else {
+-                     ++i1;
+-                  }
+-               }
+-
+-               if (l - list.size() > i1) {
+-                  String s = Translator.translateToLocal("jei.tooltip.error.recipe.transfer.inventory.full");
+-                  return this.handlerHelper.createUserErrorWithTooltip(s);
+-               } else {
+-                  MatchingItemsResult matchingitemsresult = this.stackHelper.getMatchingItems(map1, map);
+-                  if (matchingitemsresult.missingItems.size() > 0) {
+-                     String s1 = Translator.translateToLocal("jei.tooltip.error.recipe.transfer.missing");
+-                     return this.handlerHelper.createUserErrorForSlots(s1, matchingitemsresult.missingItems);
+-                  } else {
+-                     List<Integer> list2 = new ArrayList<Integer>();
+-                     list1.stream().map((sx) -> {
+-                        return s.slotNumber;
+-                     }).forEach(list2::add);
+-                     if (doTransfer) {
+-                        List<Integer> list3 = Arrays.<Integer>asList(aslot[j][0].slotNumber, aslot[j][1].slotNumber);
+-                        PacketRecipeTransfer packetrecipetransfer = new PacketRecipeTransfer(matchingitemsresult.matchingItems, list3, list2, maxTransfer, false);
+-                        JustEnoughItems.getProxy().sendPacketToServer(packetrecipetransfer);
+-                     }
+-
+-                     return null;
+-                  }
+-               }
+-            }
+-         }
++            }
++            ++filledCraftSlotCount;
++            availableItemStacks.put(slot.slotNumber, stack.copy());
++         }
++         List<Slot> inventorySlots = this.transferHelper.getInventorySlots(container);
++         for (Slot slot : inventorySlots) {
++            ItemStack stack = slot.getStack();
++            if (!stack.isEmpty()) {
++               availableItemStacks.put(slot.slotNumber, stack.copy());
++               continue;
++            }
++            ++emptySlotCount;
++         }
++         if (filledCraftSlotCount - ingredients.size() > emptySlotCount) {
++            String message = Translator.translateToLocal((String)"jei.tooltip.error.recipe.transfer.inventory.full");
++            return this.handlerHelper.createUserErrorWithTooltip(message);
++         }
++         StackHelper.MatchingItemsResult matchingItemsResult = this.stackHelper.getMatchingItems(availableItemStacks, adjustedIngredients);
++         if (matchingItemsResult.missingItems.size() > 0) {
++            String message = Translator.translateToLocal((String)"jei.tooltip.error.recipe.transfer.missing");
++            return this.handlerHelper.createUserErrorForSlots(message, matchingItemsResult.missingItems);
++         }
++         ArrayList inventorySlotIndexes = new ArrayList();
++         inventorySlots.stream().map(s -> s.slotNumber).forEach(inventorySlotIndexes::add);
++         if (doTransfer) {
++            List<Integer> craftingSlotIndexes = Arrays.asList(craftingSlots[craftingIdx][0].slotNumber, craftingSlots[craftingIdx][1].slotNumber);
++            PacketRecipeTransfer packet = new PacketRecipeTransfer(matchingItemsResult.matchingItems, craftingSlotIndexes, inventorySlotIndexes, maxTransfer, false);
++            JustEnoughItems.getProxy().sendPacketToServer((PacketJei)packet);
++         }
++         return null;
+       }
+    }
+ 

@@ -1,0 +1,34 @@
+--- a/ic2/core/profile/ProfileManager.java
++++ b/ic2/core/profile/ProfileManager.java
+@@ -8,11 +8,8 @@
+ import ic2.core.util.Config;
+ import ic2.core.util.LogCategory;
+ import ic2.core.util.ReflectionUtil;
+-import java.io.ByteArrayInputStream;
+-import java.io.File;
+-import java.io.IOException;
+-import java.io.InputStream;
+-import java.io.SequenceInputStream;
++
++import java.io.*;
+ import java.util.ArrayList;
+ import java.util.Collections;
+ import java.util.List;
+@@ -64,7 +61,7 @@
+          if (file1.exists()) {
+             for(File file2 : file1.listFiles()) {
+                if (file2.isDirectory()) {
+-                  for(File file3 : file2.listFiles(new NameFileFilter("profile.xml"))) {
++                  for(File file3 : file2.listFiles((FileFilter) new NameFileFilter("profile.xml"))) {
+                      try {
+                         Profile profile1 = ProfileParser.parse(new ProfileRoot(file3.getParentFile()));
+                         if (!registerProfile(profile1)) {
+@@ -229,7 +226,7 @@
+       list3.removeAll(textureChanges);
+ 
+       assert !list3.stream().anyMatch((packx) -> {
+-         return pack.getPackName().startsWith("IC2 Profile Pack for ");
++         return packx.getPackName().startsWith("IC2 Profile Pack for ");
+       });
+ 
+       list2.forEach(list3::add);

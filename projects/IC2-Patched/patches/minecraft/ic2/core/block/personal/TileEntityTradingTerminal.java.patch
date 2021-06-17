@@ -1,0 +1,17 @@
+--- a/ic2/core/block/personal/TileEntityTradingTerminal.java
++++ b/ic2/core/block/personal/TileEntityTradingTerminal.java
+@@ -8,11 +8,14 @@
+ import ic2.core.block.invslot.InvSlotUpgrade;
+ import java.util.Collections;
+ import java.util.Set;
++
++import ic2.core.profile.NotClassic;
+ import net.minecraft.client.gui.GuiScreen;
+ import net.minecraft.entity.player.EntityPlayer;
+ import net.minecraftforge.fml.relauncher.Side;
+ import net.minecraftforge.fml.relauncher.SideOnly;
+ 
++@NotClassic
+ public class TileEntityTradingTerminal extends TileEntityInventory implements IHasGui, IUpgradableBlock {
+    protected int range;
+    public final InvSlotUpgrade rangeUpgrade = new InvSlotUpgrade(this, "range", 1);

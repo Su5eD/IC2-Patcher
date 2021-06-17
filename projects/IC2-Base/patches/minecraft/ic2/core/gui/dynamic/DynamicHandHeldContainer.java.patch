@@ -1,0 +1,21 @@
+--- a/ic2/core/gui/dynamic/DynamicHandHeldContainer.java
++++ b/ic2/core/gui/dynamic/DynamicHandHeldContainer.java
+@@ -27,14 +27,14 @@
+ 
+    public ItemStack slotClick(int slot, int button, ClickType type, EntityPlayer player) {
+       boolean flag = false;
+-      Slot slot = null;
++      Slot invSlot = null;
+       if (!player.getEntityWorld().isRemote && slot >= 0 && slot < this.inventorySlots.size()) {
+-         slot = (Slot)this.inventorySlots.get(slot);
+-         flag = ((HandHeldInventory)this.base).isThisContainer(slot.getStack());
++         invSlot = (Slot)this.inventorySlots.get(slot);
++         flag = ((HandHeldInventory)this.base).isThisContainer(invSlot.getStack());
+       }
+ 
+       ItemStack itemstack = super.slotClick(slot, button, type, player);
+-      if (flag && !slot.getHasStack()) {
++      if (flag && !invSlot.getHasStack()) {
+          ((HandHeldInventory)this.base).saveAsThrown(itemstack);
+          player.closeScreen();
+       }
