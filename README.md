@@ -13,8 +13,8 @@ For more information, see [IC2's license](https://forum.industrial-craft.net/thr
 - Fixed issue [0002745](https://bt.industrial-craft.net/view.php?id=2745): Crash the world with Electrolyzer, Fluid Pulling Upgrade and Pump Attachment
 - Fixed issue [0002717](https://bt.industrial-craft.net/view.php?id=2717): Client crashed when connect a bronze fluid pipe with an ie fluid pipe
 - Fixed issue [0002586](https://bt.industrial-craft.net/view.php?id=2586): Nightvision Goggles can break
-- Night vision goggles now take away their effect immediately after disabling
-- Corrected the specs of the Energy Crystal and Lapotron Crystal in the classic profile
+- Night vision goggles now clear their effect immediately after disabling
+- Corrected the specs of the Energy and Lapotron crystals in the classic profile
 - Fixed a bug which displayed all non-fluid classic cell recipes in the [same recipe category](https://imgur.com/a/qkECYYD)
 - Fixed issue [0002752](https://bt.industrial-craft.net/view.php?id=2752): Bug with Industrial Craft 2 textures
   Obscuration now replaces textures instead of rendering another layer over them
@@ -23,21 +23,20 @@ For more information, see [IC2's license](https://forum.industrial-craft.net/thr
 
 #### Setting up
 1. Clone the repository
-2. Run `gradlew setupIC2`. 
-   Aside of setting up the forge workspace, it will also download, decompile, and fix IC2, 
-   which will then be decompiled into the IndustrialCraft2 subdirectory, where you can freely play around with the code.
-   Note that while this code will compile and run, it's *highly unstable* and not suitable for playing.
+2. Run the `setup` gradle task   
+   This will set up both `IC2-Base` and `IC2-Patched` projects, which contain clean and patched code respectively.  
+   Note that while this code will compile, it's *highly unstable* and not suitable for playing.
 
 #### Generating patches
-After making changes to the code, run the `genIC2Patches` task to generate the patches.
+After making changes to the code, run the `generatePatches` task of the `IC2-Patched` project to generate the patches.
 This has to be done **manually** every time you make changes.
 
 #### Building & Exporting
 Run `gradlew build`to build the patcher. The resulting jar will be located in the `build/libs` folder. 
-Remember that the jar build by the `jar` task (ran with `runClient` or `runServer`) **will NOT work** outside the dev environment.
+Remember that the jar build by the `jar` task **will NOT work** outside the dev environment.
 
 <div>
-  <img src="https://upload.wikimedia.org/wikipedia/commons/e/eb/PD-icon-black.svg" align="right" width="50">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/e/eb/PD-icon-black.svg" align="right" width="50" alt="The Unlicense Logo">
 </div>
 <h3 align="left">Licensing</h3>
 

@@ -126,6 +126,10 @@ tasks {
         }
     }
     
+    register("setup") {
+        dependsOn(":IC2-Patched:setup")
+    }
+    
     whenTaskAdded { 
         if (name.startsWith("prepareRun")) {
             dependsOn("devJar")
