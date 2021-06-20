@@ -149,7 +149,7 @@ artifacts {
 
 fun getGitVersion(): String {
     val jgitver = GitVersionCalculator.location(rootDir)
-            .setNonQualifierBranches("forge-1.12.2")
+            .setNonQualifierBranches("master")
             .setVersionPattern("\${M}\${<m}\${<meta.COMMIT_DISTANCE}\${-~meta.QUALIFIED_BRANCH_NAME}")
             .setStrategy(Strategies.PATTERN)
     return jgitver.version

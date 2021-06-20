@@ -9,7 +9,6 @@ For more information, see [IC2's license](https://forum.industrial-craft.net/thr
   To toggle the jetpack, press the *mode switch key* while *sneaking*
 - Corrected the Near-Depleted Uranium Cell's recipe output size to 8
 - Fixed issue [0002749](https://bt.industrial-craft.net/view.php?id=2749): Batch Crafter Dupe
-- Fixed issue [0002679](https://bt.industrial-craft.net/view.php?id=2679): Machine doesn't explode if re-connected to higher voltage
 - Fixed issue [0002745](https://bt.industrial-craft.net/view.php?id=2745): Crash the world with Electrolyzer, Fluid Pulling Upgrade and Pump Attachment
 - Fixed issue [0002717](https://bt.industrial-craft.net/view.php?id=2717): Client crashed when connect a bronze fluid pipe with an ie fluid pipe
 - Fixed issue [0002586](https://bt.industrial-craft.net/view.php?id=2586): Nightvision Goggles can break
