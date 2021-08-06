@@ -74,7 +74,6 @@ tasks {
     
     register<Jar>("sourceJar") {
         group = taskGroup
-        dependsOn("classes")
         archiveClassifier.set("sources")
         from(sourceSets.main.get().allSource)
     }

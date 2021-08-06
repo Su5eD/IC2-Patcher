@@ -1,0 +1,10 @@
+--- a/ic2/core/block/machine/tileentity/TileEntityCropHarvester.java
++++ b/ic2/core/block/machine/tileentity/TileEntityCropHarvester.java
+@@ -39,6 +39,7 @@
+    protected void updateEntityServer() {
+       super.updateEntityServer();
+       this.upgradeSlot.tick();
++      this.energy.setSinkTier(this.upgradeSlot.getTier(1));
+       if (this.world.getTotalWorldTime() % 10L == 0L && this.energy.getEnergy() >= 21.0D) {
+          this.scan();
+       }

@@ -17,6 +17,7 @@ For more information, see [IC2's license](https://forum.industrial-craft.net/thr
 - Fixed a bug which displayed all non-fluid classic cell recipes in the [same recipe category](https://imgur.com/a/qkECYYD)
 - Fixed issue [0002752](https://bt.industrial-craft.net/view.php?id=2752): Bug with Industrial Craft 2 textures
   Obscuration now replaces textures instead of rendering another layer over them
+- Fixed issue [0002701](https://bt.industrial-craft.net/view.php?id=2701): Crop-Matron and Crop Harvester ignoring Transformer Upgrades
 
 ### Creating patches
 

@@ -1,0 +1,10 @@
+--- a/ic2/core/block/machine/tileentity/TileEntityCropmatron.java
++++ b/ic2/core/block/machine/tileentity/TileEntityCropmatron.java
+@@ -73,6 +73,7 @@
+    protected void updateEntityServer() {
+       super.updateEntityServer();
+       this.upgradeSlot.tick();
++      this.energy.setSinkTier(this.upgradeSlot.getTier(1));
+       this.wasserinputSlot.processIntoTank(this.waterTank, this.wasseroutputSlot);
+       this.exInputSlot.processIntoTank(this.exTank, this.exOutputSlot);
+       this.fertilizerSlot.organize();
