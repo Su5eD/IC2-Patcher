@@ -1,0 +1,22 @@
+--- a/ic2/core/IC2.java
++++ b/ic2/core/IC2.java
+@@ -134,6 +134,7 @@
+ import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
+ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+ import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
++import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
+ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+ import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
+ import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
+@@ -409,6 +410,11 @@
+    @EventHandler
+    public void serverStart(FMLServerStartingEvent event) {
+       event.registerServerCommand(new CommandIc2());
++   }
++
++   @EventHandler
++   public void onServerStopped(FMLServerStoppedEvent event) {
++      WorldData.resetMaps();
+    }
+ 
+    public int getBurnTime(ItemStack stack) {
