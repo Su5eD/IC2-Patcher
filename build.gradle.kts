@@ -74,7 +74,7 @@ repositories {
 dependencies {
     minecraft(group = "net.minecraftforge", name = "forge", version = "1.12.2-14.23.5.2855")
     
-    implementation(group = "net.industrial-craft", name = "industrialcraft-2", version = "${versionIC2}-ex112", classifier = "dev")
+    implementation(project(":IC2-Patched"))
     implementation(fg.deobf(group = "mezz.jei", name = "jei_1.12.2", version = versionJEI))
 }
 

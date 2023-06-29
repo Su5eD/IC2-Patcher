@@ -2,6 +2,7 @@ package mods.su5ed.ic2patcher;
 
 import ic2.api.item.IC2Items;
 import ic2.core.IC2;
+import ic2.core.WorldData;
 import ic2.core.util.StackUtil;
 import mods.su5ed.ic2patcher.util.RecipeUtil;
 import net.minecraft.item.ItemStack;
@@ -9,10 +10,7 @@ import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.event.FMLConstructionEvent;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.*;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.registries.IForgeRegistryModifiable;
@@ -39,6 +37,11 @@ public final class Patcher {
 
     @Mod.EventHandler
     public static void postInit(FMLPostInitializationEvent event) {}
+
+    @Mod.EventHandler
+    public void onServerStopped(FMLServerStoppedEvent event) {
+        WorldData.resetMaps();
+    }
 
     private static void fixUraniumCellRecipe() {
         ItemStack cell = IC2Items.getItem("cell", "empty");
