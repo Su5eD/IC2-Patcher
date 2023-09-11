@@ -65,10 +65,17 @@ fancyGradle {
 
 repositories {
     maven {
+        // JEI Repository
         name = "Progwml6 maven"
         url = uri("https://dvs1.progwml6.com/files/maven/")
     }
     maven {
+        // Mirror Maven for JEI
+        name = "ModMaven"
+        url = uri("https://modmaven.dev")
+    }
+    maven {
+        // IC2 Repository
         name = "ic2"
         url = uri("https://maven.ic2.player.to/")
     }
@@ -78,8 +85,8 @@ dependencies {
     minecraft(group = "net.minecraftforge", name = "forge", version = "1.12.2-${versionForge}")
     
     implementation(project(":IC2-Patched"))
-    implementation(fg.deobf(group = "mezz.jei", name = "jei_1.12.2", version = versionJEI))
-//    compileOnly(fg.deobf(group = "mezz.jei", name = "jei_1.12.2", version = versionJEI))
+//    implementation(fg.deobf(group = "mezz.jei", name = "jei_1.12.2", version = versionJEI))
+    compileOnly(fg.deobf(group = "mezz.jei", name = "jei_1.12.2", version = versionJEI))
 }
 
 tasks {
