@@ -29,6 +29,7 @@ val mappingsVersion: String by project
 
 val versionIC2: String by project
 val versionJEI: String by project
+val versionForge: String by project
 
 version = getGitVersion()
 group = "mods.su5ed"
@@ -75,10 +76,11 @@ repositories {
 }
 
 dependencies {
-    minecraft(group = "net.minecraftforge", name = "forge", version = "1.12.2-14.23.5.2855")
+    minecraft(group = "net.minecraftforge", name = "forge", version = "1.12.2-${versionForge}")
     
     implementation(project(":IC2-Patched"))
-    compileOnly(fg.deobf(group = "mezz.jei", name = "jei_1.12.2", version = versionJEI))
+    implementation(fg.deobf(group = "mezz.jei", name = "jei_1.12.2", version = versionJEI))
+//    compileOnly(fg.deobf(group = "mezz.jei", name = "jei_1.12.2", version = versionJEI))
 }
 
 tasks {

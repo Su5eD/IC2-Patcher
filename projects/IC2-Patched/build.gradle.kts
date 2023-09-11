@@ -23,6 +23,7 @@ val taskGroup: String = "IC2 Patcher"
 val versionIC2: String by project
 val versionJEI: String by project
 val versionBuildCraft: String by project
+val versionForge: String by project
 
 val patchedJar: File = File(buildDir, "applyPatches/output.jar")
 val patchesDir: File = file("patches/minecraft")
@@ -191,7 +192,7 @@ repositories {
 }
 
 dependencies {
-    minecraft(group = "net.minecraftforge", name = "forge", version = "1.12.2-14.23.5.2855")
+    minecraft(group = "net.minecraftforge", name = "forge", version = "1.12.2-${versionForge}")
     
     ic2Dev(group = "net.industrial-craft", name = "industrialcraft-2", version = "${versionIC2}-ex112", classifier = "dev")
     ic2Clean(group = "net.industrial-craft", name = "industrialcraft-2", version = "${versionIC2}-ex112")

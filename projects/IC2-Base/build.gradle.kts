@@ -32,6 +32,7 @@ val versionIC2: String by project
 val versionJEI: String by project
 val versionBuildCraft: String by project
 val versionForgeFlower: String by project
+val versionForge: String by project
 
 val decompiledJar: File = File(buildDir, "decompileIC2/output.jar")
 val patchedJar: File = File(buildDir, "applyPatches/output.jar")
@@ -183,7 +184,7 @@ repositories {
 }
 
 dependencies {
-    minecraft(group = "net.minecraftforge", name = "forge", version = "1.12.2-14.23.5.2855")
+    minecraft(group = "net.minecraftforge", name = "forge", version = "1.12.2-${versionForge}")
     
     ic2(group = "net.industrial-craft", name = "industrialcraft-2", version = "${versionIC2}-ex112", classifier = "dev")
     compileOnly(group = "mezz.jei", name = "jei_1.12.2", version = versionJEI)
