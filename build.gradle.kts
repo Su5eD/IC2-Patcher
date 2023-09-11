@@ -60,6 +60,7 @@ fancyGradle {
         Patch.RESOURCES
         Patch.COREMODS
         Patch.CODE_CHICKEN_LIB
+        Patch.ASM
     }
 }
 
