@@ -10,7 +10,7 @@ pluginManagement {
     repositories {
         gradlePluginPortal()
         maven {
-            url = uri("https://maven.minecraftforge.net/")
+            url = uri("https://files.minecraftforge.net/maven")
         }
         maven {
             name = "FancyGradle"

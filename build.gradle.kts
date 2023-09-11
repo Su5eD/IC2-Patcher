@@ -17,7 +17,7 @@ plugins {
     idea
     id("net.minecraftforge.gradle") version "5.0.11"
     id("de.undercouch.download") version "4.1.1"
-    id("wtf.gofancy.fancygradle") version "1.0.0"
+    id("wtf.gofancy.fancygradle") version "1.1.+"
 }
 
 evaluationDependsOnChildren()
@@ -56,7 +56,10 @@ minecraft {
 
 fancyGradle {
     patches {
-        patch(Patch.RESOURCES, Patch.COREMODS, Patch.CODE_CHICKEN_LIB, Patch.ASM)
+        Patch.RESOURCES
+        Patch.COREMODS
+        Patch.CODE_CHICKEN_LIB
+        Patch.ASM
     }
 }
 
