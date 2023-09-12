@@ -71,21 +71,7 @@ tasks {
         dependsOn("applyStyle")
         base = processedJar
 
-        patches = null
-        project(":IC2-Base").projectDir.listFiles { _, name ->
-            name.startsWith("patches[") && name.endsWith("]")
-        }?.forEach { file ->
-            val name = file.name.toString()
-            val versions = name.substring(name.indexOf("[")+1, name.indexOf("]")).split(",")
-            if (versions.size == 2) {
-                if (compareVersions(versionIC2, versions[0])) {
-                    if (versions[1] == "+" || !compareVersions(versionIC2, versions[1])) {
-                        patches = file("patches[${versions[0]},${versions[1]}]/minecraft")
-                    }
-                }
-            }
-        }
-
+        patches = getPatchesDirectory()
         if (patches == null) {
             patches = file("patches/minecraft")
         }
@@ -137,7 +123,10 @@ tasks {
     register<TaskGeneratePatches>("generatePatches") {
         group = taskGroup
         val sourceJar = getByName<Jar>("sourceJar")
-        val outputDir = file("patches/minecraft")
+        var outputDir = getPatchesDirectory()
+        if (outputDir == null) {
+            outputDir = File("patches/minecraft")
+        }
         dependsOn(sourceJar, "applyStyle")
         base = processedJar
         modified = sourceJar.archiveFile.get().asFile
@@ -291,4 +280,24 @@ fun compareVersions(v1:String, v2:String): Boolean {
         }
     }
     return v1s.size >= v2s.size
+}
+
+/**
+ * Used to get patches directory based on the IC2 Version specified in the Gradle properties.
+ */
+fun getPatchesDirectory(): File? {
+    project(":IC2-Base").projectDir.listFiles { _, name ->
+        name.startsWith("patches[") && name.endsWith("]")
+    }?.forEach { file ->
+        val name = file.name.toString()
+        val versions = name.substring(name.indexOf("[")+1, name.indexOf("]")).split(",")
+        if (versions.size == 2) {
+            if (compareVersions(versionIC2, versions[0])) {
+                if (versions[1] == "+" || !compareVersions(versionIC2, versions[1])) {
+                    return file("patches[${versions[0]},${versions[1]}]/minecraft")
+                }
+            }
+        }
+    }
+    return null
 }
