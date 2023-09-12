@@ -1,0 +1,17 @@
+--- a/ic2/core/gui/Ic2GuiFactory.java
++++ b/ic2/core/gui/Ic2GuiFactory.java
+@@ -74,11 +74,11 @@
+             Iterator<Config> iterator = config.sectionIterator();
+ 
+             while(iterator.hasNext()) {
+-               Config config = iterator.next();
+-               if ("predefined".equals(config.name) && ".balance.uu-values.".equals(parentName)) {
++               Config childConfig = iterator.next();
++               if ("predefined".equals(childConfig.name) && ".balance.uu-values.".equals(parentName)) {
+                   list.add(new Ic2GuiFactory.IC2ConfigGuiScreen.UUListElement());
+                } else {
+-                  list.add(new DummyCategoryElement(config.name, "ic2.config.sub." + config.name, sinkCategoryLevel(config, parentName + config.name + '.')));
++                  list.add(new DummyCategoryElement(childConfig.name, "ic2.config.sub." + childConfig.name, sinkCategoryLevel(childConfig, parentName + childConfig.name + '.')));
+                }
+             }
+ 
