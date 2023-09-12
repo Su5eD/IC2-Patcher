@@ -106,6 +106,12 @@ tasks {
         archiveClassifier.set("sources")
         from(sourceSets.main.get().allJava)
     }
+
+    register<Jar>("sourceJarWithResources") {
+        dependsOn("classes","extractResources")
+        archiveClassifier.set("sources-with-resources")
+        from(sourceSets.main.get().allSource)
+    }
     
     register<TaskGeneratePatches>("generatePatches") {
         group = taskGroup
@@ -135,12 +141,11 @@ tasks {
     }
     
     named<ShadowJar>("shadowJar") {
-        dependsOn("classes")
+        dependsOn("classes", "extractSources")
     
         configurations = listOf(project.configurations["shade"])
         
         archiveClassifier.set("")
-        
         from("src/main/java/ic2") {
             include("profiles/**")
             include("sounds/**")
@@ -213,21 +218,28 @@ open class ApplyAstyle : DefaultTask() {
         val out = ZipOutputStream(FileOutputStream(output.get().asFile))
         
         for (entry in zipFile.entries()) {
-            if (entry.name.startsWith("ic2") && entry.name.endsWith(".java")) {
-                val txt = BufferedReader(InputStreamReader(zipFile.getInputStream(entry)))
-                        .run {
-                            val builder = StringBuilder()
-                            forEachLine(builder::appendLine)
-                            builder.toString()
-                        }
-                val reader = StringReader(txt)
-                    
-                val newEntry = ZipEntry(entry.name)
-                out.putNextEntry(newEntry)
-                
-                val outString = reader.readText().trimEnd() + System.lineSeparator()
-                out.write(outString.toByteArray())
-                out.closeEntry()
+            if (entry.name.startsWith("ic2")) {
+                if (entry.name.endsWith(".java")) {
+                    val txt = BufferedReader(InputStreamReader(zipFile.getInputStream(entry)))
+                            .run {
+                                val builder = StringBuilder()
+                                forEachLine(builder::appendLine)
+                                builder.toString()
+                            }
+                    val reader = StringReader(txt)
+
+                    val newEntry = ZipEntry(entry.name)
+                    out.putNextEntry(newEntry)
+
+                    val outString = reader.readText().trimEnd() + System.lineSeparator()
+                    out.write(outString.toByteArray())
+                    out.closeEntry()
+                } else {
+                    val newEntry = ZipEntry(entry.name)
+                    out.putNextEntry(newEntry)
+                    out.write(zipFile.getInputStream(entry).readBytes())
+                    out.closeEntry()
+                }
             }
         }
         

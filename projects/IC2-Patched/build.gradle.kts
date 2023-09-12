@@ -11,7 +11,7 @@ plugins {
     java
     id("de.undercouch.download")
     id("net.minecraftforge.gradle")
-    id("com.github.johnrengelman.shadow") version "6.1.0"
+    id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
 evaluationDependsOn(":IC2-Base")
@@ -41,7 +41,7 @@ minecraft {
 
 tasks {
     register<TaskApplyPatches>("applyPatches") {
-        val baseSourceJar = project(":IC2-Base").tasks.getByName<Jar>("sourceJar")
+        val baseSourceJar = project(":IC2-Base").tasks.getByName<Jar>("sourceJarWithResources")
         dependsOn(baseSourceJar)
         
         group = taskGroup
@@ -76,6 +76,12 @@ tasks {
     register<Jar>("sourceJar") {
         group = taskGroup
         archiveClassifier.set("sources")
+        from(sourceSets.main.get().allJava)
+    }
+
+    register<Jar>("sourceJarWithResources") {
+        group = taskGroup
+        archiveClassifier.set("sources-with-resources")
         from(sourceSets.main.get().allSource)
     }
     
@@ -112,9 +118,7 @@ tasks {
         dependsOn("classes", "extractSources")
     
         configurations = listOf(project.configurations["shade"])
-        
         archiveClassifier.set("")
-        
         from("src/main/java/ic2") {
             include("profiles/**")
             include("sounds/**")
