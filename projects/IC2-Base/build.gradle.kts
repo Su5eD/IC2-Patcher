@@ -92,7 +92,7 @@ tasks {
 
         rejects = File(buildDir, "$name/rejects.zip")
         output = patchedJar
-        patchMode = PatchMode.FUZZY
+        patchMode = PatchMode.OFFSET
         
         isPrintSummary = true
     }
