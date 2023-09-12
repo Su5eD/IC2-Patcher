@@ -70,7 +70,26 @@ tasks {
         group = taskGroup
         dependsOn("applyStyle")
         base = processedJar
-        patches = file("patches/minecraft")
+
+        patches = null
+        project(":IC2-Base").projectDir.listFiles { _, name ->
+            name.startsWith("patches[") && name.endsWith("]")
+        }?.forEach { file ->
+            val name = file.name.toString()
+            val versions = name.substring(name.indexOf("[")+1, name.indexOf("]")).split(",")
+            if (versions.size == 2) {
+                if (compareVersions(versionIC2, versions[0])) {
+                    if (versions[1] == "+" || !compareVersions(versionIC2, versions[1])) {
+                        patches = file("patches[${versions[0]},${versions[1]}]/minecraft")
+                    }
+                }
+            }
+        }
+
+        if (patches == null) {
+            patches = file("patches/minecraft")
+        }
+
         rejects = File(buildDir, "$name/rejects.zip")
         output = patchedJar
         patchMode = PatchMode.FUZZY
@@ -247,4 +266,29 @@ open class ApplyAstyle : DefaultTask() {
         
         out.close()
     }
+}
+
+/**
+ * Compares two versions separated by dots. Doesn't work with versions schema containing letters.
+ * Truth table:
+ *  v1 > v2 => true
+ *  v1 == v2 => true
+ *  v1 < v2 => false
+ *  v1 // v2 contain chars -> Integer parsing Exception
+ */
+fun compareVersions(v1:String, v2:String): Boolean {
+    val v1s = v1.split(".");
+    val v2s = v2.split(".");
+
+    val length: Int = if (v1s.size > v2s.size) { v2s.size } else { v1s.size }
+    for (i in 0 until length) {
+        val v1i = Integer.parseInt(v1s[i]);
+        val v2i = Integer.parseInt(v2s[i])
+        if (v1i > v2i) {
+            return true
+        } else if (v2i > v1i) {
+            return false;
+        }
+    }
+    return v1s.size >= v2s.size
 }
