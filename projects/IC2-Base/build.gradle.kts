@@ -94,7 +94,9 @@ tasks {
         group = taskGroup
         dependsOn("applyStylePatched")
         
-        from(zipTree(processedJarPatched))
+        from(zipTree(processedJarPatched)) {
+            exclude("ic2/api/energy/usage.txt")
+        }
         into("src/main/java")
     }
     
@@ -111,7 +113,18 @@ tasks {
     register<Jar>("sourceJar") {
         dependsOn("classes")
         archiveClassifier.set("sources")
-        from(sourceSets.main.get().allJava)
+        from(sourceSets.main.get().allJava) {
+            exclude("*.txt")
+        }
+    }
+
+    register<Jar>("sourceJarW-ODep") {
+        // This dependency didn't allow for generatePatches to work correctly.
+//        dependsOn("classes")
+        archiveClassifier.set("sources")
+        from(sourceSets.main.get().allJava) {
+            exclude("*.txt")
+        }
     }
 
     register<Jar>("sourceJarWithResources") {
@@ -122,7 +135,7 @@ tasks {
     
     register<TaskGeneratePatches>("generatePatches") {
         group = taskGroup
-        val sourceJar = getByName<Jar>("sourceJar")
+        val sourceJar = getByName<Jar>("sourceJarW-ODep")
         var outputDir = getPatchesDirectory()
         if (outputDir == null) {
             outputDir = File("patches/minecraft")
@@ -244,7 +257,7 @@ open class ApplyAstyle : DefaultTask() {
                     val outString = reader.readText().trimEnd() + System.lineSeparator()
                     out.write(outString.toByteArray())
                     out.closeEntry()
-                } else {
+                } else if (entry.name.startsWith("ic2/profiles") || entry.name.startsWith("ic2/sounds")) {
                     val newEntry = ZipEntry(entry.name)
                     out.putNextEntry(newEntry)
                     out.write(zipFile.getInputStream(entry).readBytes())

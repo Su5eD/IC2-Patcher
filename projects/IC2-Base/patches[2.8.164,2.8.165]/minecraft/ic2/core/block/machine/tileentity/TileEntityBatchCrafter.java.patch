@@ -1,6 +1,6 @@
 --- a/ic2/core/block/machine/tileentity/TileEntityBatchCrafter.java
 +++ b/ic2/core/block/machine/tileentity/TileEntityBatchCrafter.java
-@@ -133,8 +133,9 @@
+@@ -132,8 +132,9 @@
        this.progress = 0;
        this.guiProgress = 0.0F;
  
@@ -12,7 +12,7 @@
              public boolean accepts(ItemStack ingredient) {
                 IRecipe irecipe = TileEntityBatchCrafter.this.world.isRemote ? TileEntityBatchCrafter.this.findRecipe() : TileEntityBatchCrafter.this.recipe;
                 if (irecipe == null) {
-@@ -142,14 +143,14 @@
+@@ -141,14 +142,14 @@
                 } else {
                    assert irecipe.matches(TileEntityBatchCrafter.this.crafting, TileEntityBatchCrafter.this.world);
  
@@ -30,7 +30,7 @@
                    }
  
                    return flag;
-@@ -158,7 +159,7 @@
+@@ -157,7 +158,7 @@
  
              public void onChanged() {
                 super.onChanged();

@@ -1,6 +1,6 @@
 --- a/ic2/core/block/machine/container/ContainerIndustrialWorkbench.java
 +++ b/ic2/core/block/machine/container/ContainerIndustrialWorkbench.java
-@@ -131,8 +131,8 @@
+@@ -129,8 +129,8 @@
     }
  
     public boolean canMergeSlot(ItemStack stack, Slot slot) {
