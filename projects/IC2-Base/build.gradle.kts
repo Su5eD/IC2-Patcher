@@ -1,3 +1,4 @@
+import codechicken.diffpatch.util.PatchMode
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import net.minecraftforge.gradle.common.task.JarExec
 import net.minecraftforge.gradle.patcher.task.TaskApplyPatches
@@ -72,6 +73,7 @@ tasks {
         patches = file("patches/minecraft")
         rejects = File(buildDir, "$name/rejects.zip")
         output = patchedJar
+        patchMode = PatchMode.FUZZY
         
         isPrintSummary = true
     }
