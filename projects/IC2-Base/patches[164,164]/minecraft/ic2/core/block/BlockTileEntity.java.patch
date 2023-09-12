@@ -1,0 +1,25 @@
+--- a/ic2/core/block/BlockTileEntity.java
++++ b/ic2/core/block/BlockTileEntity.java
+@@ -107,7 +107,7 @@
+    private BlockTileEntity(String name, final ResourceLocation identifier) {
+       super((BlockName)null, TeBlockRegistry.getInfo(identifier).getDefaultMaterial());
+       ModContainer modcontainer = Loader.instance().activeModContainer();
+-      Optional optional = Loader.instance().getActiveModList().stream().filter((mod) -> {
++      Optional<ModContainer> optional = Loader.instance().getActiveModList().stream().filter((mod) -> {
+          return identifier.getResourceDomain().equals(mod.getModId());
+       }).findFirst();
+       Loader loader = Loader.instance();
+@@ -660,10 +660,10 @@
+       list.addAll(this.getDrops(world, pos, state, fortune));
+    }
+ 
+-   public List<ItemStack> getDrops(IBlockAccess world, BlockPos pos, IBlockState state, int fortune) {
+-      TileEntityBlock tileentityblock = getTe(world, pos);
++   public List<ItemStack> getDrops(IBlockAccess blockAccess, BlockPos pos, IBlockState state, int fortune) {
++      TileEntityBlock tileentityblock = getTe(blockAccess, pos);
+       if (tileentityblock == null) {
+-         World world = Util.getWorld(world);
++         World world = Util.getWorld(blockAccess);
+          if (world != null && world.isRemote || world == null && !IC2.platform.isSimulating()) {
+             return new ArrayList<ItemStack>();
+          }

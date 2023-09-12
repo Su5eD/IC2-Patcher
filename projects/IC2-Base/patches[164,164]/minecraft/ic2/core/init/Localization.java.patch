@@ -1,0 +1,20 @@
+--- a/ic2/core/init/Localization.java
++++ b/ic2/core/init/Localization.java
+@@ -132,7 +132,7 @@
+             Field field = ReflectionUtil.getField(LanguageMap.class, Map.class);
+ 
+             try {
+-               return (Map)field.get(method.invoke((Object)null));
++               return (Map)field.get(method.invoke(null));
+             } catch (Exception exception) {
+                throw new RuntimeException(exception);
+             }
+@@ -147,7 +147,7 @@
+       Field field1 = ReflectionUtil.getField(Locale.class, Map.class);
+ 
+       try {
+-         return (Map)field1.get(field.get((Object)null));
++         return (Map)field1.get(field.get(null));
+       } catch (Exception exception) {
+          throw new RuntimeException(exception);
+       }

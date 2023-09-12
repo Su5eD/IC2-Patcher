@@ -1,0 +1,11 @@
+--- a/ic2/core/item/armor/ItemArmorUtility.java
++++ b/ic2/core/item/armor/ItemArmorUtility.java
+@@ -12,7 +12,7 @@
+ 
+ public class ItemArmorUtility extends ItemArmorIC2 implements ISpecialArmor {
+    public ItemArmorUtility(ItemName name, String armorName, EntityEquipmentSlot type) {
+-      super(name, ArmorMaterial.DIAMOND, armorName, type, (Object)null);
++      super(name, ArmorMaterial.DIAMOND, armorName, type, null);
+    }
+ 
+    public int getItemEnchantability() {
