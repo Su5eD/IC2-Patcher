@@ -72,10 +72,6 @@ tasks {
         base = processedJar
 
         patches = getPatchesDirectory()
-        if (patches == null) {
-            patches = file("patches/minecraft")
-        }
-
         rejects = File(buildDir, "$name/rejects.zip")
         output = patchedJar
         patchMode = PatchMode.OFFSET
@@ -137,9 +133,6 @@ tasks {
         group = taskGroup
         val sourceJar = getByName<Jar>("sourceJarW-ODep")
         var outputDir = getPatchesDirectory()
-        if (outputDir == null) {
-            outputDir = File("patches/minecraft")
-        }
         dependsOn(sourceJar, "applyStyle")
         base = processedJar
         modified = sourceJar.archiveFile.get().asFile
@@ -298,7 +291,7 @@ fun compareVersions(v1:String, v2:String): Boolean {
 /**
  * Used to get patches directory based on the IC2 Version specified in the Gradle properties.
  */
-fun getPatchesDirectory(): File? {
+fun getPatchesDirectory(): File {
     project(":IC2-Base").projectDir.listFiles { _, name ->
         name.startsWith("patches[") && name.endsWith("]")
     }?.forEach { file ->
@@ -312,5 +305,5 @@ fun getPatchesDirectory(): File? {
             }
         }
     }
-    return null
+    return File("patches/minecraft")
 }
