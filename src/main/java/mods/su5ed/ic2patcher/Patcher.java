@@ -16,7 +16,7 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.registries.IForgeRegistryModifiable;
 import org.apache.logging.log4j.Logger;
 
-@Mod(modid = "ic2patcher", name = "IC2 Patcher", dependencies = "required-after:ic2@[2.8.221-ex112,];")
+@Mod(modid = "ic2patcher", name = "IC2 Patcher", dependencies = "required-after:ic2@[2.8.164-ex112];")
 public final class Patcher {
     public static Logger logger;
 

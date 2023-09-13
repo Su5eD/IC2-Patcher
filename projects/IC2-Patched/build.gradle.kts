@@ -27,7 +27,7 @@ val versionBuildCraft: String by project
 val versionForge: String by project
 
 val patchedJar: File = File(buildDir, "applyPatches/output.jar")
-val patchesDir: File = file("patches/minecraft")
+val patchesDir: File = getPatchesDirectory()
 
 val ic2Dev: Configuration by configurations.creating
 val ic2Clean: Configuration by configurations.creating
@@ -47,7 +47,7 @@ tasks {
         
         group = taskGroup
         base = baseSourceJar.archiveFile.get().asFile
-        patches = getPatchesDirectory()
+        patches = patchesDir
         rejects = File(buildDir, "$name/rejects.zip")
         output = patchedJar
         patchMode = PatchMode.OFFSET
@@ -91,7 +91,7 @@ tasks {
         group = taskGroup
         val baseSourceJar = project(":IC2-Base").tasks.getByName<Jar>("sourceJar")
         val sourceJar = getByName<Jar>("sourceJar")
-        val outputDir = getPatchesDirectory()
+        val outputDir = patchesDir
         dependsOn(sourceJar)
         
         base = baseSourceJar.archiveFile.get().asFile
