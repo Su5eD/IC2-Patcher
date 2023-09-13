@@ -1,0 +1,18 @@
+--- a/ic2/core/item/tool/ItemToolCrowbar.java
++++ b/ic2/core/item/tool/ItemToolCrowbar.java
+@@ -6,6 +6,7 @@
+ import ic2.core.block.transport.cover.ICoverHolder;
+ import ic2.core.init.Localization;
+ import ic2.core.item.ItemToolIC2;
++import ic2.core.profile.NotClassic;
+ import ic2.core.ref.ItemName;
+ import ic2.core.util.RotationUtil;
+ import ic2.core.util.StackUtil;
+@@ -28,6 +29,7 @@
+ import net.minecraftforge.fml.relauncher.Side;
+ import net.minecraftforge.fml.relauncher.SideOnly;
+ 
++@NotClassic
+ public class ItemToolCrowbar extends ItemToolIC2 implements IEnhancedOverlayProvider {
+    public ItemToolCrowbar() {
+       super(ItemName.crowbar, HarvestLevel.Iron, Collections.singleton(ToolClass.Crowbar));

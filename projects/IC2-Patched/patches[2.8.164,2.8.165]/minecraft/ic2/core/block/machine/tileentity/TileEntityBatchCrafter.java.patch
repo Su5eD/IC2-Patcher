@@ -1,6 +1,6 @@
 --- a/ic2/core/block/machine/tileentity/TileEntityBatchCrafter.java
 +++ b/ic2/core/block/machine/tileentity/TileEntityBatchCrafter.java
-@@ -298,7 +298,7 @@
+@@ -297,7 +297,7 @@
     }
  
     protected void doCrafting() {

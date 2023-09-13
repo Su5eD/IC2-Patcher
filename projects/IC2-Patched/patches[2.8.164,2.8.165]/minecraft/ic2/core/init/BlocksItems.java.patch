@@ -1,6 +1,6 @@
 --- a/ic2/core/init/BlocksItems.java
 +++ b/ic2/core/init/BlocksItems.java
-@@ -282,8 +282,9 @@
+@@ -281,8 +281,9 @@
              return !IC2.version.isClassic();
           }
        };
