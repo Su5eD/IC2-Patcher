@@ -28,7 +28,8 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
-import net.minecraft.launchwrapper.LaunchClassLoader;
+import mods.su5ed.ic2patcher.util.IC2VersionExtractor;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.patcher.ClassPatch;
 import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
 import net.minecraftforge.fml.repackage.com.nothome.delta.GDiffPatcher;
@@ -37,14 +38,16 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.*;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Pack200;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+
+import static mods.su5ed.ic2patcher.util.VersionComparison.compareVersions;
 
 /**
  * STOLEN from MinecraftForge's {@link net.minecraftforge.fml.common.patcher.ClassPatchManager ClassPatchManager}
@@ -62,7 +65,7 @@ public class BinPatchManager {
     private final GDiffPatcher patcher = new GDiffPatcher();
     private ListMultimap<String, ClassPatch> patches;
 
-    private Map<String,byte[]> patchedClasses = Maps.newHashMap();
+    private final Map<String,byte[]> patchedClasses = Maps.newHashMap();
     private File tempDir;
     
     private BinPatchManager() {
@@ -140,16 +143,46 @@ public class BinPatchManager {
         return inputData;
     }
 
-    public void setup(File modJar) {
+    public void setup(Map<String, Object> data) {
+        File modJar = (File) data.get("coremodLocation");
+        File mcLocation = (File) data.get("mcLocation");
+
         Pattern binpatchMatcher = Pattern.compile(String.format("binpatch/%s/.*.binpatch", "merged"));
         JarInputStream jis = null;
         try {
-            try {
-                ZipFile zip = new ZipFile(modJar);
-                InputStream binpatchesCompressed = zip.getInputStream(zip.getEntry("ic2patches.pack.lzma"));
+            try (ZipFile zip = new ZipFile(modJar)) {
+                // Patches selection depending on the IC2 version.
+                Enumeration<? extends ZipEntry> entries = zip.entries();
+                String patches = "ic2patches.pack.lzma";
+                String versionIC2 = IC2VersionExtractor.getIC2Version(mcLocation);
+                if (versionIC2 == null) throw new NullPointerException("Couldn't find IC2 Version! Is IC2 installed?");
+                if (DEBUG) LOG.debug("Current IC2 version:" + versionIC2);
+
+                while (entries.hasMoreElements()) {
+                    // As you can't list all entries under x entry, like with a normal directory,
+                    // it's required to search all entries of the Jar.
+                    String name = entries.nextElement().getName();
+                    if (!name.startsWith("patches/[") || !name.endsWith("]/ic2patches.pack.lzma")) continue;
+
+                    // Checking if IC2 Version is in the range specified by the Entry version range.
+                    String[] versions = name.substring(name.indexOf("[")+1, name.indexOf("]")).split(",");
+                    versionIC2 = versionIC2.substring(0, versionIC2.indexOf("-"));
+
+                    if (DEBUG) LOG.debug("Found patches for IC2 version: " + Arrays.toString(versions));
+
+                    if (versions.length == 2 && compareVersions(versionIC2, versions[0])) {
+                        if (Objects.equals(versions[1], "+") || !compareVersions(versionIC2, versions[1])) {
+                            if (DEBUG) LOG.debug("Loading patches from " + name + " for IC2 versions " + Arrays.toString(versions));
+                            patches = name;
+                            break;
+                        }
+                    }
+                }
+
+                InputStream binpatchesCompressed = zip.getInputStream(zip.getEntry(patches));
                 if (binpatchesCompressed==null) {
                     if (!FMLLaunchHandler.isDeobfuscatedEnvironment()) {
-                        LOG.fatal("The binary patch set is missing, things are not going to work!");
+                        LOG.fatal("The binary patch set is missing for your version of IC2, things are not going to work!");
                     }
                     return;
                 }
