@@ -156,18 +156,17 @@ public class BinPatchManager {
                 String patches = "ic2patches.pack.lzma";
                 String versionIC2 = IC2VersionExtractor.getIC2Version(mcLocation);
                 if (versionIC2 == null) throw new NullPointerException("Couldn't find IC2 Version! Is IC2 installed?");
-                if (DEBUG) LOG.debug("Current IC2 version:" + versionIC2);
+                if (DEBUG) LOG.debug("Current IC2 version: " + versionIC2);
+                versionIC2 = versionIC2.substring(0, versionIC2.indexOf("-"));
 
                 while (entries.hasMoreElements()) {
                     // As you can't list all entries under x entry, like with a normal directory,
                     // it's required to search all entries of the Jar.
                     String name = entries.nextElement().getName();
-                    if (!name.startsWith("patches/[") || !name.endsWith("]/ic2patches.pack.lzma")) continue;
+                    if (!name.startsWith("patches/patches[") || !name.endsWith("]/ic2patches.pack.lzma")) continue;
 
                     // Checking if IC2 Version is in the range specified by the Entry version range.
                     String[] versions = name.substring(name.indexOf("[")+1, name.indexOf("]")).split(",");
-                    versionIC2 = versionIC2.substring(0, versionIC2.indexOf("-"));
-
                     if (DEBUG) LOG.debug("Found patches for IC2 version: " + Arrays.toString(versions));
 
                     if (versions.length == 2 && compareVersions(versionIC2, versions[0])) {
