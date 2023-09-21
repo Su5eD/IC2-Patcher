@@ -140,6 +140,7 @@ tasks {
     }
     
     register("setup") {
+        group = "env setup"
         dependsOn(":IC2-Patched:setup")
     }
     
