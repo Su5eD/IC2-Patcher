@@ -93,7 +93,8 @@ tasks {
         val sourceJar = getByName<Jar>("sourceJar")
         val outputDir = patchesDir
         dependsOn(sourceJar)
-        
+        dependsOn(baseSourceJar)
+
         base = baseSourceJar.archiveFile.get().asFile
         modified = sourceJar.archiveFile.get().asFile
         output = outputDir
