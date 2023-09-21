@@ -27,7 +27,7 @@ val versionBuildCraft: String by project
 val versionForge: String by project
 
 val patchedJar: File = File(buildDir, "applyPatches/output.jar")
-val patchesDir: File = getPatchesDirectory()
+val patchesDir: File = file(getPatchesDirectory() + "/minecraft")
 
 val ic2Dev: Configuration by configurations.creating
 val ic2Clean: Configuration by configurations.creating
@@ -133,7 +133,7 @@ tasks {
         group = taskGroup
         cleanJar = ic2Clean.singleFile
         dirtyJar = File(buildDir, "reobfJar/output.jar")
-        output = File(buildDir, "$name/ic2patches.pack.lzma")
+        output = File(rootDir, "src/main/generatedResources/patches/" + getPatchesDirectory() + "/ic2patches.pack.lzma")
         configureBinPatchTask(this)
     }
     
@@ -143,7 +143,7 @@ tasks {
         group = taskGroup
         cleanJar = ic2Dev.singleFile
         dirtyJar = shadowJar.archiveFile.get().asFile
-        output = File(buildDir, "$name/ic2patches.pack.lzma")
+        output = File(buildDir, "$name/patches/" + getPatchesDirectory() + "/ic2patches.pack.lzma")
         configureBinPatchTask(this)
     }
     
@@ -239,7 +239,7 @@ fun compareVersions(v1:String, v2:String): Boolean {
 /**
  * Used to get patches directory based on the IC2 Version specified in the Gradle properties.
  */
-fun getPatchesDirectory(): File {
+fun getPatchesDirectory(): String {
     project(":IC2-Patched").projectDir.listFiles { _, name ->
         name.startsWith("patches[") && name.endsWith("]")
     }?.forEach { file ->
@@ -248,10 +248,10 @@ fun getPatchesDirectory(): File {
         if (versions.size == 2) {
             if (compareVersions(versionIC2, versions[0])) {
                 if (versions[1] == "+" || !compareVersions(versionIC2, versions[1])) {
-                    return file("patches[${versions[0]},${versions[1]}]/minecraft")
+                    return "patches[${versions[0]},${versions[1]}]"
                 }
             }
         }
     }
-    return File("patches/minecraft")
+    return "patches"
 }

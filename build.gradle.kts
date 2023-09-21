@@ -112,7 +112,9 @@ tasks {
     register<Jar>("devJar") {
         val generateDevBinPatches = project(":IC2-Patched").tasks.getByName<GenerateBinPatches>("generateDevBinPatches")
         dependsOn(generateDevBinPatches)
-        from(sourceSets.main.get().output)
+        from(sourceSets.main.get().output) {
+            exclude("patches");
+        }
         from(generateDevBinPatches.output)
         
         manifest { 
@@ -129,7 +131,6 @@ tasks {
         dependsOn(generateBinPatches)
         
         from(sourceSets.main.get().output)
-        from (generateBinPatches.output)
         manifest { 
             attributes(
                     "FMLCorePlugin" to "mods.su5ed.ic2patcher.asm.PatcherFMLPlugin",
@@ -157,6 +158,14 @@ reobf {
 
 artifacts { 
     archives(tasks.getByName("releaseJar"))
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDir("src/main/generatedResources")
+        }
+    }
 }
 
 fun getGitVersion(): String {
