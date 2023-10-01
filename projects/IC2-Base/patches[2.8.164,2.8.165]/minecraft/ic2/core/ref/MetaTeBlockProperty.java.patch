@@ -1,0 +1,11 @@
+--- a/ic2/core/ref/MetaTeBlockProperty.java
++++ b/ic2/core/ref/MetaTeBlockProperty.java
+@@ -152,7 +152,7 @@
+          if (entry1.getKey() != invalid.teBlock.getIdentifier()) {
+             Tuple.T2 tuple$t2 = entry1.getValue();
+             Integer integer = (Integer)tuple$t2.a;
+-            Object object = tuple$t2.a = (TA)((Integer)tuple$t2.a).intValue() + 1;
++            Object object = tuple$t2.a = ((Integer)tuple$t2.a).intValue() + 1;
+             ((List)(entry1.getValue()).b).add(metateblockproperty$metatepair1);
+          }
+       }

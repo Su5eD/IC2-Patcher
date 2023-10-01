@@ -1,0 +1,13 @@
+--- a/ic2/core/block/storage/box/TileEntityWoodenStorageBox.java
++++ b/ic2/core/block/storage/box/TileEntityWoodenStorageBox.java
+@@ -1,8 +1,10 @@
+ package ic2.core.block.storage.box;
+ 
++import ic2.core.profile.NotClassic;
+ import net.minecraft.block.SoundType;
+ import net.minecraft.entity.Entity;
+ 
++@NotClassic
+ public class TileEntityWoodenStorageBox extends TileEntityStorageBox {
+    public TileEntityWoodenStorageBox() {
+       super(27);

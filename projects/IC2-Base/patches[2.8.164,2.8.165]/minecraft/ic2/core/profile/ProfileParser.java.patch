@@ -1,0 +1,33 @@
+--- a/ic2/core/profile/ProfileParser.java
++++ b/ic2/core/profile/ProfileParser.java
+@@ -5,10 +5,8 @@
+ import ic2.core.util.LogCategory;
+ import ic2.core.util.Util;
+ import ic2.core.util.XmlUtil;
+-import java.io.BufferedInputStream;
+-import java.io.File;
+-import java.io.IOException;
+-import java.io.InputStream;
++
++import java.io.*;
+ import java.text.ParseException;
+ import java.util.ArrayList;
+ import java.util.Arrays;
+@@ -243,7 +241,7 @@
+                throw new RuntimeException("Non-replacement changes made alongside replacement: " + profileparser$node);
+             }
+ 
+-            list.add((Object)null);
++            list.add(null);
+             break;
+          default:
+             assert parent.getType().validChildren.contains(profileparser$node.getType());
+@@ -313,7 +311,7 @@
+          ProfileTarget profiletarget = root.offset(this.path);
+          Set<ProfileTarget> set = new HashSet<ProfileTarget>();
+          if (!profiletarget.isFile()) {
+-            for(File file1 : profiletarget.asFile().listFiles(new WildcardFileFilter("*.INI", IOCase.INSENSITIVE))) {
++            for(File file1 : profiletarget.asFile().listFiles((FileFilter) new WildcardFileFilter("*.INI", IOCase.INSENSITIVE))) {
+                if (file1.isFile()) {
+                   set.add(profiletarget.offset(file1.getName()));
+                }

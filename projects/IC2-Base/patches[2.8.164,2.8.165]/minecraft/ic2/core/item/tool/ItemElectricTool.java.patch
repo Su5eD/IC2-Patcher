@@ -1,0 +1,41 @@
+--- a/ic2/core/item/tool/ItemElectricTool.java
++++ b/ic2/core/item/tool/ItemElectricTool.java
+@@ -140,9 +140,9 @@
+    }
+ 
+    public void onUpdate(ItemStack itemstack, World world, Entity entity, int i, boolean flag) {
+-      boolean flag = flag && entity instanceof EntityLivingBase;
++      boolean flag2 = flag && entity instanceof EntityLivingBase;
+       if (IC2.platform.isRendering()) {
+-         if (flag && !this.wasEquipped) {
++         if (flag2 && !this.wasEquipped) {
+             if (this.audioSource == null) {
+                String s1 = this.getIdleSound((EntityLivingBase)entity, itemstack);
+                if (s1 != null) {
+@@ -158,13 +158,13 @@
+             if (s2 != null) {
+                IC2.audioManager.playOnce(entity, PositionSpec.Hand, s2, true, IC2.audioManager.getDefaultVolume());
+             }
+-         } else if (!flag && this.audioSource != null) {
++         } else if (!flag2 && this.audioSource != null) {
+             if (entity instanceof EntityLivingBase) {
+                EntityLivingBase entitylivingbase = (EntityLivingBase)entity;
+-               ItemStack itemstack = entitylivingbase.getItemStackFromSlot(EntityEquipmentSlot.MAINHAND);
+-               if (itemstack == null || itemstack.getItem() != this || itemstack == itemstack) {
++               ItemStack stack = entitylivingbase.getItemStackFromSlot(EntityEquipmentSlot.MAINHAND);
++               if (stack == null || stack.getItem() != this || stack == itemstack) {
+                   this.removeAudioSource();
+-                  String s = this.getStopSound(entitylivingbase, itemstack);
++                  String s = this.getStopSound(entitylivingbase, stack);
+                   if (s != null) {
+                      IC2.audioManager.playOnce(entity, PositionSpec.Hand, s, true, IC2.audioManager.getDefaultVolume());
+                   }
+@@ -174,7 +174,7 @@
+             this.audioSource.updatePosition();
+          }
+ 
+-         this.wasEquipped = flag;
++         this.wasEquipped = flag2;
+       }
+ 
+    }

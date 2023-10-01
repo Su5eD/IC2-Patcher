@@ -2,13 +2,13 @@
 	{
 		"modid": "ic2patcher",
 		"name": "IC2 Patcher",
-		"description": "Patches IC2",
+		"description": "This mod Patches IC2 to fix bugs that weren't fixed by IC2 Team.",
 		"version": "${version}",
 		"mcversion": "${mcversion}",
 		"credits": "",
 		"authorList": ["Su5eD"],
 		"logoFile": "",
-		"url": "",
+		"url": "https://github.com/Su5eD/IC2-Patcher",
 		"updateUrl": "",
 		"parent": "",
 		"screenshots": []

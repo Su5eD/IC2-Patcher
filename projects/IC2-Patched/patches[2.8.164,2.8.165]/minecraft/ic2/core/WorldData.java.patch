@@ -1,0 +1,59 @@
+--- a/ic2/core/WorldData.java
++++ b/ic2/core/WorldData.java
+@@ -2,6 +2,7 @@
+ 
+ import ic2.core.energy.grid.EnergyNetLocal;
+ import ic2.core.network.TeUpdateDataServer;
++import ic2.core.util.LogCategory;
+ import java.util.ArrayList;
+ import java.util.Collections;
+ import java.util.HashSet;
+@@ -22,6 +23,7 @@
+ public class WorldData {
+    private static ConcurrentMap<Integer, WorldData> idxClient = FMLCommonHandler.instance().getSide().isClient() ? new ConcurrentHashMap() : null;
+    private static ConcurrentMap<Integer, WorldData> idxServer = new ConcurrentHashMap<Integer, WorldData>();
++   private final World world;
+    final Queue<IWorldTickCallback> singleUpdates = new ConcurrentLinkedQueue<IWorldTickCallback>();
+    final Set<IWorldTickCallback> continuousUpdates = new HashSet<IWorldTickCallback>();
+    boolean continuousUpdatesInUse = false;
+@@ -42,7 +44,7 @@
+          this.energyNet = null;
+          this.windSim = null;
+       }
+-
++      this.world = world;
+    }
+ 
+    public static WorldData get(World world) {
+@@ -61,9 +63,16 @@
+             if (worlddata1 != null) {
+                worlddata = worlddata1;
+             }
++            IC2.log.debug(LogCategory.EnergyNet, "World with id %d loaded.", world.provider.getDimension());
+ 
+             return worlddata;
+          } else {
++            if (load && world != worlddata.world) {
++               worlddata = new WorldData(world);
++               concurrentmap.put(world.provider.getDimension(), worlddata);
++               IC2.log.warn(LogCategory.EnergyNet, "The dimension %d had the wrong world referenced and was replaced with the current one.", world.provider.getDimension());
++               IC2.log.warn(LogCategory.EnergyNet, "This is likely caused by missing or incorrect ordered world load / unload events.");
++            }
+             return worlddata;
+          }
+       }
+@@ -71,6 +80,14 @@
+ 
+    public static void onWorldUnload(World world) {
+       getIndex(!world.isRemote).remove(Integer.valueOf(world.provider.getDimension()));
++      IC2.log.debug(LogCategory.EnergyNet, "World with id %d unloaded.", world.provider.getDimension());
++   }
++
++   public static void resetMaps() {
++      idxServer.clear();
++      if (idxClient != null) {
++         idxClient.clear();
++      }
+    }
+ 
+    private static ConcurrentMap<Integer, WorldData> getIndex(boolean simulating) {

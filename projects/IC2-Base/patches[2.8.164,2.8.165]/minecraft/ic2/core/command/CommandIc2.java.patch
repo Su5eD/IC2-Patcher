@@ -1,0 +1,11 @@
+--- a/ic2/core/command/CommandIc2.java
++++ b/ic2/core/command/CommandIc2.java
+@@ -436,7 +436,7 @@
+             if (this.pattern.matcher(s).matches()) {
+                if (this.meta == null) {
+                   if (item instanceof IMultiItem) {
+-                     for(ItemStack itemstack : ((IMultiItem)item).getAllStacks()) {
++                     for(ItemStack itemstack : ((IMultiItem<?>)item).getAllStacks()) {
+                         assert itemstack != null : item + " produced a null stack in getAllStacks()";
+ 
+                         this.dump(itemstack, s);

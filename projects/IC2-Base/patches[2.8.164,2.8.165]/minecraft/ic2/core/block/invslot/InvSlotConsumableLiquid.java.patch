@@ -1,0 +1,20 @@
+--- a/ic2/core/block/invslot/InvSlotConsumableLiquid.java
++++ b/ic2/core/block/invslot/InvSlotConsumableLiquid.java
+@@ -51,7 +51,7 @@
+    }
+ 
+    public FluidStack drain(Fluid fluid, int maxAmount, MutableObject<ItemStack> output, boolean simulate) {
+-      output.setValue((Object)null);
++      output.setValue(null);
+       if (fluid != null && !this.acceptsLiquid(fluid)) {
+          return null;
+       } else if (this.opType != InvSlotConsumableLiquid.OpType.Drain && this.opType != InvSlotConsumableLiquid.OpType.Both) {
+@@ -79,7 +79,7 @@
+    }
+ 
+    public int fill(FluidStack fs, MutableObject<ItemStack> output, boolean simulate) {
+-      output.setValue((Object)null);
++      output.setValue(null);
+       if (fs != null && fs.amount > 0) {
+          if (this.opType != InvSlotConsumableLiquid.OpType.Fill && this.opType != InvSlotConsumableLiquid.OpType.Both) {
+             return 0;

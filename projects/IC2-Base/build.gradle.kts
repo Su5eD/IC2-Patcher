@@ -1,3 +1,4 @@
+import codechicken.diffpatch.util.PatchMode
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import net.minecraftforge.gradle.common.task.JarExec
 import net.minecraftforge.gradle.patcher.task.TaskApplyPatches
@@ -32,6 +33,7 @@ val versionIC2: String by project
 val versionJEI: String by project
 val versionBuildCraft: String by project
 val versionForgeFlower: String by project
+val versionForge: String by project
 
 val decompiledJar: File = File(buildDir, "decompileIC2/output.jar")
 val patchedJar: File = File(buildDir, "applyPatches/output.jar")
@@ -68,9 +70,11 @@ tasks {
         group = taskGroup
         dependsOn("applyStyle")
         base = processedJar
-        patches = file("patches/minecraft")
+
+        patches = getPatchesDirectory()
         rejects = File(buildDir, "$name/rejects.zip")
         output = patchedJar
+        patchMode = PatchMode.OFFSET
         
         isPrintSummary = true
     }
@@ -86,7 +90,9 @@ tasks {
         group = taskGroup
         dependsOn("applyStylePatched")
         
-        from(zipTree(processedJarPatched))
+        from(zipTree(processedJarPatched)) {
+            exclude("ic2/api/energy/usage.txt")
+        }
         into("src/main/java")
     }
     
@@ -103,13 +109,30 @@ tasks {
     register<Jar>("sourceJar") {
         dependsOn("classes")
         archiveClassifier.set("sources")
-        from(sourceSets.main.get().allJava)
+        from(sourceSets.main.get().allJava) {
+            exclude("*.txt")
+        }
+    }
+
+    register<Jar>("sourceJarW-ODep") {
+        // This dependency didn't allow for generatePatches to work correctly.
+//        dependsOn("classes")
+        archiveClassifier.set("sources")
+        from(sourceSets.main.get().allJava) {
+            exclude("*.txt")
+        }
+    }
+
+    register<Jar>("sourceJarWithResources") {
+        dependsOn("classes","extractResources")
+        archiveClassifier.set("sources-with-resources")
+        from(sourceSets.main.get().allSource)
     }
     
     register<TaskGeneratePatches>("generatePatches") {
         group = taskGroup
-        val sourceJar = getByName<Jar>("sourceJar")
-        val outputDir = file("patches/minecraft")
+        val sourceJar = getByName<Jar>("sourceJarW-ODep")
+        var outputDir = getPatchesDirectory()
         dependsOn(sourceJar, "applyStyle")
         base = processedJar
         modified = sourceJar.archiveFile.get().asFile
@@ -134,12 +157,11 @@ tasks {
     }
     
     named<ShadowJar>("shadowJar") {
-        dependsOn("classes")
+        dependsOn("classes", "extractSources")
     
         configurations = listOf(project.configurations["shade"])
         
         archiveClassifier.set("")
-        
         from("src/main/java/ic2") {
             include("profiles/**")
             include("sounds/**")
@@ -183,7 +205,7 @@ repositories {
 }
 
 dependencies {
-    minecraft(group = "net.minecraftforge", name = "forge", version = "1.12.2-14.23.5.2855")
+    minecraft(group = "net.minecraftforge", name = "forge", version = "1.12.2-${versionForge}")
     
     ic2(group = "net.industrial-craft", name = "industrialcraft-2", version = "${versionIC2}-ex112", classifier = "dev")
     compileOnly(group = "mezz.jei", name = "jei_1.12.2", version = versionJEI)
@@ -212,24 +234,76 @@ open class ApplyAstyle : DefaultTask() {
         val out = ZipOutputStream(FileOutputStream(output.get().asFile))
         
         for (entry in zipFile.entries()) {
-            if (entry.name.startsWith("ic2") && entry.name.endsWith(".java")) {
-                val txt = BufferedReader(InputStreamReader(zipFile.getInputStream(entry)))
-                        .run {
-                            val builder = StringBuilder()
-                            forEachLine(builder::appendLine)
-                            builder.toString()
-                        }
-                val reader = StringReader(txt)
-                    
-                val newEntry = ZipEntry(entry.name)
-                out.putNextEntry(newEntry)
-                
-                val outString = reader.readText().trimEnd() + System.lineSeparator()
-                out.write(outString.toByteArray())
-                out.closeEntry()
+            if (entry.name.startsWith("ic2")) {
+                if (entry.name.endsWith(".java")) {
+                    val txt = BufferedReader(InputStreamReader(zipFile.getInputStream(entry)))
+                            .run {
+                                val builder = StringBuilder()
+                                forEachLine(builder::appendLine)
+                                builder.toString()
+                            }
+                    val reader = StringReader(txt)
+
+                    val newEntry = ZipEntry(entry.name)
+                    out.putNextEntry(newEntry)
+
+                    val outString = reader.readText().trimEnd() + System.lineSeparator()
+                    out.write(outString.toByteArray())
+                    out.closeEntry()
+                } else if (entry.name.startsWith("ic2/profiles") || entry.name.startsWith("ic2/sounds")) {
+                    val newEntry = ZipEntry(entry.name)
+                    out.putNextEntry(newEntry)
+                    out.write(zipFile.getInputStream(entry).readBytes())
+                    out.closeEntry()
+                }
             }
         }
         
         out.close()
     }
+}
+
+/**
+ * Compares two versions separated by dots. Doesn't work with versions schema containing letters.
+ * Truth table:
+ *  v1 > v2 => true
+ *  v1 == v2 => true
+ *  v1 < v2 => false
+ *  v1 // v2 contain chars -> Integer parsing Exception
+ */
+fun compareVersions(v1:String, v2:String): Boolean {
+    val v1s = v1.split(".");
+    val v2s = v2.split(".");
+
+    val length: Int = if (v1s.size > v2s.size) { v2s.size } else { v1s.size }
+    for (i in 0 until length) {
+        val v1i = Integer.parseInt(v1s[i]);
+        val v2i = Integer.parseInt(v2s[i])
+        if (v1i > v2i) {
+            return true
+        } else if (v2i > v1i) {
+            return false;
+        }
+    }
+    return v1s.size >= v2s.size
+}
+
+/**
+ * Used to get patches directory based on the IC2 Version specified in the Gradle properties.
+ */
+fun getPatchesDirectory(): File {
+    project(":IC2-Base").projectDir.listFiles { _, name ->
+        name.startsWith("patches[") && name.endsWith("]")
+    }?.forEach { file ->
+        val name = file.name.toString()
+        val versions = name.substring(name.indexOf("[")+1, name.indexOf("]")).split(",")
+        if (versions.size == 2) {
+            if (compareVersions(versionIC2, versions[0])) {
+                if (versions[1] == "+" || !compareVersions(versionIC2, versions[1])) {
+                    return file("patches[${versions[0]},${versions[1]}]/minecraft")
+                }
+            }
+        }
+    }
+    return File("patches/minecraft")
 }

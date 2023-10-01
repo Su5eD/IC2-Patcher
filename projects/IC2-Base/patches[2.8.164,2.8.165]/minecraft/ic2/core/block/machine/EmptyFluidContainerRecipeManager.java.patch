@@ -1,0 +1,11 @@
+--- a/ic2/core/block/machine/EmptyFluidContainerRecipeManager.java
++++ b/ic2/core/block/machine/EmptyFluidContainerRecipeManager.java
+@@ -30,7 +30,7 @@
+             return null;
+          } else {
+             Collection<ItemStack> collection = StackUtil.isEmpty(liquidutil$fluidoperationresult.extraOutput) ? Collections.emptyList() : Collections.singletonList(liquidutil$fluidoperationresult.extraOutput);
+-            return (new MachineRecipe((Object)null, new IEmptyFluidContainerRecipeManager.Output(collection, liquidutil$fluidoperationresult.fluidChange))).getResult(liquidutil$fluidoperationresult.inPlaceOutput);
++            return (new MachineRecipe(null, new IEmptyFluidContainerRecipeManager.Output(collection, liquidutil$fluidoperationresult.fluidChange))).getResult(liquidutil$fluidoperationresult.inPlaceOutput);
+          }
+       }
+    }

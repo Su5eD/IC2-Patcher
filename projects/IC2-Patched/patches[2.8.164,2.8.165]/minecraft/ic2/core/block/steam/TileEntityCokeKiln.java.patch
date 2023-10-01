@@ -1,0 +1,18 @@
+--- a/ic2/core/block/steam/TileEntityCokeKiln.java
++++ b/ic2/core/block/steam/TileEntityCokeKiln.java
+@@ -11,6 +11,7 @@
+ import ic2.core.gui.dynamic.GuiParser;
+ import ic2.core.gui.dynamic.IGuiValueProvider;
+ import ic2.core.network.GuiSynced;
++import ic2.core.profile.NotClassic;
+ import ic2.core.recipe.dynamic.DynamicRecipe;
+ import ic2.core.recipe.dynamic.DynamicRecipeManager;
+ import ic2.core.recipe.dynamic.RecipeOutputFluidStack;
+@@ -42,6 +43,7 @@
+ import net.minecraftforge.fml.relauncher.Side;
+ import net.minecraftforge.fml.relauncher.SideOnly;
+ 
++@NotClassic
+ public class TileEntityCokeKiln extends TileEntityInventory implements IMultiBlockController, IHasGui, IGuiValueProvider {
+    boolean disabled = true;
+    protected int tickRate = 20;

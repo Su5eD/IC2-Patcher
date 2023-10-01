@@ -1,0 +1,11 @@
+--- a/ic2/core/ref/BlockName.java
++++ b/ic2/core/ref/BlockName.java
+@@ -80,7 +80,7 @@
+          return null;
+       } else if (this.instance instanceof IMultiItem) {
+          IMultiItem<T> imultiitem = (IMultiItem)this.instance;
+-         return imultiitem.getItemStack((IIdProvider)variant);
++         return imultiitem.getItemStack((T) variant);
+       } else if (variant == null) {
+          return this.getItemStack((String)null);
+       } else {
