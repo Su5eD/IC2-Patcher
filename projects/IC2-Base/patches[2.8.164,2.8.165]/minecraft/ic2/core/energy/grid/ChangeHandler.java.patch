@@ -1,0 +1,44 @@
+--- a/ic2/core/energy/grid/ChangeHandler.java
++++ b/ic2/core/energy/grid/ChangeHandler.java
+@@ -115,9 +115,9 @@
+ 
+             ienergytile = (IEnergyTile)tile.next();
+             blockpos = EnergyNet.instance.getPos(ienergytile);
+-            Tile tile;
+-            if ((tile = enet.registeredTiles.get(blockpos)) != null) {
+-               ienergytile1 = tile.getMainTile();
++            Tile registeredTile;
++            if ((registeredTile = enet.registeredTiles.get(blockpos)) != null) {
++               ienergytile1 = registeredTile.getMainTile();
+                boolean flag = false;
+                Iterator<GridChange> iterator1 = pendingChanges.iterator();
+ 
+@@ -168,15 +168,15 @@
+          for(IEnergyTile ienergytile1 : tile.subTiles) {
+             for(EnumFacing enumfacing : EnumFacing.VALUES) {
+                BlockPos blockpos = EnergyNet.instance.getPos(ienergytile1).offset(enumfacing);
+-               Tile tile = enet.registeredTiles.get(blockpos);
+-               if (tile != null && tile != node.tile) {
+-                  for(Node node1 : tile.nodes) {
++               Tile registeredTile = enet.registeredTiles.get(blockpos);
++               if (registeredTile != null && registeredTile != node.tile) {
++                  for(Node node1 : registeredTile.nodes) {
+                      if (!node1.isExtraNode()) {
+                         IEnergyTile ienergytile2 = node1.tile.getMainTile();
+                         boolean flag = false;
+                         if ((node.nodeType == NodeType.Source || node.nodeType == NodeType.Conductor) && node1.nodeType != NodeType.Source) {
+                            IEnergyEmitter ienergyemitter = (IEnergyEmitter)(ienergytile1 instanceof IEnergyEmitter ? ienergytile1 : ienergytile);
+-                           IEnergyTile ienergytile3 = tile.getSubTileAt(blockpos);
++                           IEnergyTile ienergytile3 = registeredTile.getSubTileAt(blockpos);
+                            IEnergyAcceptor ienergyacceptor = (IEnergyAcceptor)(ienergytile3 instanceof IEnergyAcceptor ? ienergytile3 : ienergytile2);
+                            flag = ienergyemitter.emitsEnergyTo((IEnergyAcceptor)ienergytile2, enumfacing) && ienergyacceptor.acceptsEnergyFrom((IEnergyEmitter)ienergytile, enumfacing.getOpposite());
+                         }
+@@ -184,7 +184,7 @@
+                         boolean flag3 = false;
+                         if (!flag && (node.nodeType == NodeType.Sink || node.nodeType == NodeType.Conductor) && node1.nodeType != NodeType.Sink) {
+                            IEnergyAcceptor ienergyacceptor1 = (IEnergyAcceptor)(ienergytile1 instanceof IEnergyAcceptor ? ienergytile1 : ienergytile);
+-                           IEnergyTile ienergytile4 = tile.getSubTileAt(blockpos);
++                           IEnergyTile ienergytile4 = registeredTile.getSubTileAt(blockpos);
+                            IEnergyEmitter ienergyemitter1 = (IEnergyEmitter)(ienergytile4 instanceof IEnergyEmitter ? ienergytile4 : ienergytile2);
+                            flag3 = ienergyacceptor1.acceptsEnergyFrom((IEnergyEmitter)ienergytile2, enumfacing) && ienergyemitter1.emitsEnergyTo((IEnergyAcceptor)ienergytile, enumfacing.getOpposite());
+                         }

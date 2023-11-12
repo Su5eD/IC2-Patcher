@@ -1,0 +1,154 @@
+--- a/ic2/core/IC2.java
++++ b/ic2/core/IC2.java
+@@ -351,10 +351,8 @@
+          }
+       }
+ 
+-      Stream stream = list1.stream().map(IForgeRegistryEntry::getRegistryName);
+-      IForgeRegistryModifiable iforgeregistrymodifiable = (IForgeRegistryModifiable)ForgeRegistries.RECIPES;
+-      ((IForgeRegistryModifiable)ForgeRegistries.RECIPES).getClass();
+-      stream.forEach(iforgeregistrymodifiable::remove);
++      Stream<ResourceLocation> stream = list1.stream().map(IForgeRegistryEntry::getRegistryName);
++      stream.forEach(((IForgeRegistryModifiable<IRecipe>)ForgeRegistries.RECIPES)::remove);
+       if (ConfigUtil.getBool(MainConfig.get(), "recipes/smeltToIc2Items")) {
+          Map<ItemStack, ItemStack> map = FurnaceRecipes.instance().getSmeltingList();
+ 
+@@ -617,69 +615,69 @@
+             } else {
+                EnumFacing enumfacing1 = RotationUtil.rotateByRay(event.getTarget());
+                IWrenchable iwrenchable = (IWrenchable)world.getBlockState(blockpos).getBlock();
+-               List<EnhancedOverlay.Segment> list = new ArrayList<EnhancedOverlay.Segment>();
++               List<EnhancedOverlay.Segment> skippedSegments = new ArrayList<EnhancedOverlay.Segment>();
+ 
+                for(EnhancedOverlay.Segment enhancedoverlay$segment : EnhancedOverlay.Segment.values()) {
+-                  EnumFacing enumfacing2;
++                  EnumFacing spin;
+                   switch(enhancedoverlay$segment) {
+                   case CENTRE:
+-                     enumfacing2 = enumfacing;
++                     spin = enumfacing;
+                      break;
+                   case TOP:
+                      if (enumfacing.getAxis().isVertical()) {
+-                        enumfacing2 = EnumFacing.NORTH;
++                        spin = EnumFacing.NORTH;
+                      } else {
+-                        enumfacing2 = EnumFacing.UP;
++                        spin = EnumFacing.UP;
+                      }
+                      break;
+                   case BOTTOM:
+                      if (enumfacing.getAxis().isVertical()) {
+-                        enumfacing2 = EnumFacing.SOUTH;
++                        spin = EnumFacing.SOUTH;
+                      } else {
+-                        enumfacing2 = EnumFacing.DOWN;
++                        spin = EnumFacing.DOWN;
+                      }
+                      break;
+                   case LEFT:
+                      if (enumfacing.getAxis().isVertical()) {
+-                        enumfacing2 = EnumFacing.WEST;
++                        spin = EnumFacing.WEST;
+                      } else {
+-                        enumfacing2 = enumfacing.rotateY();
++                        spin = enumfacing.rotateY();
+                      }
+                      break;
+                   case RIGHT:
+                      if (enumfacing.getAxis().isVertical()) {
+-                        enumfacing2 = EnumFacing.EAST;
++                        spin = EnumFacing.EAST;
+                      } else {
+-                        enumfacing2 = enumfacing.rotateYCCW();
++                        spin = enumfacing.rotateYCCW();
+                      }
+                      break;
+                   case TOP_LEFT:
+                   case TOP_RIGHT:
+                   case BOTTOM_LEFT:
+                   case BOTTOM_RIGHT:
+-                     enumfacing2 = enumfacing.getOpposite();
++                     spin = enumfacing.getOpposite();
+                      break;
+                   default:
+                      throw new IllegalStateException("Unexpected segment: " + enhancedoverlay$segment);
+                   }
+ 
+-                  if (iwrenchable.canSetFacing(world, blockpos, enumfacing2, event.getPlayer())) {
+-                     int i;
+-                     int j;
+-                     int k;
+-                     if (enumfacing1 == enumfacing2) {
+-                        k = 0;
+-                        i = 0;
+-                        j = 255;
++                  if (iwrenchable.canSetFacing(world, blockpos, spin, event.getPlayer())) {
++                     int green;
++                     int red;
++                     int blue;
++                     if (enumfacing1 == spin) {
++                        blue = 0;
++                        green = 0;
++                        red = 255;
+                      } else {
+-                        j = 0;
+-                        i = 0;
+-                        k = 255;
++                        red = 0;
++                        green = 0;
++                        blue = 255;
+                      }
+ 
+-                     EnhancedOverlay.forFace(enumfacing).drawArea(enhancedoverlay$segment, Tessellator.getInstance().getBuffer(), i, j, k);
+-                     if (enumfacing1 == enumfacing2) {
+-                        if (enumfacing.getOpposite() == enumfacing2) {
++                     EnhancedOverlay.forFace(enumfacing).drawArea(enhancedoverlay$segment, Tessellator.getInstance().getBuffer(), green, red, blue);
++                     if (enumfacing1 == spin) {
++                        if (enumfacing.getOpposite() == spin) {
+                            EnumFacing[] aenumfacing = null;
+                            EnumFacing[] aenumfacing1 = null;
+                            switch(enumfacing.getAxis()) {
+@@ -695,8 +693,8 @@
+                            }
+ 
+                            if (aenumfacing != null) {
+-                              for(EnumFacing enumfacing3 : aenumfacing) {
+-                                 map.put(enumfacing3, () -> {
++                              for(EnumFacing face : aenumfacing) {
++                                 map.put(face, () -> {
+                                     GlStateManager.color((float)red / 255.0F, (float)green / 255.0F, (float)blue / 255.0F, 0.5F);
+                                     EnhancedOverlay.drawArea(face, EnhancedOverlay.Segment.TOP_LEFT, EnhancedOverlay.Segment.TOP, EnhancedOverlay.Segment.TOP_RIGHT, EnhancedOverlay.Segment.BOTTOM_LEFT, EnhancedOverlay.Segment.BOTTOM, EnhancedOverlay.Segment.BOTTOM_RIGHT);
+                                  });
+@@ -704,26 +702,26 @@
+                            }
+ 
+                            if (aenumfacing1 != null) {
+-                              for(EnumFacing enumfacing4 : aenumfacing1) {
+-                                 map.put(enumfacing4, () -> {
++                              for(EnumFacing face : aenumfacing1) {
++                                 map.put(face, () -> {
+                                     GlStateManager.color((float)red / 255.0F, (float)green / 255.0F, (float)blue / 255.0F, 0.5F);
+                                     EnhancedOverlay.drawArea(face, EnhancedOverlay.Segment.TOP_LEFT, EnhancedOverlay.Segment.LEFT, EnhancedOverlay.Segment.BOTTOM_LEFT, EnhancedOverlay.Segment.TOP_RIGHT, EnhancedOverlay.Segment.RIGHT, EnhancedOverlay.Segment.BOTTOM_RIGHT);
+                                  });
+                               }
+                            }
+                         } else if (enhancedoverlay$segment == EnhancedOverlay.Segment.CENTRE) {
+-                           map.put(enumfacing2, () -> {
++                           map.put(spin, () -> {
+                               GlStateManager.color((float)red / 255.0F, (float)green / 255.0F, (float)blue / 255.0F, 0.5F);
+                               EnhancedOverlay.drawArea(spin, (EnhancedOverlay.Segment[])skippedSegments.toArray(new EnhancedOverlay.Segment[skippedSegments.size()]));
+                            });
+                         } else {
+-                           map.put(enumfacing2, () -> {
++                           map.put(spin, () -> {
+                               EnhancedOverlay.forFace(spin).drawSide(Tessellator.getInstance().getBuffer(), red, green, blue);
+                            });
+                         }
+                      }
+                   } else {
+-                     list.add(enhancedoverlay$segment);
++                     skippedSegments.add(enhancedoverlay$segment);
+                   }
+                }
+             }

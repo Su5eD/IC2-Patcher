@@ -1,3 +1,4 @@
+import codechicken.diffpatch.util.PatchMode
 import net.minecraftforge.gradle.patcher.task.TaskApplyPatches
 import net.minecraftforge.gradle.patcher.task.TaskGeneratePatches
 import org.apache.commons.io.FileUtils
@@ -11,7 +12,7 @@ plugins {
     java
     id("de.undercouch.download")
     id("net.minecraftforge.gradle")
-    id("com.github.johnrengelman.shadow") version "6.1.0"
+    id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
 evaluationDependsOn(":IC2-Base")
@@ -23,9 +24,10 @@ val taskGroup: String = "IC2 Patcher"
 val versionIC2: String by project
 val versionJEI: String by project
 val versionBuildCraft: String by project
+val versionForge: String by project
 
 val patchedJar: File = File(buildDir, "applyPatches/output.jar")
-val patchesDir: File = file("patches/minecraft")
+val patchesDir: File = file(getPatchesDirectory() + "/minecraft")
 
 val ic2Dev: Configuration by configurations.creating
 val ic2Clean: Configuration by configurations.creating
@@ -40,7 +42,7 @@ minecraft {
 
 tasks {
     register<TaskApplyPatches>("applyPatches") {
-        val baseSourceJar = project(":IC2-Base").tasks.getByName<Jar>("sourceJar")
+        val baseSourceJar = project(":IC2-Base").tasks.getByName<Jar>("sourceJarWithResources")
         dependsOn(baseSourceJar)
         
         group = taskGroup
@@ -48,6 +50,7 @@ tasks {
         patches = patchesDir
         rejects = File(buildDir, "$name/rejects.zip")
         output = patchedJar
+        patchMode = PatchMode.OFFSET
         
         isPrintSummary = true
     }
@@ -75,6 +78,12 @@ tasks {
     register<Jar>("sourceJar") {
         group = taskGroup
         archiveClassifier.set("sources")
+        from(sourceSets.main.get().allJava)
+    }
+
+    register<Jar>("sourceJarWithResources") {
+        group = taskGroup
+        archiveClassifier.set("sources-with-resources")
         from(sourceSets.main.get().allSource)
     }
     
@@ -84,7 +93,8 @@ tasks {
         val sourceJar = getByName<Jar>("sourceJar")
         val outputDir = patchesDir
         dependsOn(sourceJar)
-        
+        dependsOn(baseSourceJar)
+
         base = baseSourceJar.archiveFile.get().asFile
         modified = sourceJar.archiveFile.get().asFile
         output = outputDir
@@ -111,9 +121,7 @@ tasks {
         dependsOn("classes", "extractSources")
     
         configurations = listOf(project.configurations["shade"])
-        
         archiveClassifier.set("")
-        
         from("src/main/java/ic2") {
             include("profiles/**")
             include("sounds/**")
@@ -126,7 +134,7 @@ tasks {
         group = taskGroup
         cleanJar = ic2Clean.singleFile
         dirtyJar = File(buildDir, "reobfJar/output.jar")
-        output = File(buildDir, "$name/ic2patches.pack.lzma")
+        output = File(rootDir, "src/main/generatedResources/patches/" + getPatchesDirectory() + "/ic2patches.pack.lzma")
         configureBinPatchTask(this)
     }
     
@@ -136,7 +144,7 @@ tasks {
         group = taskGroup
         cleanJar = ic2Dev.singleFile
         dirtyJar = shadowJar.archiveFile.get().asFile
-        output = File(buildDir, "$name/ic2patches.pack.lzma")
+        output = File(buildDir, "$name/patches/" + getPatchesDirectory() + "/ic2patches.pack.lzma")
         configureBinPatchTask(this)
     }
     
@@ -191,7 +199,7 @@ repositories {
 }
 
 dependencies {
-    minecraft(group = "net.minecraftforge", name = "forge", version = "1.12.2-14.23.5.2855")
+    minecraft(group = "net.minecraftforge", name = "forge", version = "1.12.2-${versionForge}")
     
     ic2Dev(group = "net.industrial-craft", name = "industrialcraft-2", version = "${versionIC2}-ex112", classifier = "dev")
     ic2Clean(group = "net.industrial-craft", name = "industrialcraft-2", version = "${versionIC2}-ex112")
@@ -202,4 +210,49 @@ dependencies {
     val ejml = create(group = "com.googlecode.efficient-java-matrix-library", name = "core", version = "0.26")
     implementation(ejml)
     shade(ejml)
+}
+
+/**
+ * Compares two versions separated by dots. Doesn't work with versions schema containing letters.
+ * Truth table:
+ *  v1 > v2 => true
+ *  v1 == v2 => true
+ *  v1 < v2 => false
+ *  v1 // v2 contain chars -> Integer parsing Exception
+ */
+fun compareVersions(v1:String, v2:String): Boolean {
+    val v1s = v1.split(".");
+    val v2s = v2.split(".");
+
+    val length: Int = if (v1s.size > v2s.size) { v2s.size } else { v1s.size }
+    for (i in 0 until length) {
+        val v1i = Integer.parseInt(v1s[i]);
+        val v2i = Integer.parseInt(v2s[i])
+        if (v1i > v2i) {
+            return true
+        } else if (v2i > v1i) {
+            return false;
+        }
+    }
+    return v1s.size >= v2s.size
+}
+
+/**
+ * Used to get patches directory based on the IC2 Version specified in the Gradle properties.
+ */
+fun getPatchesDirectory(): String {
+    project(":IC2-Patched").projectDir.listFiles { _, name ->
+        name.startsWith("patches[") && name.endsWith("]")
+    }?.forEach { file ->
+        val name = file.name.toString()
+        val versions = name.substring(name.indexOf("[")+1, name.indexOf("]")).split(",")
+        if (versions.size == 2) {
+            if (compareVersions(versionIC2, versions[0])) {
+                if (versions[1] == "+" || !compareVersions(versionIC2, versions[1])) {
+                    return "patches[${versions[0]},${versions[1]}]"
+                }
+            }
+        }
+    }
+    return "patches"
 }

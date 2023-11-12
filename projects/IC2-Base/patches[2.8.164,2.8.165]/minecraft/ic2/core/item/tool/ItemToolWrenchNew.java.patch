@@ -1,0 +1,11 @@
+--- a/ic2/core/item/tool/ItemToolWrenchNew.java
++++ b/ic2/core/item/tool/ItemToolWrenchNew.java
+@@ -94,7 +94,7 @@
+       if (block instanceof IWrenchable) {
+          TileEntity tileentity = world.getTileEntity(pos);
+          return tileentity instanceof IPipe ? true : Arrays.stream((Object[])EnumFacing.VALUES).anyMatch((face) -> {
+-            return ((IWrenchable)block).canSetFacing(world, pos, face, player);
++            return ((IWrenchable)block).canSetFacing(world, pos, (EnumFacing) face, player);
+          });
+       } else {
+          return false;

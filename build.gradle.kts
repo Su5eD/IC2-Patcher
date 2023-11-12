@@ -17,7 +17,7 @@ plugins {
     idea
     id("net.minecraftforge.gradle") version "5.0.11"
     id("de.undercouch.download") version "4.1.1"
-    id("wtf.gofancy.fancygradle") version "1.0.0"
+    id("wtf.gofancy.fancygradle") version "1.1.+"
 }
 
 evaluationDependsOnChildren()
@@ -29,6 +29,7 @@ val mappingsVersion: String by project
 
 val versionIC2: String by project
 val versionJEI: String by project
+val versionForge: String by project
 
 version = getGitVersion()
 group = "mods.su5ed"
@@ -56,26 +57,37 @@ minecraft {
 
 fancyGradle {
     patches {
-        patch(Patch.RESOURCES, Patch.COREMODS, Patch.CODE_CHICKEN_LIB, Patch.ASM)
+        Patch.RESOURCES
+        Patch.COREMODS
+        Patch.CODE_CHICKEN_LIB
+        Patch.ASM
     }
 }
 
 repositories {
     maven {
+        // JEI Repository
         name = "Progwml6 maven"
         url = uri("https://dvs1.progwml6.com/files/maven/")
     }
     maven {
+        // Mirror Maven for JEI
+        name = "ModMaven"
+        url = uri("https://modmaven.dev")
+    }
+    maven {
+        // IC2 Repository
         name = "ic2"
         url = uri("https://maven.ic2.player.to/")
     }
 }
 
 dependencies {
-    minecraft(group = "net.minecraftforge", name = "forge", version = "1.12.2-14.23.5.2855")
+    minecraft(group = "net.minecraftforge", name = "forge", version = "1.12.2-${versionForge}")
     
     implementation(project(":IC2-Patched"))
-    implementation(fg.deobf(group = "mezz.jei", name = "jei_1.12.2", version = versionJEI))
+//    implementation(fg.deobf(group = "mezz.jei", name = "jei_1.12.2", version = versionJEI))
+    compileOnly(fg.deobf(group = "mezz.jei", name = "jei_1.12.2", version = versionJEI))
 }
 
 tasks {
@@ -100,7 +112,9 @@ tasks {
     register<Jar>("devJar") {
         val generateDevBinPatches = project(":IC2-Patched").tasks.getByName<GenerateBinPatches>("generateDevBinPatches")
         dependsOn(generateDevBinPatches)
-        from(sourceSets.main.get().output)
+        from(sourceSets.main.get().output) {
+            exclude("patches");
+        }
         from(generateDevBinPatches.output)
         
         manifest { 
@@ -117,7 +131,6 @@ tasks {
         dependsOn(generateBinPatches)
         
         from(sourceSets.main.get().output)
-        from (generateBinPatches.output)
         manifest { 
             attributes(
                     "FMLCorePlugin" to "mods.su5ed.ic2patcher.asm.PatcherFMLPlugin",
@@ -127,6 +140,7 @@ tasks {
     }
     
     register("setup") {
+        group = "env setup"
         dependsOn(":IC2-Patched:setup")
     }
     
@@ -145,6 +159,14 @@ reobf {
 
 artifacts { 
     archives(tasks.getByName("releaseJar"))
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDir("src/main/generatedResources")
+        }
+    }
 }
 
 fun getGitVersion(): String {

@@ -1,0 +1,11 @@
+--- a/ic2/core/block/invslot/InvSlotProcessableCanner.java
++++ b/ic2/core/block/invslot/InvSlotProcessableCanner.java
+@@ -101,7 +101,7 @@
+       return this.getOutput(input, forAccept);
+    }
+ 
+-   protected MachineRecipeResult<Object, Object, Object> getOutput(Object input, boolean forAccept) {
++   protected MachineRecipeResult getOutput(Object input, boolean forAccept) {
+       switch(((TileEntityCanner)this.base).getMode()) {
+       case BottleSolid:
+          return Recipes.cannerBottle.apply((ICannerBottleRecipeManager.RawInput)input, forAccept);

@@ -1,0 +1,11 @@
+--- a/ic2/core/gui/dynamic/TextProvider.java
++++ b/ic2/core/gui/dynamic/TextProvider.java
+@@ -56,7 +56,7 @@
+             list = new ArrayList<TextProvider.AbstractTextProvider>();
+          } else if (c0 == '{' && c1 == ',') {
+             finish(stringbuilder1, list);
+-            list.add((Object)null);
++            list.add(null);
+          } else if (c0 == '{' && c1 == '}') {
+             finish(stringbuilder1, list);
+             TextProvider.AbstractTextProvider textprovider$abstracttextprovider2 = null;

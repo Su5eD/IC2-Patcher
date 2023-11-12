@@ -1,0 +1,29 @@
+--- a/ic2/core/block/BlockIC2Fence.java
++++ b/ic2/core/block/BlockIC2Fence.java
+@@ -184,7 +184,7 @@
+          state = this.getActualState(state, world, pos);
+       }
+ 
+-      addCollisionBoxToList(pos, mask, result, aabbs.get((Object)null));
++      addCollisionBoxToList(pos, mask, result, aabbs.get(null));
+ 
+       for(IProperty<Boolean> iproperty : connectProperties.values()) {
+          if (((Boolean)state.getValue(iproperty)).booleanValue()) {
+@@ -195,7 +195,7 @@
+    }
+ 
+    public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world, BlockPos pos) {
+-      AxisAlignedBB axisalignedbb = aabbs.get((Object)null);
++      AxisAlignedBB axisalignedbb = aabbs.get(null);
+       double d0 = axisalignedbb.minX;
+       double d1 = 0.0D;
+       double d2 = axisalignedbb.minZ;
+@@ -374,7 +374,7 @@
+       Map<IProperty<Boolean>, AxisAlignedBB> map = new IdentityHashMap<IProperty<Boolean>, AxisAlignedBB>(connectProperties.size() + 1);
+       double d0 = 0.375D;
+       double d1 = 0.625D;
+-      map.put((Object)null, new AxisAlignedBB(0.375D, 0.0D, 0.375D, 0.625D, 1.5D, 0.625D));
++      map.put(null, new AxisAlignedBB(0.375D, 0.0D, 0.375D, 0.625D, 1.5D, 0.625D));
+ 
+       for(EnumFacing enumfacing : EnumFacing.HORIZONTALS) {
+          double d2;

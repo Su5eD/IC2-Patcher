@@ -21,9 +21,8 @@ public class PatcherFMLPlugin implements IFMLLoadingPlugin {
 
     @Override
     public void injectData(Map<String, Object> data) {
-        Object jar = data.get("coremodLocation");
-        if (jar == null) return;
-        BinPatchManager.INSTANCE.setup((File) jar);
+        if (data.get("coremodLocation") == null || data.get("mcLocation") == null) return;
+        BinPatchManager.INSTANCE.setup(data);
     }
 
     @Override
