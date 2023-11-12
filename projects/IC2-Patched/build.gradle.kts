@@ -178,7 +178,7 @@ repositories {
     mavenCentral()
     maven {
         name = "ic2"
-        url = uri("https://maven.ic2.player.to/")
+        url = uri("https://maven2.ic2.player.to/")
     }
     maven { 
         name = "Progwml6 maven"
