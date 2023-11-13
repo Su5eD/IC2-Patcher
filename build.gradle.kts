@@ -78,7 +78,7 @@ repositories {
     maven {
         // IC2 Repository
         name = "ic2"
-        url = uri("https://maven.ic2.player.to/")
+        url = uri("https://maven2.ic2.player.to/")
     }
 }
 
