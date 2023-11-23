@@ -29,7 +29,6 @@ import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import mods.su5ed.ic2patcher.util.IC2VersionExtractor;
-import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.patcher.ClassPatch;
 import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
 import net.minecraftforge.fml.repackage.com.nothome.delta.GDiffPatcher;

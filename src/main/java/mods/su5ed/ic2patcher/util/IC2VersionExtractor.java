@@ -1,6 +1,8 @@
 package mods.su5ed.ic2patcher.util;
 
 import com.google.gson.Gson;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.util.List;
@@ -13,6 +15,7 @@ import java.util.zip.ZipFile;
 public class IC2VersionExtractor {
 
     private static String ic2Version = null;
+    private static final Logger logger = LogManager.getLogger("IC2-Patcher/IC2VersionExtraction");
 
     /**
      * Used to get cached IC2 Version extracted from the IC2 Jar. Requires {@link IC2VersionExtractor#getIC2Version(File)} to be called at least once.
@@ -27,11 +30,14 @@ public class IC2VersionExtractor {
      * @throws IOException when IO Exception occurs.
      */
     public static String getIC2Version(File mcLocation) throws IOException {
-        if (mcLocation == null) return ic2Version;
+        if (mcLocation == null || ic2Version != null) return ic2Version;
 
         File mods = new File(mcLocation, "mods");
 
-        if (!mods.exists() || mods.listFiles() == null) return null;
+        if (!mods.exists() || mods.listFiles() == null) {
+            logger.fatal("No mods folder exists or list of files returned is null! This error will cause a crash.");
+            return null;
+        }
 
         for (File file : mods.listFiles()) {
             if (!file.exists() || file.isDirectory() || !file.getName().endsWith(".jar")) continue;
@@ -44,10 +50,12 @@ public class IC2VersionExtractor {
                     Map<?,?> mcModInfo = ((List<Map<?,?>>)new Gson().fromJson(new InputStreamReader(zip.getInputStream(mcModInfoEntry)), Object.class)).get(0);
                     if (!Objects.equals(mcModInfo.get("modid"), "ic2")) continue;
                     ic2Version = (String) mcModInfo.get("version");
+                    logger.info("IC2 was found! Extracted version: " + ic2Version);
                     return ic2Version;
                 } catch (Exception ignored) {}
             }
         }
+        logger.fatal("No IC2 was found in the mods folder. Is IC2 Installed? This error will cause a crash.");
         return null;
     }
 }
