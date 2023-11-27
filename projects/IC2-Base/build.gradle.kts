@@ -1,8 +1,8 @@
 import codechicken.diffpatch.util.PatchMode
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import net.minecraftforge.gradle.common.task.JarExec
-import net.minecraftforge.gradle.patcher.task.TaskApplyPatches
-import net.minecraftforge.gradle.patcher.task.TaskGeneratePatches
+import net.minecraftforge.gradle.common.tasks.JarExec
+import net.minecraftforge.gradle.patcher.tasks.ApplyPatches
+import net.minecraftforge.gradle.patcher.tasks.GeneratePatches
 import org.apache.commons.io.FileUtils
 import java.io.BufferedReader
 import java.io.FileOutputStream
@@ -53,10 +53,10 @@ minecraft {
 tasks {
     register<JarExec>("decompileIC2") {
         group = taskGroup
-        tool = "net.minecraftforge:forgeflower:$versionForgeFlower"
+        tool.set("net.minecraftforge:forgeflower:$versionForgeFlower")
         val input = ic2.singleFile.absolutePath
         outputs.file(decompiledJar)
-        args = arrayOf("-din=1", "-rbr=1", "-dgs=1", "-asc=1", "-rsy=1", "-iec=1", "-jvn=1", "-log=TRACE", input, decompiledJar.absolutePath)
+        args.set(listOf("-din=1", "-rbr=1", "-dgs=1", "-asc=1", "-rsy=1", "-iec=1", "-jvn=1", "-log=TRACE", input, decompiledJar.absolutePath))
     }
     
     register<ApplyAstyle>("applyStyle") {
@@ -66,16 +66,16 @@ tasks {
         output.set(processedJar)
     }
     
-    register<TaskApplyPatches>("applyPatches") {
+    register<ApplyPatches>("applyPatches") {
         group = taskGroup
         dependsOn("applyStyle")
-        base = processedJar
+        base.set(processedJar)
 
-        patches = getPatchesDirectory()
-        rejects = File(buildDir, "$name/rejects.zip")
-        output = patchedJar
-        patchMode = PatchMode.OFFSET
-        
+        patches.set(getPatchesDirectory())
+        rejects.set(File(buildDir, "$name/rejects.zip"))
+        output.set(patchedJar)
+        patchMode.set(PatchMode.OFFSET)
+
         isPrintSummary = true
     }
     
@@ -129,20 +129,20 @@ tasks {
         from(sourceSets.main.get().allSource)
     }
     
-    register<TaskGeneratePatches>("generatePatches") {
+    register<GeneratePatches>("generatePatches") {
         group = taskGroup
         val sourceJar = getByName<Jar>("sourceJarW-ODep")
         var outputDir = getPatchesDirectory()
         dependsOn(sourceJar, "applyStyle")
-        base = processedJar
-        modified = sourceJar.archiveFile.get().asFile
-        output = outputDir
+        base.set(processedJar)
+        modified.set(sourceJar.archiveFile.get().asFile)
+        output.set(outputDir)
         isPrintSummary = true
-        
+
         doLast {
             val outputPath = outputDir.toPath()
             Files.walk(outputPath)
-                    .filter { path -> 
+                    .filter { path ->
                         val relative = outputPath.relativize(path).toString()
                         relative.isNotEmpty() && (!relative.startsWith("ic2") || relative.startsWith("ic2\\profiles") || relative.startsWith("ic2\\sounds")) && path.toFile().isDirectory
                     }

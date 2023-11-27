@@ -1,18 +1,19 @@
 import codechicken.diffpatch.util.PatchMode
-import net.minecraftforge.gradle.patcher.task.TaskApplyPatches
-import net.minecraftforge.gradle.patcher.task.TaskGeneratePatches
+import net.minecraftforge.gradle.patcher.tasks.ApplyPatches
+import net.minecraftforge.gradle.patcher.tasks.GeneratePatches
 import org.apache.commons.io.FileUtils
 import java.nio.file.Files
 import java.nio.file.Path
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import net.minecraftforge.gradle.patcher.task.GenerateBinPatches
-import net.minecraftforge.gradle.mcp.task.GenerateSRG
+import net.minecraftforge.gradle.patcher.tasks.GenerateBinPatches
+import net.minecraftforge.gradle.mcp.tasks.GenerateSRG
 
 plugins {
     java
     id("de.undercouch.download")
     id("net.minecraftforge.gradle")
     id("com.github.johnrengelman.shadow") version "7.1.2"
+    id("wtf.gofancy.fancygradle")
 }
 
 evaluationDependsOn(":IC2-Base")
@@ -40,18 +41,28 @@ minecraft {
     mappings(mappingsChannel, mappingsVersion)
 }
 
+fancyGradle {
+    patches {
+        asm
+        codeChickenLib
+//        coremods
+        resources
+        mergetool
+    }
+}
+
 tasks {
-    register<TaskApplyPatches>("applyPatches") {
+    register<ApplyPatches>("applyPatches") {
         val baseSourceJar = project(":IC2-Base").tasks.getByName<Jar>("sourceJarWithResources")
         dependsOn(baseSourceJar)
-        
+
         group = taskGroup
-        base = baseSourceJar.archiveFile.get().asFile
-        patches = patchesDir
-        rejects = File(buildDir, "$name/rejects.zip")
-        output = patchedJar
-        patchMode = PatchMode.OFFSET
-        
+        base.set(baseSourceJar.archiveFile.get().asFile)
+        patches.set(patchesDir)
+        rejects.set(File(buildDir, "$name/rejects.zip"))
+        output.set(patchedJar)
+        patchMode.set(PatchMode.OFFSET)
+
         isPrintSummary = true
     }
     
@@ -87,7 +98,7 @@ tasks {
         from(sourceSets.main.get().allSource)
     }
     
-    register<TaskGeneratePatches>("generatePatches") {
+    register<GeneratePatches>("generatePatches") {
         group = taskGroup
         val baseSourceJar = project(":IC2-Base").tasks.getByName<Jar>("sourceJar")
         val sourceJar = getByName<Jar>("sourceJar")
@@ -95,15 +106,15 @@ tasks {
         dependsOn(sourceJar)
         dependsOn(baseSourceJar)
 
-        base = baseSourceJar.archiveFile.get().asFile
-        modified = sourceJar.archiveFile.get().asFile
-        output = outputDir
+        base.set(baseSourceJar.archiveFile.get().asFile)
+        modified.set(sourceJar.archiveFile.get().asFile)
+        output.set(outputDir)
         isPrintSummary = true
-        
+
         doLast {
             val outputPath = outputDir.toPath()
             Files.walk(outputPath)
-                    .filter { path -> 
+                    .filter { path ->
                         val relative = outputPath.relativize(path).toString()
                         relative.isNotEmpty() && (!relative.startsWith("ic2") || relative.startsWith("ic2\\profiles") || relative.startsWith("ic2\\sounds")) && path.toFile().isDirectory
                     }
@@ -132,19 +143,19 @@ tasks {
     register<GenerateBinPatches>("generateBinPatches") {
         dependsOn("reobfJar")
         group = taskGroup
-        cleanJar = ic2Clean.singleFile
-        dirtyJar = File(buildDir, "reobfJar/output.jar")
-        output = File(rootDir, "src/main/generatedResources/patches/" + getPatchesDirectory() + "/ic2patches.pack.lzma")
+        cleanJar.set(ic2Clean.singleFile)
+        dirtyJar.set(File(buildDir, "reobfJar/output.jar"))
+        output.set(File(rootDir, "src/main/generatedResources/patches/" + getPatchesDirectory() + "/ic2patches.pack.lzma"))
         configureBinPatchTask(this)
     }
-    
+
     register<GenerateBinPatches>("generateDevBinPatches") {
         val shadowJar = getByName<ShadowJar>("shadowJar")
         dependsOn(shadowJar)
         group = taskGroup
-        cleanJar = ic2Dev.singleFile
-        dirtyJar = shadowJar.archiveFile.get().asFile
-        output = File(buildDir, "$name/patches/" + getPatchesDirectory() + "/ic2patches.pack.lzma")
+        cleanJar.set(ic2Dev.singleFile)
+        dirtyJar.set(shadowJar.archiveFile.get().asFile)
+        output.set(File(buildDir, "$name/patches/" + getPatchesDirectory() + "/ic2patches.pack.lzma"))
         configureBinPatchTask(this)
     }
     
@@ -160,20 +171,20 @@ tasks {
 fun configureBinPatchTask(task: GenerateBinPatches) {
     val createMcpToSrg = tasks.getByName<GenerateSRG>("createMcpToSrg")
     task.dependsOn(createMcpToSrg)
-    task.addPatchSet(patchesDir)
-            
-    task.args = arrayOf(
-            "--output", "{output}", 
-            "--patches", "{patches}", 
+//    task.addPatchSet(patchesDir)
+    task.patchSets.setFrom(patchesDir)
+
+    task.args.set(listOf(
+            "--output", "{output}",
+            "--patches", "{patches}",
             "--srg", "{srg}",
             "--legacy",
-                            
-            "--clean", "{clean}", 
+            "--clean", "{clean}",
             "--create", "{dirty}",
             "--prefix", "binpatch/merged"
-    )
-                
-    task.srg = createMcpToSrg.output
+    ))
+
+    task.srg.set(createMcpToSrg.output)
 }
 
 reobf {
