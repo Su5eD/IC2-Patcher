@@ -45,7 +45,7 @@ fancyGradle {
     patches {
         asm
         codeChickenLib
-//        coremods
+        coremods
         resources
         mergetool
     }

@@ -57,9 +57,10 @@ minecraft {
 fancyGradle {
     patches {
         asm
-//        codeChickenLib
-//        coremods
+        codeChickenLib
+        coremods
         resources
+        mergetool
     }
 }
 
@@ -146,6 +147,9 @@ tasks {
     whenTaskAdded { 
         if (name.startsWith("prepareRun")) {
             dependsOn("devJar")
+            dependsOn("patchModifyClassPath")
+            dependsOn("patchGenerateObfToSrg")
+            dependsOn("patchExtractMappingsZip")
         }
     }
 }
