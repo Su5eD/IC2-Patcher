@@ -146,6 +146,7 @@ tasks {
     
     whenTaskAdded { 
         if (name.startsWith("prepareRun")) {
+            dependsOn(project(":IC2-Patched").tasks.getByName("patchRunJar"))
             dependsOn("devJar")
             dependsOn("patchModifyClassPath")
             dependsOn("patchGenerateObfToSrg")

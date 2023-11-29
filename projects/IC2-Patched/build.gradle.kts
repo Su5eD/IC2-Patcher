@@ -1,12 +1,15 @@
 import codechicken.diffpatch.util.PatchMode
-import net.minecraftforge.gradle.patcher.tasks.ApplyPatches
-import net.minecraftforge.gradle.patcher.tasks.GeneratePatches
 import org.apache.commons.io.FileUtils
-import java.nio.file.Files
-import java.nio.file.Path
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import net.minecraftforge.gradle.patcher.tasks.GenerateBinPatches
+import net.minecraftforge.gradle.patcher.tasks.GeneratePatches
+import net.minecraftforge.gradle.patcher.tasks.ApplyPatches
 import net.minecraftforge.gradle.mcp.tasks.GenerateSRG
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.jar.JarFile
+import java.util.jar.JarOutputStream
+import java.util.regex.Pattern
 
 plugins {
     java
@@ -158,7 +161,72 @@ tasks {
         output.set(File(buildDir, "$name/patches/" + getPatchesDirectory() + "/ic2patches.pack.lzma"))
         configureBinPatchTask(this)
     }
-    
+
+    /**
+     * Used to replace classes in the jar used for running the game in the IDE.
+     * Some classes (like networking) aren't functional after recompiling them, so those are getting replaced.
+     */
+    register("patchRunJar") {
+        val shadowJar = getByName<ShadowJar>("shadowJar")
+        dependsOn(shadowJar)
+        mustRunAfter(shadowJar)
+
+        val projectJarFile = shadowJar.archiveFile.get().asFile
+        val patchedJar = File(projectJarFile.toString().replace(".jar", "-patched.jar"))
+
+        //TODO: Add separation between versions, so you can specify version range for replacement classes. For now those are required classes for 164 to boot.
+        val classesToReplace = listOf("ic2/core/network/.*", "assets/.*", "ic2/sounds/.*")
+        val tries = 3;
+
+        doLast { for (i in 1 until tries+1) { try {
+            val patchedOut = JarOutputStream(patchedJar.outputStream())
+            val projectJar = JarFile(projectJarFile)
+            val sourceJar = JarFile(ic2Dev.singleFile)
+            val stats = HashMap<String, Int>()
+            classesToReplace.forEach { regex -> stats[regex] = 0 }
+
+            projectJar.use { input -> sourceJar.use { inputOg ->
+                val entries = input.entries()
+                val sourceEntries = ArrayList<String>()
+                for (entry in inputOg.entries()) sourceEntries.add(entry.name)
+                while (entries.hasMoreElements()) {
+                    var entry = entries.nextElement()
+                    var replaced = false
+
+                    for (regex in classesToReplace) {
+                        if (Pattern.matches(regex, entry.name) && !entry.name.endsWith("/")) {
+                            if (sourceEntries.contains(entry.name)) {
+                                entry = sourceJar.getJarEntry(entry.name);
+                                patchedOut.putNextEntry(entry)
+                                patchedOut.write(sourceJar.getInputStream(entry).readBytes())
+                                replaced = true
+                                stats[regex] = (stats[regex] ?: 0) + 1
+                            } else {
+                                println("Couldn't find entry " + entry.name + " in original jar!")
+                            }
+                            break
+                        }
+                    }
+                    if (!replaced) {
+                        patchedOut.putNextEntry(entry)
+                        patchedOut.write(projectJar.getInputStream(entry).readBytes())
+                    }
+                    patchedOut.closeEntry()
+                }
+                patchedOut.close()
+                println("Attempt $i was successful! Out of " + input.size() + " entries replaced:")
+                stats.forEach { (key, value) -> println("> $value entries under regex $key") }
+            } }
+            projectJar.close()
+            Files.delete(projectJarFile.toPath())
+            Files.move(patchedJar.toPath(), projectJarFile.toPath())
+            break
+        } catch (e: Exception) {
+            if (i >= tries) throw e
+            println("Exception caught while trying to patch run jar. Attempt: $i | Message: " + e.localizedMessage)
+        } } }
+    }
+
     named("compileJava") {
         dependsOn("setup")
     }
