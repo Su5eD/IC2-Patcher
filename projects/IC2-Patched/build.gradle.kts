@@ -175,7 +175,7 @@ tasks {
         val patchedJar = File(projectJarFile.toString().replace(".jar", "-patched.jar"))
 
         //TODO: Add separation between versions, so you can specify version range for replacement classes. For now those are required classes for 164 to boot.
-        val classesToReplace = listOf("ic2/core/network/.*", "assets/.*", "ic2/sounds/.*")
+        val classesToReplace = listOf("assets/.*", "ic2/sounds/.*")
         val tries = 3;
 
         doLast { for (i in 1 until tries+1) { try {
