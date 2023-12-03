@@ -1,0 +1,18 @@
+--- a/ic2/core/block/invslot/InvSlotDischarge.java
++++ b/ic2/core/block/invslot/InvSlotDischarge.java
+@@ -9,6 +9,7 @@
+ import net.minecraft.item.ItemStack;
+ 
+ public class InvSlotDischarge extends InvSlot implements IDischargingSlot {
++   public int baseTier;
+    public int tier;
+    public boolean allowRedstoneDust;
+ 
+@@ -24,6 +25,7 @@
+       super(base, "discharge", access, 1, preferredSide);
+       this.allowRedstoneDust = true;
+       this.tier = tier;
++      this.baseTier = tier;
+       this.allowRedstoneDust = allowRedstoneDust;
+    }
+ 
