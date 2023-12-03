@@ -1,0 +1,49 @@
+--- a/ic2/core/block/machine/container/ContainerBatchCrafter.java
++++ b/ic2/core/block/machine/container/ContainerBatchCrafter.java
+@@ -13,6 +13,8 @@
+ import java.util.List;
+ import net.minecraft.entity.player.EntityPlayer;
+ import net.minecraft.item.ItemStack;
++import ic2.api.upgrade.IUpgradeItem;
++import net.minecraft.inventory.Slot;
+ 
+ public class ContainerBatchCrafter extends ContainerElectricMachine<TileEntityBatchCrafter> {
+    protected final TIntIntMap indexToSlot = new TIntIntHashMap();
+@@ -41,12 +43,23 @@
+       }
+ 
+       for(int l = 0; l < 4; ++l) {
+-         this.addSlotToContainer(new SlotInvSlot(tileEntity.upgradeSlot, l, 152, 8 + l * 18));
++         // Ingredients: 0-8 // Upgrades: 9-12
++         this.indexToSlot.put(l+9, this.addSlotToContainer(new SlotInvSlot(tileEntity.upgradeSlot, l, 152, 8 + l * 18)).slotNumber);
+       }
+ 
+    }
+ 
+    protected ItemStack handlePlayerSlotShiftClick(EntityPlayer player, ItemStack sourceItemStack) {
++      if (sourceItemStack.getItem() instanceof IUpgradeItem && this.base.upgradeSlot.accepts(sourceItemStack)) {
++         for (int i = 0; i < 4; i++) {
++            Slot slot = this.inventorySlots.get(this.indexToSlot.get(i+9));
++            if (slot.isItemValid(sourceItemStack)) {
++               sourceItemStack = this.transfer(sourceItemStack, slot);
++               if (StackUtil.isEmpty(sourceItemStack)) return StackUtil.emptyStack;
++            }
++         }
++      }
++
+       Tuple.T2<List<ItemStack>, ? extends TIntCollection> t2 = StackUtil.balanceStacks(this.base.ingredients, this.base.acceptPredicate, StackUtil.getSlotsFromInv(this.base.ingredients), Collections.singleton(sourceItemStack));
+       TIntIterator tintiterator = t2.b.iterator();
+ 
+@@ -55,7 +68,11 @@
+          this.inventorySlots.get(this.indexToSlot.get(i)).onSlotChanged();
+       }
+ 
+-      sourceItemStack = t2.a.isEmpty() ? StackUtil.emptyStack : t2.a.get(0);
++      if (t2.a.isEmpty()) return StackUtil.emptyStack;
++      sourceItemStack = t2.a.get(0);
++
++      if (this.base.dischargeSlot.accepts(sourceItemStack)) sourceItemStack = this.transfer(sourceItemStack, this.inventorySlots.get(36));
++
+       return sourceItemStack;
+    }
+ 
