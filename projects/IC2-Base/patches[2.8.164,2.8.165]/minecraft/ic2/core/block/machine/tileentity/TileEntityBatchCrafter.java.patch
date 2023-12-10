@@ -1,5 +1,14 @@
 --- a/ic2/core/block/machine/tileentity/TileEntityBatchCrafter.java
 +++ b/ic2/core/block/machine/tileentity/TileEntityBatchCrafter.java
+@@ -121,7 +121,7 @@
+       };
+       this.acceptPredicate = new Predicate<Tuple.T2<ItemStack, Integer>>() {
+          public boolean apply(Tuple.T2<ItemStack, Integer> input) {
+-            return TileEntityBatchCrafter.this.ingredientsRow[((Integer)input.b).intValue()].accepts((ItemStack)input.a);
++            return TileEntityBatchCrafter.this.ingredientsRow[input.b].accepts(input.a);
+          }
+       };
+       this.recipe = null;
 @@ -132,8 +132,9 @@
        this.progress = 0;
        this.guiProgress = 0.0F;

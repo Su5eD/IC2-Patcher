@@ -29,7 +29,6 @@ import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import mods.su5ed.ic2patcher.util.IC2VersionExtractor;
-import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.patcher.ClassPatch;
 import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
 import net.minecraftforge.fml.repackage.com.nothome.delta.GDiffPatcher;
@@ -155,7 +154,11 @@ public class BinPatchManager {
                 Enumeration<? extends ZipEntry> entries = zip.entries();
                 String patches = "ic2patches.pack.lzma";
                 String versionIC2 = IC2VersionExtractor.getIC2Version(mcLocation);
-                if (versionIC2 == null) throw new NullPointerException("Couldn't find IC2 Version! Is IC2 installed?");
+                if (versionIC2 == null) {
+                    if (!FMLLaunchHandler.isDeobfuscatedEnvironment()) throw new NullPointerException("Couldn't find IC2 Version! Is IC2 installed?");
+                    LOG.error("Couldn't find IC2 Version, however this is Deobfuscated Environment, so this error will be ignored and no patches will be loaded.");
+                    return;
+                }
                 if (DEBUG) LOG.debug("Current IC2 version: " + versionIC2);
                 versionIC2 = versionIC2.substring(0, versionIC2.indexOf("-"));
 

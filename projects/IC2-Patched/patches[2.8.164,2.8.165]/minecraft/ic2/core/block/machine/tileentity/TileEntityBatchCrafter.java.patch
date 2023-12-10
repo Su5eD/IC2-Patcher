@@ -1,6 +1,32 @@
 --- a/ic2/core/block/machine/tileentity/TileEntityBatchCrafter.java
 +++ b/ic2/core/block/machine/tileentity/TileEntityBatchCrafter.java
-@@ -297,7 +297,7 @@
+@@ -136,24 +136,7 @@
+          int finalI = i;
+          this.ingredientsRow[i] = new InvSlot(this, "ingredient[" + finalI + ']', InvSlot.Access.I, 1) {
+             public boolean accepts(ItemStack ingredient) {
+-               IRecipe irecipe = TileEntityBatchCrafter.this.world.isRemote ? TileEntityBatchCrafter.this.findRecipe() : TileEntityBatchCrafter.this.recipe;
+-               if (irecipe == null) {
+-                  return false;
+-               } else {
+-                  assert irecipe.matches(TileEntityBatchCrafter.this.crafting, TileEntityBatchCrafter.this.world);
+-
+-                  ItemStack itemstack = TileEntityBatchCrafter.this.craftingGrid[finalI];
+-
+-                  boolean flag;
+-                  try {
+-                     TileEntityBatchCrafter.this.craftingGrid[finalI] = ingredient;
+-                     flag = irecipe.matches(TileEntityBatchCrafter.this.crafting, TileEntityBatchCrafter.this.world);
+-                  } finally {
+-                     TileEntityBatchCrafter.this.craftingGrid[finalI] = itemstack;
+-                  }
+-
+-                  return flag;
+-               }
++               return StackUtil.checkItemEquality(craftingGrid[finalI], ingredient);
+             }
+ 
+             public void onChanged() {
+@@ -297,7 +280,7 @@
     }
  
     protected void doCrafting() {

@@ -1,0 +1,44 @@
+--- a/ic2/core/block/machine/container/ContainerBatchCrafter.java
++++ b/ic2/core/block/machine/container/ContainerBatchCrafter.java
+@@ -12,7 +12,6 @@
+ import java.util.Collections;
+ import java.util.List;
+ import net.minecraft.entity.player.EntityPlayer;
+-import net.minecraft.inventory.Slot;
+ import net.minecraft.item.ItemStack;
+ 
+ public class ContainerBatchCrafter extends ContainerElectricMachine<TileEntityBatchCrafter> {
+@@ -26,10 +25,9 @@
+          for(int j = 0; j < 3; ++j) {
+             this.addSlotToContainer(new SlotHologramSlot(tileEntity.craftingGrid, j + i * 3, 30 + j * 18, 17 + i * 18, 1, new SlotHologramSlot.ChangeCallback() {
+                public void onChanged(int index) {
+-                  if (((TileEntityBatchCrafter)ContainerBatchCrafter.this.base).hasWorld() && !((TileEntityBatchCrafter)ContainerBatchCrafter.this.base).getWorld().isRemote) {
+-                     ((TileEntityBatchCrafter)ContainerBatchCrafter.this.base).matrixChange(index);
++                  if (ContainerBatchCrafter.this.base.hasWorld() && !ContainerBatchCrafter.this.base.getWorld().isRemote) {
++                     ContainerBatchCrafter.this.base.matrixChange(index);
+                   }
+-
+                }
+             }));
+          }
+@@ -49,15 +47,15 @@
+    }
+ 
+    protected ItemStack handlePlayerSlotShiftClick(EntityPlayer player, ItemStack sourceItemStack) {
+-      Tuple.T2<List<ItemStack>, ? extends TIntCollection> t2 = StackUtil.balanceStacks(((TileEntityBatchCrafter)this.base).ingredients, ((TileEntityBatchCrafter)this.base).acceptPredicate, StackUtil.getSlotsFromInv(((TileEntityBatchCrafter)this.base).ingredients), Collections.singleton(sourceItemStack));
+-      TIntIterator tintiterator = ((TIntCollection)t2.b).iterator();
++      Tuple.T2<List<ItemStack>, ? extends TIntCollection> t2 = StackUtil.balanceStacks(this.base.ingredients, this.base.acceptPredicate, StackUtil.getSlotsFromInv(this.base.ingredients), Collections.singleton(sourceItemStack));
++      TIntIterator tintiterator = t2.b.iterator();
+ 
+-      while(tintiterator.hasNext()) {
++      while (tintiterator.hasNext()) {
+          int i = tintiterator.next();
+-         ((Slot)this.inventorySlots.get(this.indexToSlot.get(i))).onSlotChanged();
++         this.inventorySlots.get(this.indexToSlot.get(i)).onSlotChanged();
+       }
+ 
+-      sourceItemStack = ((List)t2.a).isEmpty() ? StackUtil.emptyStack : (ItemStack)((List)t2.a).get(0);
++      sourceItemStack = t2.a.isEmpty() ? StackUtil.emptyStack : t2.a.get(0);
+       return sourceItemStack;
+    }
+ 

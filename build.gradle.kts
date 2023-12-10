@@ -2,8 +2,7 @@ import fr.brouillard.oss.jgitver.GitVersionCalculator
 import fr.brouillard.oss.jgitver.Strategies
 import net.minecraftforge.gradle.common.util.RunConfig
 import wtf.gofancy.fancygradle.script.extensions.deobf
-import net.minecraftforge.gradle.patcher.task.GenerateBinPatches
-import wtf.gofancy.fancygradle.patch.Patch
+import net.minecraftforge.gradle.patcher.tasks.GenerateBinPatches
 
 buildscript {
     dependencies { 
@@ -15,7 +14,7 @@ plugins {
     `java-library`
     `maven-publish`
     idea
-    id("net.minecraftforge.gradle") version "5.0.11"
+    id("net.minecraftforge.gradle") version "5.1.+"
     id("de.undercouch.download") version "4.1.1"
     id("wtf.gofancy.fancygradle") version "1.1.+"
 }
@@ -57,10 +56,11 @@ minecraft {
 
 fancyGradle {
     patches {
-        Patch.RESOURCES
-        Patch.COREMODS
-        Patch.CODE_CHICKEN_LIB
-        Patch.ASM
+        asm
+        codeChickenLib
+        coremods
+        resources
+        mergetool
     }
 }
 
@@ -78,7 +78,7 @@ repositories {
     maven {
         // IC2 Repository
         name = "ic2"
-        url = uri("https://maven.ic2.player.to/")
+        url = uri("https://maven2.ic2.player.to/")
     }
 }
 
@@ -86,8 +86,8 @@ dependencies {
     minecraft(group = "net.minecraftforge", name = "forge", version = "1.12.2-${versionForge}")
     
     implementation(project(":IC2-Patched"))
-//    implementation(fg.deobf(group = "mezz.jei", name = "jei_1.12.2", version = versionJEI))
-    compileOnly(fg.deobf(group = "mezz.jei", name = "jei_1.12.2", version = versionJEI))
+    implementation(fg.deobf(group = "mezz.jei", name = "jei_1.12.2", version = versionJEI))
+//    compileOnly(fg.deobf(group = "mezz.jei", name = "jei_1.12.2", version = versionJEI))
 }
 
 tasks {
@@ -116,22 +116,22 @@ tasks {
             exclude("patches");
         }
         from(generateDevBinPatches.output)
-        
-        manifest { 
+
+        manifest {
             attributes(
                     "FMLCorePlugin" to "mods.su5ed.ic2patcher.asm.PatcherFMLPlugin",
                     "FMLCorePluginContainsFMLMod" to true
             )
         }
     }
-    
+
     register<Jar>("releaseJar") {
         archiveClassifier.set("")
         val generateBinPatches = project(":IC2-Patched").tasks.getByName<GenerateBinPatches>("generateBinPatches")
         dependsOn(generateBinPatches)
-        
+
         from(sourceSets.main.get().output)
-        manifest { 
+        manifest {
             attributes(
                     "FMLCorePlugin" to "mods.su5ed.ic2patcher.asm.PatcherFMLPlugin",
                     "FMLCorePluginContainsFMLMod" to true
@@ -146,7 +146,11 @@ tasks {
     
     whenTaskAdded { 
         if (name.startsWith("prepareRun")) {
+            dependsOn(project(":IC2-Patched").tasks.getByName("patchRunJar"))
             dependsOn("devJar")
+            dependsOn("patchModifyClassPath")
+            dependsOn("patchGenerateObfToSrg")
+            dependsOn("patchExtractMappingsZip")
         }
     }
 }
@@ -157,7 +161,7 @@ reobf {
     }
 }
 
-artifacts { 
+artifacts {
     archives(tasks.getByName("releaseJar"))
 }
 
