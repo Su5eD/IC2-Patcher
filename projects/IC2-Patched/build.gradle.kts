@@ -246,7 +246,7 @@ fun configureBinPatchTask(task: GenerateBinPatches) {
             "--output", "{output}",
             "--patches", "{patches}",
             "--srg", "{srg}",
-            "--legacy",
+//            "--legacy",
             "--clean", "{clean}",
             "--create", "{dirty}",
             "--prefix", "binpatch/merged"
