@@ -41,7 +41,6 @@ import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.jar.JarOutputStream;
-import java.util.jar.Pack200;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -188,11 +187,10 @@ public class BinPatchManager {
                     }
                     return;
                 }
-                try (LzmaInputStream binpatchesDecompressed = new LzmaInputStream(binpatchesCompressed)) {
-                    ByteArrayOutputStream jarBytes = new ByteArrayOutputStream();
-                    try (JarOutputStream jos = new JarOutputStream(jarBytes)) {
-                        Pack200.newUnpacker().unpack(binpatchesDecompressed, jos);
-                        jis = new JarInputStream(new ByteArrayInputStream(jarBytes.toByteArray()));
+                try (LzmaInputStream binpatchesDecompressedLzma = new LzmaInputStream(binpatchesCompressed)) {
+                    byte[] decompressed = ByteStreams.toByteArray(binpatchesDecompressedLzma);
+                    try (ByteArrayInputStream binpatchesDecompressed = new ByteArrayInputStream(decompressed)){
+                        jis = new JarInputStream(binpatchesDecompressed);
                     }
                 }
             }
@@ -210,7 +208,7 @@ public class BinPatchManager {
                     }
                     if (binpatchMatcher.matcher(entry.getName()).matches()) {
                         ClassPatch cp = readPatch(entry, jis);
-                        if (cp != null) {
+                        if (cp != null && cp.patch.length > 0) {
                             patches.put(cp.sourceClassName, cp);
                         }
                     }
@@ -241,9 +239,10 @@ public class BinPatchManager {
             LOG.warn(LOG.getMessageFactory().newMessage("Unable to read binpatch file {} - ignoring", patchEntry.getName()), e);
             return null;
         }
+        int version = input.readByte(); // Default 1
         String name = input.readUTF();
-        String sourceClassName = input.readUTF();
-        String targetClassName = input.readUTF();
+        String sourceClassName = name.replace('/', '.');
+        String targetClassName = input.readUTF().replace('/', '.');
         boolean exists = input.readBoolean();
         int inputChecksum = 0;
         if (exists) {
