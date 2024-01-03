@@ -147,11 +147,26 @@ tasks {
 
     register("srcCleanup") {
         group = "env setup"
-        println("Cleaning up source directories from IC2 Projects. Please close all opened source files if this process fails.")
         val basesrc = file(project(":IC2-Base").projectDir.path + "/src")
         val patchsrc = file(project(":IC2-Patched").projectDir.path + "/src")
-        if (basesrc.exists() && !basesrc.deleteRecursively()) throw IllegalStateException("Failed deleting base source directory!")
-        if (patchsrc.exists() && !patchsrc.deleteRecursively()) throw IllegalStateException("Failed deleting patched source directory!")
+        val versionBaseFile = file(basesrc.path + "_IC2_VERSION")
+        val versionPatchedFile = file(patchsrc.path + "_IC2_VERSION")
+        var versionBase: String? = null
+        var versionPatched: String? = null
+
+        if (versionBaseFile.exists()) versionBase = versionBaseFile.readLines()[0]
+        if (versionPatchedFile.exists()) versionPatched = versionPatchedFile.readLines()[0]
+
+        if (versionBase == versionPatched && versionBase == versionIC2 && versionPatched == versionIC2) {
+            println("IC2 Sources are from the correct version. No cleanup is required.")
+        } else {
+            println("Cleaning up source directories from IC2 Projects due to IC2 Versions mismatch. Please close all opened source files if this process fails.")
+            if (basesrc.exists() && !basesrc.deleteRecursively()) throw IllegalStateException("Failed deleting base source directory!")
+            if (patchsrc.exists() && !patchsrc.deleteRecursively()) throw IllegalStateException("Failed deleting patched source directory!")
+            versionBaseFile.writeText(versionIC2)
+            versionPatchedFile.writeText(versionIC2)
+            println("Source cleaned up, and IC2 Version was saved to IC2_VERSION file in the src folder.")
+        }
     }
     
     whenTaskAdded { 
