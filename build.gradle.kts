@@ -145,9 +145,7 @@ tasks {
         doFirst {
             cleanIC2Srcs()
         }
-        doLast {
-            dependsOn(":IC2-Patched:setup")
-        }
+        dependsOn(":IC2-Patched:setup")
     }
 
     register("srcCleanup") {
