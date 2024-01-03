@@ -141,7 +141,17 @@ tasks {
     
     register("setup") {
         group = "env setup"
+        dependsOn("srcCleanup")
         dependsOn(":IC2-Patched:setup")
+    }
+
+    register("srcCleanup") {
+        group = "env setup"
+        println("Cleaning up source directories from IC2 Projects. Please close all opened source files if this process fails.")
+        val basesrc = file(project(":IC2-Base").projectDir.path + "/src")
+        val patchsrc = file(project(":IC2-Patched").projectDir.path + "/src")
+        if (basesrc.exists() && !basesrc.deleteRecursively()) throw IllegalStateException("Failed deleting base source directory!")
+        if (patchsrc.exists() && !patchsrc.deleteRecursively()) throw IllegalStateException("Failed deleting patched source directory!")
     }
     
     whenTaskAdded { 
