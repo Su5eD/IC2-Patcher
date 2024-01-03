@@ -142,15 +142,15 @@ tasks {
     
     register("setup") {
         group = "env setup"
-        doFirst {
-            cleanIC2Srcs()
-        }
-        dependsOn(":IC2-Patched:setup")
+        dependsOn("srcCleanup")
+        dependsOn(":IC2-Patched:setup").mustRunAfter("srcCleanup")
     }
 
     register("srcCleanup") {
         group = "env setup"
-        cleanIC2Srcs()
+        doFirst {
+            cleanIC2Srcs()
+        }
     }
     
     whenTaskAdded { 
