@@ -1,0 +1,117 @@
+--- a/ic2/core/item/armor/jetpack/JetpackLogic.java
++++ b/ic2/core/item/armor/jetpack/JetpackLogic.java
+@@ -98,58 +98,78 @@
+    }
+ 
+    public static void onArmorTick(World world, EntityPlayer player, ItemStack stack, IJetpack jetpack) {
+-      if (stack != null && jetpack.isJetpackActive(stack)) {
++      if (stack != null) {
+          NBTTagCompound nbttagcompound = getJetpackCompound(stack);
+          boolean flag = getHoverMode(nbttagcompound);
+          byte b0 = nbttagcompound.getByte("toggleTimer");
+          boolean flag1 = false;
+-         if (IC2.keyboard.isJumpKeyDown(player) && IC2.keyboard.isModeSwitchKeyDown(player) && b0 == 0) {
++
++         if (player.isSneaking() && IC2.keyboard.isModeSwitchKeyDown(player) && b0 == 0) {
+             b0 = 10;
+-            flag = !flag;
++            boolean disabled = !nbttagcompound.getBoolean("jetpackDisabled");
+             if (IC2.platform.isSimulating()) {
+-               nbttagcompound.setBoolean("hoverMode", flag);
+-               if (flag) {
+-                  IC2.platform.messagePlayer(player, "Hover Mode enabled.");
++               nbttagcompound.setBoolean("jetpackDisabled", disabled);
++               if (disabled && jetpack.isJetpackActive(stack)) {
++                  IC2.platform.messagePlayer(player, "This jetpack can't be disabled.");
++                  nbttagcompound.setBoolean("jetpackDisabled", false);
+                } else {
++                  IC2.platform.messagePlayer(player, "Jetpack "+(disabled ? "disabled" : "enabled"));
++                  if (disabled) nbttagcompound.setBoolean("hoverMode", false);
++               }
++            } else if (disabled && !jetpack.isJetpackActive(stack)) {
++               IC2.audioManager.removeSources(player);
++            }
++         }
++
++         if (jetpack.isJetpackActive(stack)) {
++            if (IC2.keyboard.isJumpKeyDown(player) && IC2.keyboard.isModeSwitchKeyDown(player) && b0 == 0) {
++               b0 = 10;
++               flag = !flag;
++               if (IC2.platform.isSimulating()) {
++                  nbttagcompound.setBoolean("hoverMode", flag);
++                  if (flag) {
++                     IC2.platform.messagePlayer(player, "Hover Mode enabled.");
++                  } else {
++                     IC2.platform.messagePlayer(player, "Hover Mode disabled.");
++                  }
++               }
++            }
++
++            if (IC2.keyboard.isJumpKeyDown(player) || flag) {
++               flag1 = useJetpack(player, flag, jetpack, stack);
++               if (player.onGround && flag && IC2.platform.isSimulating()) {
++                  setHoverMode(nbttagcompound, false);
+                   IC2.platform.messagePlayer(player, "Hover Mode disabled.");
+                }
+             }
+-         }
+-
+-         if (IC2.keyboard.isJumpKeyDown(player) || flag) {
+-            flag1 = useJetpack(player, flag, jetpack, stack);
+-            if (player.onGround && flag && IC2.platform.isSimulating()) {
+-               setHoverMode(nbttagcompound, false);
+-               IC2.platform.messagePlayer(player, "Hover Mode disabled.");
++
++            if (IC2.platform.isRendering() && player == IC2.platform.getPlayerInstance()) {
++               if (lastJetpackUsed != flag1) {
++                  if (flag1) {
++                     if (audioSource == null) {
++                        audioSource = IC2.audioManager.createSource(player, PositionSpec.Backpack, "Tools/Jetpack/JetpackLoop.ogg", true, false, IC2.audioManager.getDefaultVolume());
++                     }
++
++                     if (audioSource != null) {
++                        audioSource.play();
++                     }
++                  } else if (audioSource != null) {
++                     audioSource.remove();
++                     audioSource = null;
++                  }
++
++                  lastJetpackUsed = flag1;
++               }
++
++               if (audioSource != null) {
++                  audioSource.updatePosition();
++               }
+             }
+          }
+ 
+          if (IC2.platform.isSimulating() && b0 > 0) {
+             --b0;
+             nbttagcompound.setByte("toggleTimer", b0);
+-         }
+-
+-         if (IC2.platform.isRendering() && player == IC2.platform.getPlayerInstance()) {
+-            if (lastJetpackUsed != flag1) {
+-               if (flag1) {
+-                  if (audioSource == null) {
+-                     audioSource = IC2.audioManager.createSource(player, PositionSpec.Backpack, "Tools/Jetpack/JetpackLoop.ogg", true, false, IC2.audioManager.getDefaultVolume());
+-                  }
+-
+-                  if (audioSource != null) {
+-                     audioSource.play();
+-                  }
+-               } else if (audioSource != null) {
+-                  audioSource.remove();
+-                  audioSource = null;
+-               }
+-
+-               lastJetpackUsed = flag1;
+-            }
+-
+-            if (audioSource != null) {
+-               audioSource.updatePosition();
+-            }
+          }
+ 
+          if (flag1) {

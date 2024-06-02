@@ -25,31 +25,7 @@
              if (l > 8) {
                 IC2.platform.removePotion(player, MobEffects.NIGHT_VISION);
                 player.addPotionEffect(new PotionEffect(MobEffects.BLINDNESS, 100, 0, true, true));
-@@ -278,6 +280,23 @@
-          IC2.platform.profilerStartSection("QuantumBodyarmor");
-          player.extinguish();
-          IC2.platform.profilerEndSection();
-+
-+         if (player.isSneaking() && IC2.keyboard.isModeSwitchKeyDown(player) && b0 == 0) {
-+            b0 = 10;
-+            boolean disabled = !nbttagcompound.getBoolean("jetpackDisabled");
-+            if (IC2.platform.isSimulating()) {
-+               nbttagcompound.setBoolean("jetpackDisabled", disabled);
-+               IC2.platform.messagePlayer(player, "Jetpack "+(disabled ? "disabled" : "enabled"));
-+               if (disabled) nbttagcompound.setBoolean("hoverMode", false);
-+            } else if (disabled) {
-+               IC2.audioManager.removeSources(player);
-+            }
-+         }
-+
-+         if (IC2.platform.isSimulating() && b0 > 0) {
-+            --b0;
-+            nbttagcompound.setByte("toggleTimer", b0);
-+         }
-          break;
-       case LEGS:
-          IC2.platform.profilerStartSection("QuantumLeggings");
-@@ -375,7 +394,7 @@
+@@ -375,7 +377,7 @@
     }
  
     public boolean isJetpackActive(ItemStack stack) {
