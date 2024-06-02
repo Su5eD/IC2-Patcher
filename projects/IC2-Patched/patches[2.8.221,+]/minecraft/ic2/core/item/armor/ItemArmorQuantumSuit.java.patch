@@ -1,6 +1,31 @@
 --- a/ic2/core/item/armor/ItemArmorQuantumSuit.java
 +++ b/ic2/core/item/armor/ItemArmorQuantumSuit.java
-@@ -278,6 +278,23 @@
+@@ -226,6 +226,7 @@
+ 
+          boolean flag3 = nbttagcompound.getBoolean("Nightvision");
+          short short1 = nbttagcompound.getShort("HudMode");
++         int l = player.getEntityWorld().getLightFromNeighbors(new BlockPos(player));
+          if (IC2.keyboard.isAltKeyDown(player) && IC2.keyboard.isModeSwitchKeyDown(player) && b0 == 0) {
+             b0 = 10;
+             flag3 = !flag3;
+@@ -235,6 +236,8 @@
+                   IC2.platform.messagePlayer(player, "Nightvision enabled.");
+                } else {
+                   IC2.platform.messagePlayer(player, "Nightvision disabled.");
++                  if (l > 8) IC2.platform.removePotion(player, MobEffects.BLINDNESS);
++                  else IC2.platform.removePotion(player, MobEffects.NIGHT_VISION);
+                }
+             }
+          }
+@@ -260,7 +263,6 @@
+ 
+          if (flag3 && IC2.platform.isSimulating() && ElectricItem.manager.use(stack, 1.0D, player)) {
+             BlockPos blockpos = new BlockPos((int)Math.floor(player.posX), (int)Math.floor(player.posY), (int)Math.floor(player.posZ));
+-            int l = player.getEntityWorld().getLightFromNeighbors(blockpos);
+             if (l > 8) {
+                IC2.platform.removePotion(player, MobEffects.NIGHT_VISION);
+                player.addPotionEffect(new PotionEffect(MobEffects.BLINDNESS, 100, 0, true, true));
+@@ -278,6 +280,23 @@
           IC2.platform.profilerStartSection("QuantumBodyarmor");
           player.extinguish();
           IC2.platform.profilerEndSection();
@@ -24,7 +49,7 @@
           break;
        case LEGS:
           IC2.platform.profilerStartSection("QuantumLeggings");
-@@ -375,7 +392,7 @@
+@@ -375,7 +394,7 @@
     }
  
     public boolean isJetpackActive(ItemStack stack) {
