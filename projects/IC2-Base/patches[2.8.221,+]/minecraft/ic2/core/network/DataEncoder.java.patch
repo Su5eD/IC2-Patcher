@@ -24,9 +24,23 @@
                 }
  
                 return object3;
-@@ -467,7 +468,7 @@
+@@ -457,17 +458,17 @@
+          return new ChunkPos(is.readInt(), is.readInt());
+       case Collection:
+          final Object object2 = decode(is, DataEncoder.EncodedType.Array);
+-         if (object2 instanceof DataEncoder.IResolvableValue) {
+-            return new DataEncoder.IResolvableValue<List<Object>>() {
++         if (object2 instanceof IResolvableValue) {
++            return new IResolvableValue<List<Object>>() {
+                public List<Object> get() {
+-                  return Arrays.<Object>asList(((DataEncoder.IResolvableValue)object2).get());
++                  return Arrays.asList((Object[])((IResolvableValue)object2).get());
+                }
+             };
+          }
  
-          return Arrays.<Object>asList(object2);
+-         return Arrays.<Object>asList(object2);
++         return Arrays.asList((Object[])((Object[]) object2));
        case Component:
 -         return (List<Object>)decode(is, DataEncoder.EncodedType.NBTTagCompound);
 +         return decode(is, DataEncoder.EncodedType.NBTTagCompound);
