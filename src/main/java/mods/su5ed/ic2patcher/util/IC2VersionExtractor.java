@@ -8,6 +8,7 @@ import java.io.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -39,22 +40,35 @@ public class IC2VersionExtractor {
             return null;
         }
 
-        for (File file : mods.listFiles()) {
-            if (!file.exists() || file.isDirectory() || !file.getName().endsWith(".jar")) continue;
+        Function<File, String> searcher = (modsDir) -> {
+            for (File file : modsDir.listFiles()) {
+                if (!file.exists() || file.isDirectory() || !file.getName().endsWith(".jar")) continue;
 
-            try (ZipFile zip = new ZipFile(file)) {
-                ZipEntry mcModInfoEntry = zip.getEntry("mcmod.info");
-                if (mcModInfoEntry == null) continue;
-                try {
-                    // Unchecked Cast Warning*
-                    Map<?,?> mcModInfo = ((List<Map<?,?>>)new Gson().fromJson(new InputStreamReader(zip.getInputStream(mcModInfoEntry)), Object.class)).get(0);
-                    if (!Objects.equals(mcModInfo.get("modid"), "ic2")) continue;
-                    ic2Version = (String) mcModInfo.get("version");
-                    logger.info("IC2 was found! Extracted version: " + ic2Version);
-                    return ic2Version;
+                try (ZipFile zip = new ZipFile(file)) {
+                    ZipEntry mcModInfoEntry = zip.getEntry("mcmod.info");
+                    if (mcModInfoEntry == null) continue;
+                    try {
+                        // Unchecked Cast Warning*
+                        Map<?,?> mcModInfo = ((List<Map<?,?>>)new Gson().fromJson(new InputStreamReader(zip.getInputStream(mcModInfoEntry)), Object.class)).get(0);
+                        if (!Objects.equals(mcModInfo.get("modid"), "ic2")) continue;
+                        ic2Version = (String) mcModInfo.get("version");
+                        logger.info("IC2 was found! Extracted version: " + ic2Version);
+                        return ic2Version;
+                    } catch (Exception ignored) {}
                 } catch (Exception ignored) {}
             }
+            return null;
+        };
+
+        String ver = searcher.apply(mods);
+        if (ver != null) return ver;
+
+        mods = new File(mods, "1.12.2");
+        if (mods.exists() && mods.isDirectory()) {
+            ver = searcher.apply(mods);
+            if (ver != null) return ver;
         }
+
         logger.fatal("No IC2 was found in the mods folder. Is IC2 Installed? This error will cause a crash.");
         return null;
     }
