@@ -1,0 +1,19 @@
+--- a/ic2/core/item/armor/ItemArmorJetpackElectric.java
++++ b/ic2/core/item/armor/ItemArmorJetpackElectric.java
+@@ -3,6 +3,7 @@
+ import ic2.api.item.ElectricItem;
+ import ic2.core.item.armor.jetpack.IJetpack;
+ import ic2.core.ref.ItemName;
++import ic2.core.util.StackUtil;
+ import net.minecraft.entity.EntityLivingBase;
+ import net.minecraft.entity.player.EntityPlayer;
+ import net.minecraft.inventory.EntityEquipmentSlot;
+@@ -31,7 +32,7 @@
+    }
+ 
+    public boolean isJetpackActive(ItemStack stack) {
+-      return true;
++      return !StackUtil.getOrCreateNbtData(stack).getBoolean("jetpackDisabled");
+    }
+ 
+    public double getChargeLevel(ItemStack stack) {

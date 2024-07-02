@@ -24,3 +24,5 @@ run
 # generated projects
 projects/IC2-Base/src
 projects/IC2-Patched/src
+projects/IC2-Base/src_IC2_VERSION
+projects/IC2-Patched/src_IC2_VERSION

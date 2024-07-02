@@ -1,0 +1,35 @@
+--- a/ic2/core/block/reactor/tileentity/TileEntityNuclearReactorElectric.java
++++ b/ic2/core/block/reactor/tileentity/TileEntityNuclearReactorElectric.java
+@@ -1,5 +1,7 @@
+ package ic2.core.block.reactor.tileentity;
+ 
++import ic2.api.energy.EnergyNet;
++import ic2.api.energy.tile.IMultiEnergySource;
+ import ic2.api.energy.event.EnergyTileLoadEvent;
+ import ic2.api.energy.event.EnergyTileUnloadEvent;
+ import ic2.api.energy.tile.IEnergyAcceptor;
+@@ -75,7 +77,7 @@
+ import org.apache.commons.lang3.mutable.MutableBoolean;
+ import org.apache.logging.log4j.Level;
+ 
+-public class TileEntityNuclearReactorElectric extends TileEntityInventory implements IHasGui, IReactor, IEnergySource, IMetaDelegate, IGuiValueProvider {
++public class TileEntityNuclearReactorElectric extends TileEntityInventory implements IHasGui, IReactor, IEnergySource, IMetaDelegate, IGuiValueProvider, IMultiEnergySource {
+    public AudioSource audioSourceMain;
+    public AudioSource audioSourceGeiger;
+    private float lastOutput = 0.0F;
+@@ -852,5 +854,15 @@
+ 
+    public int getInventoryStackLimit() {
+       return 1;
++   }
++
++   @Override
++   public boolean sendMultipleEnergyPackets() {
++      return EnergyNet.instance.getTierFromPower(this.getOfferedEnergy()) > this.getSourceTier();
++   }
++
++   @Override
++   public int getMultipleEnergyPacketAmount() {
++      return (int) Math.ceil(this.getOfferedEnergy() / EnergyNet.instance.getPowerFromTier(this.getSourceTier()));
+    }
+ }
