@@ -6,7 +6,7 @@
 		"version": "${version}",
 		"mcversion": "${mcversion}",
 		"credits": "",
-		"authorList": ["Su5eD"],
+		"authorList": ["Su5eD", "Kanzaji"],
 		"logoFile": "",
 		"url": "https://github.com/Su5eD/IC2-Patcher",
 		"updateUrl": "",
