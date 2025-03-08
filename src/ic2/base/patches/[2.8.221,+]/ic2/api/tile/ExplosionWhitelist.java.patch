@@ -1,0 +1,7 @@
+--- a/ic2/api/tile/ExplosionWhitelist.java
++++ b/ic2/api/tile/ExplosionWhitelist.java
+@@ -45,4 +45,3 @@
+ 
+ 	private static Set<Block> whitelist = Collections.newSetFromMap(new IdentityHashMap<Block, Boolean>());
+ }
+-

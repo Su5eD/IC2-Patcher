@@ -1,0 +1,7 @@
+--- a/ic2/api/network/INetworkDataProvider.java
++++ b/ic2/api/network/INetworkDataProvider.java
+@@ -18,4 +18,3 @@
+ 	 */
+ 	List<String> getNetworkedFields();
+ }
+-

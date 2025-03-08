@@ -6,7 +6,7 @@ import ic2.core.ref.ItemName;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.ISubtypeRegistry;
 import mezz.jei.api.JEIPlugin;
-import mods.su5ed.ic2patcher.Patcher;
+import mods.su5ed.ic2patcher.IC2Patcher;
 import net.minecraft.item.ItemStack;
 
 import java.lang.invoke.MethodHandle;
@@ -34,7 +34,7 @@ public class JeiModule implements IModPlugin {
             applyHandle = lookup.unreflect(methodApply);
         } catch (ClassNotFoundException | NoSuchFieldException | NoSuchMethodException | IllegalAccessException e) {
             instanceField = applyHandle = null;
-            Patcher.logger.info("Failed to unreflect members of FluidSubtypeInterpreter, the JEI cell subtype patch won't work");
+            IC2Patcher.logger.info("Failed to unreflect members of FluidSubtypeInterpreter, the JEI cell subtype patch won't work");
         }
         INSTANCE_FIELD = instanceField;
         APPLY_HANDLE = applyHandle;

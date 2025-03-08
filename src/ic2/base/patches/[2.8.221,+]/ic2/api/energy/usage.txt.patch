@@ -1,0 +1,7 @@
+--- a/ic2/api/energy/usage.txt
++++ b/ic2/api/energy/usage.txt
+@@ -145,4 +145,3 @@
+ 
+ IC2's EnergyNet itself is built on top of the api events and interfaces, providing their default
+ use case.
+-

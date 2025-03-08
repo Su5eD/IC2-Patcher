@@ -23,10 +23,13 @@ pluginManagement {
     }
 }
 
-rootProject.name = "IC2-Patcher"
+val baseProjectName = providers.gradleProperty("baseProjectName").get()
 
-include(":IC2-Base")
-include(":IC2-Patched")
+// Patcher project
+rootProject.name = "$baseProjectName-Patcher"
 
-project(":IC2-Base").projectDir = file("projects/IC2-Base")
-project(":IC2-Patched").projectDir = file("projects/IC2-Patched")
+include(":$baseProjectName-Base")
+include(":$baseProjectName-Patched")
+
+project(":$baseProjectName-Base").projectDir = file("src/${baseProjectName.toLowerCase()}/base")
+project(":$baseProjectName-Patched").projectDir = file("src/${baseProjectName.toLowerCase()}/patched")

@@ -1,0 +1,7 @@
+--- a/ic2/api/energy/tile/IEnergyEmitter.java
++++ b/ic2/api/energy/tile/IEnergyEmitter.java
+@@ -23,4 +23,3 @@
+ 	 */
+ 	boolean emitsEnergyTo(IEnergyAcceptor receiver, EnumFacing side);
+ }
+-

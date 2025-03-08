@@ -1,0 +1,7 @@
+--- a/ic2/api/energy/tile/IEnergyTile.java
++++ b/ic2/api/energy/tile/IEnergyTile.java
+@@ -12,4 +12,3 @@
+ public interface IEnergyTile {
+ 	//
+ }
+-

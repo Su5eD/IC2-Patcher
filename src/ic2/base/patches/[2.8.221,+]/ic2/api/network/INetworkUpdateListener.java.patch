@@ -1,0 +1,7 @@
+--- a/ic2/api/network/INetworkUpdateListener.java
++++ b/ic2/api/network/INetworkUpdateListener.java
+@@ -11,4 +11,3 @@
+ 	 */
+ 	void onNetworkUpdate(String field);
+ }
+-
