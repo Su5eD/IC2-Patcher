@@ -78,6 +78,10 @@ repositories {
         name = "ModMaven"
         url = uri("https://modmaven.dev")
     }
+    maven {
+        // Curse Maven
+        url = uri("https://cursemaven.com")
+    }
 }
 
 dependencies {
@@ -85,6 +89,15 @@ dependencies {
 
     implementation(project(":$baseProjectName-Patched"))
     implementation(fg.deobf(group = "mezz.jei", name = "jei_1.12.2", version = versionJEI))
+    runtimeOnly(fg.deobf(group = "curse.maven", name = "thermal_expansions-69163", version = "2926431"))
+    runtimeOnly(fg.deobf(group = "curse.maven", name = "thermal_foundation-222880", version = "2926428"))
+    runtimeOnly(fg.deobf(group = "curse.maven", name = "thermal_dynamics-227443", version = "2920505"))
+    runtimeOnly(fg.deobf(group = "curse.maven", name = "cofh_core-69162", version = "2920433"))
+    runtimeOnly(fg.deobf(group = "curse.maven", name = "ccl-242818", version = "2779848"))
+    runtimeOnly(fg.deobf(group = "curse.maven", name = "cofh_world-271384", version = "2920434"))
+    runtimeOnly(fg.deobf(group = "curse.maven", name = "rf-270789", version = "2920436"))
+    runtimeOnly(fg.deobf(group = "curse.maven", name = "ae2-223794", version = "2747063"))
+    runtimeOnly(fg.deobf(group = "curse.maven", name = "flux_networks-248020", version = "3178199"))
 }
 
 tasks {

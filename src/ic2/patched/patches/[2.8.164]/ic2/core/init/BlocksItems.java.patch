@@ -1,6 +1,23 @@
 --- a/ic2/core/init/BlocksItems.java
 +++ b/ic2/core/init/BlocksItems.java
-@@ -281,8 +281,9 @@
+@@ -147,10 +147,16 @@
+ import net.minecraftforge.common.util.EnumHelper;
+ import net.minecraftforge.fluids.Fluid;
+ import net.minecraftforge.fluids.FluidRegistry;
++import net.minecraftforge.fluids.FluidStack;
+ import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
++import net.minecraftforge.fluids.capability.IFluidHandlerItem;
++import net.minecraftforge.fluids.capability.IFluidTankProperties;
+ import net.minecraftforge.fml.common.registry.ForgeRegistries;
+ import net.minecraftforge.oredict.OreDictionary;
+ 
++import javax.annotation.Nonnull;
++import javax.annotation.Nullable;
++
+ public class BlocksItems {
+    public static void init() {
+       initPotions();
+@@ -281,8 +287,9 @@
              return !IC2.version.isClassic();
           }
        };
@@ -12,3 +29,53 @@
        new ItemBatterySU(ItemName.single_use_battery, 1200, 1);
        new ItemBatteryChargeHotbar(ItemName.charging_re_battery, 40000.0D, 128.0D, 1);
        new ItemBatteryChargeHotbar(ItemName.advanced_charging_re_battery, 400000.0D, 1024.0D, 2);
+@@ -362,15 +369,45 @@
+       itemmulti3.setUseHandler(CellType.empty, ItemHandlers.emptyCellFill);
+       itemmulti3.addCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, (stack) -> {
+          CellType celltype = (CellType)itemmulti3.getType(stack);
+-         CellType.CellFluidHandler celltype$cellfluidhandler;
++         IFluidHandlerItem fluidHandler;
+          if (celltype.isFluidContainer()) {
+             itemmulti3.getClass();
+-            celltype$cellfluidhandler = new CellType.CellFluidHandler(stack, itemmulti3::getType);
++            fluidHandler = new CellType.CellFluidHandler(stack, itemmulti3::getType);
+          } else {
+-            celltype$cellfluidhandler = null;
++            // Dummy FluidHandler that doesn't accept any I/O. See IC2-Patcher/#26
++            fluidHandler = new IFluidHandlerItem() {
++
++               @Override
++               public IFluidTankProperties[] getTankProperties() {
++                  return new IFluidTankProperties[0];
++               }
++
++               @Override
++               public int fill(FluidStack resource, boolean doFill) {
++                  return 0;
++               }
++
++               @Nullable
++               @Override
++               public FluidStack drain(FluidStack resource, boolean doDrain) {
++                  return null;
++               }
++
++               @Nullable
++               @Override
++               public FluidStack drain(int maxDrain, boolean doDrain) {
++                  return null;
++               }
++
++               @Nonnull
++               @Override
++               public ItemStack getContainer() {
++                  return stack;
++               }
++            };
+          }
+ 
+-         return celltype$cellfluidhandler;
++         return fluidHandler;
+       });
+       new ItemCable();
+       ItemMulti<ItemUpgradeModule.UpgradeType> itemmulti4 = new ItemUpgradeModule();
