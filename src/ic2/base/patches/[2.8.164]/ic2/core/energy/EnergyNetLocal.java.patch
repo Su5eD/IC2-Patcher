@@ -1,5 +1,31 @@
 --- a/ic2/core/energy/EnergyNetLocal.java
 +++ b/ic2/core/energy/EnergyNetLocal.java
+@@ -44,17 +44,17 @@
+    public static final double sinkResistanceFactor = 1.0D;
+    public static final double sourceCurrent = 17.0D;
+    public static final boolean enableCache = true;
++   private static final long logSuppressionTimeout = 300000000000L;
+    private static int nextGridUid = 0;
+    private static int nextNodeUid = 0;
+-   private final World world = null;
+-   protected final Set<Grid> grids = new HashSet<Grid>();
+-   protected List<Change> changes = new ArrayList<Change>();
+-   private final Map<BlockPos, Tile> registeredTiles = new HashMap<BlockPos, Tile>();
+-   private final Map<IEnergyTile, Integer> pendingAdds = new WeakHashMap<IEnergyTile, Integer>();
+-   private final Set<Tile> removedTiles = new HashSet<Tile>();
+    private boolean locked = false;
+-   private static final long logSuppressionTimeout = 300000000000L;
+-   private final Map<String, Long> recentLogs = new HashMap<String, Long>();
++   private final World world = null;
++   protected final Set<Grid> grids = new HashSet<>();
++   protected List<Change> changes = new ArrayList<>();
++   private final Map<BlockPos, Tile> registeredTiles = new HashMap<>();
++   private final Map<IEnergyTile, Integer> pendingAdds = new WeakHashMap<>();
++   private final Set<Tile> removedTiles = new HashSet<>();
++   private final Map<String, Long> recentLogs = new HashMap<>();
+ 
+    public EnergyNetLocal() {
+       throw new UnsupportedOperationException();
 @@ -417,14 +417,14 @@
           for(IEnergyTile ienergytile : tile.subTiles) {
              for(EnumFacing enumfacing : EnumFacing.VALUES) {

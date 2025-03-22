@@ -1,0 +1,7 @@
+--- a/ic2/api/item/ElectricItem.java
++++ b/ic2/api/item/ElectricItem.java
+@@ -56,4 +56,3 @@
+ 
+ 	private static final List<IBackupElectricItemManager> backupManagers = new ArrayList<IBackupElectricItemManager>();
+ }
+-

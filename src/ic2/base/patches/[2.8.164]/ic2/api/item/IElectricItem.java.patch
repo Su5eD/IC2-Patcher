@@ -1,0 +1,7 @@
+--- a/ic2/api/item/IElectricItem.java
++++ b/ic2/api/item/IElectricItem.java
+@@ -39,4 +39,3 @@
+ 	 */
+ 	double getTransferLimit(ItemStack stack);
+ }
+-

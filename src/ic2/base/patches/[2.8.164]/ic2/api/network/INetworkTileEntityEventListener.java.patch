@@ -1,0 +1,7 @@
+--- a/ic2/api/network/INetworkTileEntityEventListener.java
++++ b/ic2/api/network/INetworkTileEntityEventListener.java
+@@ -11,4 +11,3 @@
+ 	 */
+ 	void onNetworkEvent(int event);
+ }
+-

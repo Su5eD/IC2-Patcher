@@ -1,0 +1,7 @@
+--- a/ic2/api/energy/event/EnergyTileLoadEvent.java
++++ b/ic2/api/energy/event/EnergyTileLoadEvent.java
+@@ -23,4 +23,3 @@
+ 		super(energyTile1);
+ 	}
+ }
+-

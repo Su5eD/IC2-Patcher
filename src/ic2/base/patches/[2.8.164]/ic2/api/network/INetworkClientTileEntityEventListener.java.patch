@@ -1,0 +1,7 @@
+--- a/ic2/api/network/INetworkClientTileEntityEventListener.java
++++ b/ic2/api/network/INetworkClientTileEntityEventListener.java
+@@ -14,4 +14,3 @@
+ 	 */
+ 	void onNetworkEvent(EntityPlayer player, int event);
+ }
+-

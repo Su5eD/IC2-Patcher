@@ -40,7 +40,7 @@ public final class IC2Patcher {
 
     @Mod.EventHandler
     public void onServerStopped(FMLServerStoppedEvent event) {
-        WorldData.resetMaps();
+//        WorldData.resetMaps();
     }
 
     private static void fixUraniumCellRecipe() {

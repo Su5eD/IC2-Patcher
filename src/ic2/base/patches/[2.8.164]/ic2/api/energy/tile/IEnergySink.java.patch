@@ -1,0 +1,7 @@
+--- a/ic2/api/energy/tile/IEnergySink.java
++++ b/ic2/api/energy/tile/IEnergySink.java
+@@ -42,4 +42,3 @@
+ 	 */
+ 	double injectEnergy(EnumFacing directionFrom, double amount, double voltage);
+ }
+-
