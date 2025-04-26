@@ -27,7 +27,6 @@ val mappingsVersion: String by project
 
 val versionForge: String by project
 val versionJEI: String by project
-val extraUtils2Source: String by project
 
 val taskGroup: String by project
 val baseArchiveName: String by project
@@ -88,6 +87,7 @@ dependencies {
     minecraft(group = "net.minecraftforge", name = "forge", version = "1.12.2-${versionForge}")
 
     implementation(project(":$baseProjectName-Patched"))
+    implementation(project(":api"))
     implementation(fg.deobf(group = "mezz.jei", name = "jei_1.12.2", version = versionJEI))
     runtimeOnly(fg.deobf(group = "curse.maven", name = "thermal_expansions-69163", version = "2926431"))
     runtimeOnly(fg.deobf(group = "curse.maven", name = "thermal_foundation-222880", version = "2926428"))
@@ -143,7 +143,7 @@ tasks {
         mustRunAfter(binPatches)
 
         archiveClassifier.set("")
-        from(sourceSets.main.get().output)
+        from(sourceSets.main.get().output, project(":api").the<JavaPluginExtension>().sourceSets["main"].output)
         manifest {
             attributes(
                 "FMLCorePlugin" to "$group.${baseProjectName.toLowerCase()}patcher.asm.PatcherFMLPlugin",

@@ -1,6 +1,1264 @@
 --- a/ic2/core/util/StackUtil.java
 +++ b/ic2/core/util/StackUtil.java
-@@ -1116,25 +1116,25 @@
+@@ -69,24 +69,24 @@
+ 
+    public static IInventory findDoubleChest(TileEntityChest chest) {
+       World world = chest.getWorld();
+-      BlockPos blockpos = chest.getPos();
+-      if (world != null && blockpos != null && world.isBlockLoaded(blockpos)) {
++      BlockPos pos = chest.getPos();
++      if (world != null && pos != null && world.isBlockLoaded(pos)) {
+          Type type = chest.getChestType();
+ 
+-         for(EnumFacing enumfacing : EnumFacing.HORIZONTALS) {
+-            TileEntity tileentity = world.getTileEntity(blockpos.offset(enumfacing));
+-            if (tileentity instanceof TileEntityChest && ((TileEntityChest)tileentity).getChestType() == type) {
+-               ILockableContainer ilockablecontainer;
+-               ILockableContainer ilockablecontainer1;
+-               if (enumfacing != EnumFacing.WEST && enumfacing != EnumFacing.NORTH) {
+-                  ilockablecontainer = chest;
+-                  ilockablecontainer1 = (TileEntityChest)tileentity;
++         for(EnumFacing facing : EnumFacing.HORIZONTALS) {
++            TileEntity te = world.getTileEntity(pos.offset(facing));
++            if (te instanceof TileEntityChest && ((TileEntityChest)te).getChestType() == type) {
++               ILockableContainer left;
++               ILockableContainer right;
++               if (facing != EnumFacing.WEST && facing != EnumFacing.NORTH) {
++                  left = chest;
++                  right = (TileEntityChest)te;
+                } else {
+-                  ilockablecontainer = (TileEntityChest)tileentity;
+-                  ilockablecontainer1 = chest;
++                  left = (TileEntityChest)te;
++                  right = chest;
+                }
+ 
+-               return new InventoryLargeChest("container.chestDouble", ilockablecontainer, ilockablecontainer1);
++               return new InventoryLargeChest("container.chestDouble", left, right);
+             }
+          }
+ 
+@@ -96,32 +96,32 @@
+       }
+    }
+ 
+-   public static StackUtil.AdjacentInv getAdjacentInventory(TileEntity source, EnumFacing dir) {
+-      TileEntity tileentity = source.getWorld().getTileEntity(source.getPos().offset(dir));
+-      if (!isInventoryTile(tileentity, dir)) {
++   public static AdjacentInv getAdjacentInventory(TileEntity source, EnumFacing dir) {
++      TileEntity target = source.getWorld().getTileEntity(source.getPos().offset(dir));
++      if (!isInventoryTile(target, dir)) {
+          return null;
+       } else {
+-         GameProfile gameprofile;
+-         if (tileentity instanceof IPersonalBlock && source instanceof IPersonalBlock && (gameprofile = ((IPersonalBlock)source).getOwner()) != null) {
+-            return new StackUtil.PersonalAdjacentInv(tileentity, dir, gameprofile);
++         GameProfile srcOwner;
++         if (target instanceof IPersonalBlock && source instanceof IPersonalBlock && (srcOwner = ((IPersonalBlock)source).getOwner()) != null) {
++            return new StackUtil.PersonalAdjacentInv(target, dir, srcOwner);
+          } else {
+-            return tileentity instanceof TileEntityChest && findDoubleChest((TileEntityChest)tileentity) == null ? null : new StackUtil.AdjacentInv(tileentity, dir);
++            return target instanceof TileEntityChest && findDoubleChest((TileEntityChest)target) == null ? null : new AdjacentInv(target, dir);
+          }
+       }
+    }
+ 
+-   public static List<StackUtil.AdjacentInv> getAdjacentInventories(TileEntity source) {
+-      List<StackUtil.AdjacentInv> list = new ArrayList<StackUtil.AdjacentInv>();
++   public static List<AdjacentInv> getAdjacentInventories(TileEntity source) {
++      List<AdjacentInv> inventories = new ArrayList<>();
+ 
+-      for(EnumFacing enumfacing : EnumFacing.VALUES) {
+-         StackUtil.AdjacentInv stackutil$adjacentinv = getAdjacentInventory(source, enumfacing);
+-         if (stackutil$adjacentinv != null) {
+-            list.add(stackutil$adjacentinv);
++      for(EnumFacing dir : EnumFacing.VALUES) {
++         AdjacentInv inventory = getAdjacentInventory(source, dir);
++         if (inventory != null) {
++            inventories.add(inventory);
+          }
+       }
+ 
+-      Collections.sort(list, new Comparator<StackUtil.AdjacentInv>() {
+-         public int compare(StackUtil.AdjacentInv a, StackUtil.AdjacentInv b) {
++      Collections.sort(inventories, new Comparator<AdjacentInv>() {
++         public int compare(AdjacentInv a, AdjacentInv b) {
+             if (!(a.te instanceof IPersonalBlock) && b.te instanceof IPersonalBlock) {
+                return !(b.te instanceof IPersonalBlock) && a.te instanceof IPersonalBlock ? StackUtil.getInventorySize(b.te, b.dir.getOpposite(), b.getAccessor()) - StackUtil.getInventorySize(a.te, a.dir.getOpposite(), a.getAccessor()) : 1;
+             } else {
+@@ -129,7 +129,7 @@
+             }
+          }
+       });
+-      return list;
++      return inventories;
+    }
+ 
+    public static GameProfile getOwner(TileEntity te) {
+@@ -138,11 +138,11 @@
+ 
+    public static int getInventorySize(TileEntity te, EnumFacing side, GameProfile accessor) {
+       if (te instanceof IInventory) {
+-         IInventory iinventory = getInventory(te, accessor);
+-         return iinventory == null ? 0 : iinventory.getSizeInventory();
++         IInventory inv = getInventory(te, accessor);
++         return inv == null ? 0 : inv.getSizeInventory();
+       } else if (te.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, side)) {
+-         IItemHandler iitemhandler = (IItemHandler)te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, side);
+-         return iitemhandler == null ? 0 : iitemhandler.getSlots();
++         IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, side);
++         return handler == null ? 0 : handler.getSlots();
+       } else {
+          return 0;
+       }
+@@ -159,33 +159,33 @@
+    }
+ 
+    public static int distribute(TileEntity source, ItemStack stack, boolean simulate) {
+-      ItemStack itemstack = copy(stack);
++      ItemStack remaining = copy(stack);
+ 
+-      for(StackUtil.AdjacentInv stackutil$adjacentinv : getAdjacentInventories(source)) {
+-         int i = putInInventory(source, stackutil$adjacentinv, itemstack, simulate);
+-         itemstack = decSize(itemstack, i);
+-         if (isEmpty(itemstack)) {
++      for(AdjacentInv inventory : getAdjacentInventories(source)) {
++         int amount = putInInventory(source, inventory, remaining, simulate);
++         remaining = decSize(remaining, amount);
++         if (isEmpty(remaining)) {
+             break;
+          }
+       }
+ 
+-      return getSize(stack) - getSize(itemstack);
++      return getSize(stack) - getSize(remaining);
+    }
+ 
+    public static int fetch(TileEntity source, ItemStack stack, boolean simulate) {
+-      ItemStack itemstack = copy(stack);
++      ItemStack remaining = copy(stack);
+ 
+-      for(StackUtil.AdjacentInv stackutil$adjacentinv : getAdjacentInventories(source)) {
+-         ItemStack itemstack1 = getFromInventory(source, stackutil$adjacentinv, itemstack, true, simulate);
+-         if (!isEmpty(itemstack1)) {
+-            itemstack = decSize(itemstack, getSize(itemstack1));
+-            if (isEmpty(itemstack)) {
++      for(AdjacentInv inventory : getAdjacentInventories(source)) {
++         ItemStack transferred = getFromInventory(source, inventory, remaining, true, simulate);
++         if (!isEmpty(transferred)) {
++            remaining = decSize(remaining, getSize(transferred));
++            if (isEmpty(remaining)) {
+                break;
+             }
+          }
+       }
+ 
+-      return getSize(stack) - getSize(itemstack);
++      return getSize(stack) - getSize(remaining);
+    }
+ 
+    public static int transfer(TileEntity src, TileEntity dst, EnumFacing dir, int amount) {
+@@ -200,39 +200,39 @@
+       if (amount <= 0) {
+          return 0;
+       } else {
+-         GameProfile gameprofile = getOwner(src);
+-         GameProfile gameprofile1 = getOwner(dst);
+-         EnumFacing enumfacing = dir.getOpposite();
+-         int[] aint = getInventorySlots(src, dir, false, true, gameprofile1);
+-         if (aint.length == 0) {
++         GameProfile srcOwner = getOwner(src);
++         GameProfile dstOwner = getOwner(dst);
++         EnumFacing reverseDir = dir.getOpposite();
++         int[] srcSlots = getInventorySlots(src, dir, false, true, dstOwner);
++         if (srcSlots.length == 0) {
+             return 0;
+          } else {
+-            int[] aint1 = getInventorySlots(dst, enumfacing, true, false, gameprofile);
+-            if (aint1.length == 0) {
++            int[] dstSlots = getInventorySlots(dst, reverseDir, true, false, srcOwner);
++            if (dstSlots.length == 0) {
+                return 0;
+             } else if (src instanceof IInventory) {
+-               IInventory iinventory = getInventory(src, gameprofile1);
+-               if (iinventory == null) {
++               IInventory srcInv = getInventory(src, dstOwner);
++               if (srcInv == null) {
+                   return 0;
+                } else if (dst instanceof IInventory) {
+-                  IInventory iinventory2 = getInventory(dst, gameprofile);
+-                  return iinventory2 == null ? 0 : transfer(iinventory, aint, iinventory2, aint1, dir, enumfacing, amount, checker, skipChecker);
++                  IInventory dstInv = getInventory(dst, srcOwner);
++                  return dstInv == null ? 0 : transfer(srcInv, srcSlots, dstInv, dstSlots, dir, reverseDir, amount, checker, skipChecker);
+                } else if (dst.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, dir.getOpposite())) {
+-                  IItemHandler iitemhandler2 = (IItemHandler)dst.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, dir.getOpposite());
+-                  return iitemhandler2 == null ? 0 : transfer(iinventory, aint, iitemhandler2, aint1, enumfacing, amount, checker, skipChecker);
++                  IItemHandler dstHandler = dst.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, dir.getOpposite());
++                  return dstHandler == null ? 0 : transfer(srcInv, srcSlots, dstHandler, dstSlots, reverseDir, amount, checker, skipChecker);
+                } else {
+                   return 0;
+                }
+             } else if (src.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, dir)) {
+-               IItemHandler iitemhandler = (IItemHandler)src.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, dir);
+-               if (iitemhandler == null) {
++               IItemHandler srcHandler = src.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, dir);
++               if (srcHandler == null) {
+                   return 0;
+                } else if (dst instanceof IInventory) {
+-                  IInventory iinventory1 = getInventory(dst, gameprofile);
+-                  return iinventory1 == null ? 0 : transfer(iitemhandler, aint, iinventory1, aint1, enumfacing, amount, checker, skipChecker);
++                  IInventory dstInv = getInventory(dst, srcOwner);
++                  return dstInv == null ? 0 : transfer(srcHandler, srcSlots, dstInv, dstSlots, reverseDir, amount, checker, skipChecker);
+                } else if (dst.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, dir.getOpposite())) {
+-                  IItemHandler iitemhandler1 = (IItemHandler)dst.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, dir.getOpposite());
+-                  return iitemhandler1 == null ? 0 : transfer(iitemhandler, aint, iitemhandler1, aint1, amount, checker, skipChecker);
++                  IItemHandler dstHandler = dst.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, dir.getOpposite());
++                  return dstHandler == null ? 0 : transfer(srcHandler, srcSlots, dstHandler, dstSlots, amount, checker, skipChecker);
+                } else {
+                   return 0;
+                }
+@@ -244,15 +244,16 @@
+    }
+ 
+    private static int transfer(IInventory src, int[] srcSlots, IInventory dst, int[] dstSlots, EnumFacing dir, EnumFacing reverseDir, int amount, Predicate<ItemStack> checker, boolean skipChecker) {
+-      ISidedInventory isidedinventory = dst instanceof ISidedInventory ? (ISidedInventory)dst : null;
++      ISidedInventory dstSided = dst instanceof ISidedInventory ? (ISidedInventory)dst : null;
++      int total = amount;
+ 
+-      for(int i : srcSlots) {
+-         ItemStack itemstack = src.getStackInSlot(i);
+-         if (!isEmpty(itemstack) && (skipChecker || checker.apply(itemstack))) {
+-            int j = insert(itemstack, amount, dst, isidedinventory, reverseDir, dstSlots);
+-            if (j > 0) {
+-               amount -= j;
+-               src.setInventorySlotContents(i, decSize(itemstack, j));
++      for(int srcSlot : srcSlots) {
++         ItemStack srcStack = src.getStackInSlot(srcSlot);
++         if (!isEmpty(srcStack) && (skipChecker || checker.apply(srcStack))) {
++            int transferred = insert(srcStack, amount, dst, dstSided, reverseDir, dstSlots);
++            if (transferred > 0) {
++               amount -= transferred;
++               src.setInventorySlotContents(srcSlot, decSize(srcStack, transferred));
+                if (amount <= 0) {
+                   break;
+                }
+@@ -260,7 +261,7 @@
+          }
+       }
+ 
+-      amount = amount - amount;
++      amount = total - amount;
+ 
+       assert amount >= 0;
+ 
+@@ -273,15 +274,16 @@
+    }
+ 
+    private static int transfer(IItemHandler src, int[] srcSlots, IInventory dst, int[] dstSlots, EnumFacing reverseDir, int amount, Predicate<ItemStack> checker, boolean skipChecker) {
+-      ISidedInventory isidedinventory = dst instanceof ISidedInventory ? (ISidedInventory)dst : null;
++      ISidedInventory dstSided = dst instanceof ISidedInventory ? (ISidedInventory)dst : null;
++      int total = amount;
+ 
+-      for(int i : srcSlots) {
+-         ItemStack itemstack = src.extractItem(i, amount, true);
+-         if (!isEmpty(itemstack) && (skipChecker || checker.apply(itemstack))) {
+-            int j = insert(itemstack, amount, dst, isidedinventory, reverseDir, dstSlots);
+-            if (j > 0) {
+-               amount -= j;
+-               src.extractItem(i, j, false);
++      for(int srcSlot : srcSlots) {
++         ItemStack srcStack = src.extractItem(srcSlot, amount, true);
++         if (!isEmpty(srcStack) && (skipChecker || checker.apply(srcStack))) {
++            int transferred = insert(srcStack, amount, dst, dstSided, reverseDir, dstSlots);
++            if (transferred > 0) {
++               amount -= transferred;
++               src.extractItem(srcSlot, transferred, false);
+                if (amount <= 0) {
+                   break;
+                }
+@@ -289,7 +291,7 @@
+          }
+       }
+ 
+-      amount = amount - amount;
++      amount = total - amount;
+ 
+       assert amount >= 0;
+ 
+@@ -301,50 +303,52 @@
+    }
+ 
+    private static int insert(ItemStack stack, int maxAmount, IInventory dst, ISidedInventory dstSided, EnumFacing side, int[] dstSlots) {
+-      int i = Math.min(stack.getMaxStackSize(), dst.getInventoryStackLimit());
+-      int j = Math.min(maxAmount, getSize(stack));
+-      int k = j;
++      int sizeLimit = Math.min(stack.getMaxStackSize(), dst.getInventoryStackLimit());
++      int total = Math.min(maxAmount, getSize(stack));
++      int remaining = total;
+ 
+-      for(int l = 0; l < 2; ++l) {
+-         for(int i1 = 0; i1 < dstSlots.length; ++i1) {
+-            int j1 = dstSlots[i1];
+-            if (j1 >= 0) {
+-               ItemStack itemstack = dst.getStackInSlot(j1);
+-               if ((l != 0 || !isEmpty(itemstack) && checkItemEqualityStrict(stack, itemstack)) && (l != 1 || isEmpty(itemstack)) && dst.isItemValidForSlot(j1, stack) && (dstSided == null || dstSided.canInsertItem(j1, stack, side))) {
+-                  int k1 = Math.min(k, i - getSize(itemstack));
+-                  if (isEmpty(itemstack)) {
+-                     dst.setInventorySlotContents(j1, copyWithSize(stack, k1));
++      for(int pass = 0; pass < 2; ++pass) {
++         for(int i = 0; i < dstSlots.length; ++i) {
++            int dstSlot = dstSlots[i];
++            if (dstSlot >= 0) {
++               ItemStack dstStack = dst.getStackInSlot(dstSlot);
++               if ((pass != 0 || !isEmpty(dstStack) && checkItemEqualityStrict(stack, dstStack)) && (pass != 1 || isEmpty(dstStack)) && dst.isItemValidForSlot(dstSlot, stack) && (dstSided == null || dstSided.canInsertItem(dstSlot, stack, side))) {
++                  int amount = Math.min(remaining, sizeLimit - getSize(dstStack));
++                  if (isEmpty(dstStack)) {
++                     dst.setInventorySlotContents(dstSlot, copyWithSize(stack, amount));
+                   } else {
+-                     if (k1 <= 0) {
+-                        dstSlots[i1] = -1;
++                     if (amount <= 0) {
++                        dstSlots[i] = -1;
+                         continue;
+                      }
+ 
+-                     dst.setInventorySlotContents(j1, incSize(itemstack, k1));
++                     dst.setInventorySlotContents(dstSlot, incSize(dstStack, amount));
+                   }
+ 
+-                  assert k1 > 0;
++                  assert amount > 0;
+ 
+-                  k -= k1;
+-                  if (k <= 0) {
+-                     return j;
++                  remaining -= amount;
++                  if (remaining <= 0) {
++                     return total;
+                   }
+                }
+             }
+          }
+       }
+ 
+-      return j - k;
++      return total - remaining;
+    }
+ 
+    private static int transfer(IItemHandler src, int[] srcSlots, IItemHandler dst, int[] dstSlots, int amount, Predicate<ItemStack> checker, boolean skipChecker) {
+-      for(int i : srcSlots) {
+-         ItemStack itemstack = src.extractItem(i, amount, true);
+-         if (!isEmpty(itemstack) && (skipChecker || checker.apply(itemstack))) {
+-            int j = insert(itemstack, Integer.MAX_VALUE, dst, dstSlots);
+-            if (j > 0) {
+-               amount -= j;
+-               src.extractItem(i, j, false);
++      int total = amount;
++
++      for(int srcSlot : srcSlots) {
++         ItemStack srcStack = src.extractItem(srcSlot, amount, true);
++         if (!isEmpty(srcStack) && (skipChecker || checker.apply(srcStack))) {
++            int transferred = insert(srcStack, Integer.MAX_VALUE, dst, dstSlots);
++            if (transferred > 0) {
++               amount -= transferred;
++               src.extractItem(srcSlot, transferred, false);
+                if (amount <= 0) {
+                   break;
+                }
+@@ -352,7 +356,7 @@
+          }
+       }
+ 
+-      amount = amount - amount;
++      amount = total - amount;
+ 
+       assert amount >= 0;
+ 
+@@ -360,13 +364,15 @@
+    }
+ 
+    private static int transfer(IInventory src, int[] srcSlots, IItemHandler dst, int[] dstSlots, EnumFacing dir, int amount, Predicate<ItemStack> checker, boolean skipChecker) {
+-      for(int i : srcSlots) {
+-         ItemStack itemstack = src.getStackInSlot(i);
+-         if (!isEmpty(itemstack) && (skipChecker || checker.apply(itemstack))) {
+-            int j = insert(itemstack, amount, dst, dstSlots);
+-            if (j > 0) {
+-               amount -= j;
+-               src.setInventorySlotContents(i, decSize(itemstack, j));
++      int total = amount;
++
++      for(int srcSlot : srcSlots) {
++         ItemStack srcStack = src.getStackInSlot(srcSlot);
++         if (!isEmpty(srcStack) && (skipChecker || checker.apply(srcStack))) {
++            int transferred = insert(srcStack, amount, dst, dstSlots);
++            if (transferred > 0) {
++               amount -= transferred;
++               src.setInventorySlotContents(srcSlot, decSize(srcStack, transferred));
+                if (amount <= 0) {
+                   break;
+                }
+@@ -374,7 +380,7 @@
+          }
+       }
+ 
+-      amount = amount - amount;
++      amount = total - amount;
+ 
+       assert amount >= 0;
+ 
+@@ -386,51 +392,51 @@
+    }
+ 
+    private static int insert(ItemStack stack, int maxAmount, IItemHandler dst, int[] dstSlots) {
+-      int i = Math.min(maxAmount, getSize(stack));
+-      int j = i;
++      int total = Math.min(maxAmount, getSize(stack));
++      int remaining = total;
+ 
+       assert !isEmpty(stack);
+ 
+-      for(int k = 0; k < 2; ++k) {
+-         for(int l : dstSlots) {
+-            if (l >= 0) {
+-               ItemStack itemstack = dst.getStackInSlot(l);
+-               if ((k != 0 || !isEmpty(itemstack) && checkItemEqualityStrict(stack, itemstack)) && (k != 1 || isEmpty(itemstack))) {
+-                  ItemStack itemstack1 = dst.insertItem(l, copyWithSize(stack, j), false);
+-                  int i1 = j - getSize(itemstack1);
+-                  j -= i1;
+-                  if (j <= 0) {
+-                     return i;
++      for(int pass = 0; pass < 2; ++pass) {
++         for(int dstSlot : dstSlots) {
++            if (dstSlot >= 0) {
++               ItemStack dstStack = dst.getStackInSlot(dstSlot);
++               if ((pass != 0 || !isEmpty(dstStack) && checkItemEqualityStrict(stack, dstStack)) && (pass != 1 || isEmpty(dstStack))) {
++                  ItemStack leftOver = dst.insertItem(dstSlot, copyWithSize(stack, remaining), false);
++                  int transferred = remaining - getSize(leftOver);
++                  remaining -= transferred;
++                  if (remaining <= 0) {
++                     return total;
+                   }
+                }
+             }
+          }
+       }
+ 
+-      return i - j;
++      return total - remaining;
+    }
+ 
+    public static void distributeDrops(TileEntity source, List<ItemStack> stacks) {
+-      ListIterator<ItemStack> listiterator = stacks.listIterator();
++      ListIterator<ItemStack> it = stacks.listIterator();
+ 
+-      while(listiterator.hasNext()) {
+-         ItemStack itemstack = listiterator.next();
+-         int i = distribute(source, itemstack, false);
+-         if (i == getSize(itemstack)) {
+-            listiterator.remove();
++      while(it.hasNext()) {
++         ItemStack stack = it.next();
++         int amount = distribute(source, stack, false);
++         if (amount == getSize(stack)) {
++            it.remove();
+          } else {
+-            listiterator.set(decSize(itemstack, i));
++            it.set(decSize(stack, amount));
+          }
+       }
+ 
+-      for(ItemStack itemstack1 : stacks) {
+-         dropAsEntity(source.getWorld(), source.getPos(), itemstack1);
++      for(ItemStack stack : stacks) {
++         dropAsEntity(source.getWorld(), source.getPos(), stack);
+       }
+ 
+       stacks.clear();
+    }
+ 
+-   private static ItemStack getFromInventory(TileEntity source, StackUtil.AdjacentInv inventory, ItemStack stack, boolean ignoreMaxStackSize, boolean simulate) {
++   private static ItemStack getFromInventory(TileEntity source, AdjacentInv inventory, ItemStack stack, boolean ignoreMaxStackSize, boolean simulate) {
+       return getFromInventory(inventory.te, inventory.dir.getOpposite(), stack, getSize(stack), ignoreMaxStackSize, inventory.getAccessor(), simulate);
+    }
+ 
+@@ -443,96 +449,96 @@
+          max = Math.min(max, stackDestination.getMaxStackSize() - getSize(stackDestination));
+       }
+ 
+-      int[] aint = getInventorySlots(te, side, false, true, accessor);
+-      if (aint.length == 0) {
++      int[] slots = getInventorySlots(te, side, false, true, accessor);
++      if (slots.length == 0) {
+          return emptyStack;
+       } else {
+-         ItemStack itemstack = emptyStack;
++         ItemStack ret = emptyStack;
+          if (te instanceof IInventory) {
+-            IInventory iinventory = getInventory(te, accessor);
+-            if (iinventory == null) {
++            IInventory inv = getInventory(te, accessor);
++            if (inv == null) {
+                return emptyStack;
+             }
+ 
+-            for(int i : aint) {
++            for(int slot : slots) {
+                if (max <= 0) {
+                   break;
+                }
+ 
+-               ItemStack itemstack1 = iinventory.getStackInSlot(i);
+-               if (!isEmpty(itemstack1) && (isEmpty(stackDestination) || checkItemEqualityStrict(itemstack1, stackDestination))) {
+-                  boolean flag = isEmpty(itemstack);
+-                  if (flag) {
+-                     itemstack = copyWithSize(itemstack1, 1);
++               ItemStack stack = inv.getStackInSlot(slot);
++               if (!isEmpty(stack) && (isEmpty(stackDestination) || checkItemEqualityStrict(stack, stackDestination))) {
++                  boolean extra = isEmpty(ret);
++                  if (extra) {
++                     ret = copyWithSize(stack, 1);
+                      if (isEmpty(stackDestination)) {
+                         if (!ignoreMaxStackSize) {
+-                           max = Math.min(max, itemstack.getMaxStackSize());
++                           max = Math.min(max, ret.getMaxStackSize());
+                         }
+ 
+-                        stackDestination = itemstack;
++                        stackDestination = ret;
+                      }
+                   }
+ 
+-                  int j = Math.min(max, getSize(itemstack1));
++                  int transfer = Math.min(max, getSize(stack));
+                   if (!simulate) {
+-                     itemstack1 = decSize(itemstack1, j);
+-                     iinventory.setInventorySlotContents(i, itemstack1);
++                     stack = decSize(stack, transfer);
++                     inv.setInventorySlotContents(slot, stack);
+                   }
+ 
+-                  max -= j;
+-                  itemstack = incSize(itemstack, flag ? j - 1 : j);
++                  max -= transfer;
++                  ret = incSize(ret, extra ? transfer - 1 : transfer);
+                }
+             }
+ 
+-            if (!simulate && !isEmpty(itemstack)) {
+-               iinventory.markDirty();
++            if (!simulate && !isEmpty(ret)) {
++               inv.markDirty();
+             }
+          } else if (te.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, side)) {
+-            IItemHandler iitemhandler = (IItemHandler)te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, side);
+-            if (iitemhandler == null) {
++            IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, side);
++            if (handler == null) {
+                return emptyStack;
+             }
+ 
+-            for(int k : aint) {
++            for (int slot : slots) {
+                if (max <= 0) {
+                   break;
+                }
+ 
+                if (!isEmpty(stackDestination)) {
+-                  ItemStack itemstack2 = iitemhandler.getStackInSlot(k);
+-                  if (isEmpty(itemstack2) || !checkItemEqualityStrict(itemstack2, stackDestination)) {
++                  ItemStack stack = handler.getStackInSlot(slot);
++                  if (isEmpty(stack) || !checkItemEqualityStrict(stack, stackDestination)) {
+                      continue;
+                   }
+                }
+ 
+-               ItemStack itemstack3 = iitemhandler.extractItem(k, max, simulate);
+-               if (!isEmpty(itemstack3)) {
+-                  boolean flag1 = isEmpty(itemstack);
+-                  if (flag1) {
+-                     itemstack = copyWithSize(itemstack3, 1);
++               ItemStack stack = handler.extractItem(slot, max, simulate);
++               if (!isEmpty(stack)) {
++                  boolean extra = isEmpty(ret);
++                  if (extra) {
++                     ret = copyWithSize(stack, 1);
+                      if (isEmpty(stackDestination)) {
+                         if (!ignoreMaxStackSize) {
+-                           max = Math.min(max, itemstack.getMaxStackSize());
++                           max = Math.min(max, ret.getMaxStackSize());
+                         }
+ 
+-                        stackDestination = itemstack;
++                        stackDestination = ret;
+                      }
+                   } else {
+-                     assert checkItemEqualityStrict(itemstack3, itemstack);
++                     assert checkItemEqualityStrict(stack, ret);
+                   }
+ 
+-                  int l = getSize(itemstack3);
+-                  max -= l;
+-                  itemstack = incSize(itemstack, flag1 ? l - 1 : l);
++                  int transfer = getSize(stack);
++                  max -= transfer;
++                  ret = incSize(ret, extra ? transfer - 1 : transfer);
+                }
+             }
+          }
+ 
+-         return itemstack;
++         return ret;
+       }
+    }
+ 
+-   private static int putInInventory(TileEntity source, StackUtil.AdjacentInv inventory, ItemStack stackSource, boolean simulate) {
++   private static int putInInventory(TileEntity source, AdjacentInv inventory, ItemStack stackSource, boolean simulate) {
+       return putInInventory(inventory.te, inventory.dir.getOpposite(), stackSource, inventory.getAccessor(), simulate);
+    }
+ 
+@@ -544,101 +550,101 @@
+       if (isEmpty(stackSource)) {
+          return 0;
+       } else {
+-         int[] aint = getInventorySlots(te, side, true, false, accessor);
+-         if (aint.length == 0) {
++         int[] slots = getInventorySlots(te, side, true, false, accessor);
++         if (slots.length == 0) {
+             return 0;
+          } else if (te instanceof IInventory) {
+-            IInventory iinventory = getInventory(te, accessor);
+-            if (iinventory == null) {
++            IInventory inv = getInventory(te, accessor);
++            if (inv == null) {
+                return 0;
+             } else {
+-               int j = getSize(stackSource);
+-
+-               for(int l : aint) {
+-                  if (j <= 0) {
+-                     break;
+-                  }
+-
+-                  if (iinventory.isItemValidForSlot(l, stackSource) && (!(iinventory instanceof ISidedInventory) || ((ISidedInventory)iinventory).canInsertItem(l, stackSource, side))) {
+-                     ItemStack itemstack5 = iinventory.getStackInSlot(l);
+-                     if (!isEmpty(itemstack5) && checkItemEqualityStrict(itemstack5, stackSource)) {
+-                        int j1 = Math.min(j, Math.min(iinventory.getInventoryStackLimit(), itemstack5.getMaxStackSize()) - getSize(itemstack5));
+-                        if (!simulate) {
+-                           iinventory.setInventorySlotContents(l, incSize(itemstack5, j1));
+-                        }
+-
+-                        j -= j1;
+-                     }
+-                  }
+-               }
+-
+-               for(int i1 : aint) {
+-                  if (j <= 0) {
+-                     break;
+-                  }
+-
+-                  if (iinventory.isItemValidForSlot(i1, stackSource) && (!(iinventory instanceof ISidedInventory) || ((ISidedInventory)iinventory).canInsertItem(i1, stackSource, side))) {
+-                     ItemStack itemstack6 = iinventory.getStackInSlot(i1);
+-                     if (isEmpty(itemstack6)) {
+-                        int k1 = Math.min(j, Math.min(iinventory.getInventoryStackLimit(), stackSource.getMaxStackSize()));
+-                        if (!simulate) {
+-                           ItemStack itemstack3 = copyWithSize(stackSource, k1);
+-                           iinventory.setInventorySlotContents(i1, itemstack3);
+-                        }
+-
+-                        j -= k1;
+-                     }
+-                  }
+-               }
+-
+-               if (!simulate && j != getSize(stackSource)) {
+-                  iinventory.markDirty();
+-               }
+-
+-               return getSize(stackSource) - j;
++               int toTransfer = getSize(stackSource);
++
++               for(int slot : slots) {
++                  if (toTransfer <= 0) {
++                     break;
++                  }
++
++                  if (inv.isItemValidForSlot(slot, stackSource) && (!(inv instanceof ISidedInventory) || ((ISidedInventory)inv).canInsertItem(slot, stackSource, side))) {
++                     ItemStack stack = inv.getStackInSlot(slot);
++                     if (!isEmpty(stack) && checkItemEqualityStrict(stack, stackSource)) {
++                        int transfer = Math.min(toTransfer, Math.min(inv.getInventoryStackLimit(), stack.getMaxStackSize()) - getSize(stack));
++                        if (!simulate) {
++                           inv.setInventorySlotContents(slot, incSize(stack, transfer));
++                        }
++
++                        toTransfer -= transfer;
++                     }
++                  }
++               }
++
++               for(int slot : slots) {
++                  if (toTransfer <= 0) {
++                     break;
++                  }
++
++                  if (inv.isItemValidForSlot(slot, stackSource) && (!(inv instanceof ISidedInventory) || ((ISidedInventory)inv).canInsertItem(slot, stackSource, side))) {
++                     ItemStack stack = inv.getStackInSlot(slot);
++                     if (isEmpty(stack)) {
++                        int transfer = Math.min(toTransfer, Math.min(inv.getInventoryStackLimit(), stackSource.getMaxStackSize()));
++                        if (!simulate) {
++                           ItemStack dest = copyWithSize(stackSource, transfer);
++                           inv.setInventorySlotContents(slot, dest);
++                        }
++
++                        toTransfer -= transfer;
++                     }
++                  }
++               }
++
++               if (!simulate && toTransfer != getSize(stackSource)) {
++                  inv.markDirty();
++               }
++
++               return getSize(stackSource) - toTransfer;
+             }
+          } else if (!te.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, side)) {
+             return 0;
+          } else {
+-            IItemHandler iitemhandler = (IItemHandler)te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, side);
+-            if (iitemhandler == null) {
++            IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, side);
++            if (handler == null) {
+                return 0;
+             } else {
+-               ItemStack itemstack = stackSource.copy();
+-
+-               for(int i : aint) {
+-                  if (isEmpty(itemstack)) {
+-                     break;
+-                  }
+-
+-                  ItemStack itemstack1 = iitemhandler.getStackInSlot(i);
+-                  if (!isEmpty(itemstack1)) {
+-                     ItemStack itemstack2 = iitemhandler.insertItem(i, itemstack.copy(), simulate);
+-                     if (isEmpty(itemstack2)) {
+-                        itemstack = emptyStack;
+-                     } else if (getSize(itemstack2) < getSize(itemstack)) {
+-                        itemstack = setSize(itemstack, getSize(itemstack2));
+-                     }
+-                  }
+-               }
+-
+-               for(int k : aint) {
+-                  if (isEmpty(itemstack)) {
+-                     break;
+-                  }
+-
+-                  ItemStack itemstack4 = iitemhandler.getStackInSlot(k);
+-                  if (isEmpty(itemstack4)) {
+-                     ItemStack itemstack7 = iitemhandler.insertItem(k, itemstack.copy(), simulate);
+-                     if (isEmpty(itemstack7)) {
+-                        itemstack = emptyStack;
+-                     } else if (getSize(itemstack7) < getSize(itemstack)) {
+-                        itemstack = setSize(itemstack, getSize(itemstack7));
+-                     }
+-                  }
+-               }
+-
+-               return getSize(stackSource) - getSize(itemstack);
++               ItemStack src = stackSource.copy();
++
++               for(int slot : slots) {
++                  if (isEmpty(src)) {
++                     break;
++                  }
++
++                  ItemStack stack = handler.getStackInSlot(slot);
++                  if (!isEmpty(stack)) {
++                     ItemStack remaining = handler.insertItem(slot, src.copy(), simulate);
++                     if (isEmpty(remaining)) {
++                        src = emptyStack;
++                     } else if (getSize(remaining) < getSize(src)) {
++                        src = setSize(src, getSize(remaining));
++                     }
++                  }
++               }
++
++               for(int slot : slots) {
++                  if (isEmpty(src)) {
++                     break;
++                  }
++
++                  ItemStack stack = handler.getStackInSlot(slot);
++                  if (isEmpty(stack)) {
++                     ItemStack remaining = handler.insertItem(slot, src.copy(), simulate);
++                     if (isEmpty(remaining)) {
++                        src = emptyStack;
++                     } else if (getSize(remaining) < getSize(src)) {
++                        src = setSize(src, getSize(remaining));
++                     }
++                  }
++               }
++
++               return getSize(stackSource) - getSize(src);
+             }
+          }
+       }
+@@ -646,88 +652,88 @@
+ 
+    private static int[] getInventorySlots(TileEntity te, EnumFacing side, boolean checkInsert, boolean checkExtract, GameProfile accessor) {
+       if (te instanceof IInventory) {
+-         IInventory iinventory = getInventory(te, accessor);
+-         if (iinventory != null && iinventory.getInventoryStackLimit() > 0) {
+-            ISidedInventory isidedinventory;
+-            int[] aint1;
+-            if (iinventory instanceof ISidedInventory) {
+-               isidedinventory = (ISidedInventory)iinventory;
+-               aint1 = isidedinventory.getSlotsForFace(side);
+-               if (aint1.length == 0) {
++         IInventory inv = getInventory(te, accessor);
++         if (inv != null && inv.getInventoryStackLimit() > 0) {
++            ISidedInventory sidedInv;
++            int[] ret;
++            if (inv instanceof ISidedInventory) {
++               sidedInv = (ISidedInventory)inv;
++               ret = sidedInv.getSlotsForFace(side);
++               if (ret.length == 0) {
+                   return emptySlotArray;
+                }
+ 
+-               aint1 = Arrays.copyOf(aint1, aint1.length);
++               ret = Arrays.copyOf(ret, ret.length);
+             } else {
+-               int j1 = iinventory.getSizeInventory();
+-               if (j1 <= 0) {
++               int size = inv.getSizeInventory();
++               if (size <= 0) {
+                   return emptySlotArray;
+                }
+ 
+-               isidedinventory = null;
+-               aint1 = new int[j1];
++               sidedInv = null;
++               ret = new int[size];
+ 
+-               for(int l1 = 0; l1 < aint1.length; aint1[l1] = l1++) {
++               for(int l1 = 0; l1 < ret.length; ret[l1] = l1++) {
+                   ;
+                }
+             }
+ 
+             if (checkInsert || checkExtract) {
+-               int k1 = 0;
++               int writeIdx = 0;
+ 
+-               for(int i2 = 0; i2 < aint1.length; ++i2) {
+-                  int j2 = aint1[i2];
+-                  ItemStack itemstack1 = iinventory.getStackInSlot(j2);
+-                  if ((!checkExtract || !isEmpty(itemstack1) && (isidedinventory == null || isidedinventory.canExtractItem(j2, itemstack1, side))) && (!checkInsert || isEmpty(itemstack1) || getSize(itemstack1) < itemstack1.getMaxStackSize() && getSize(itemstack1) < iinventory.getInventoryStackLimit() && (isidedinventory == null || isidedinventory.canInsertItem(j2, itemstack1, side)))) {
+-                     aint1[k1] = j2;
+-                     ++k1;
++               for(int readIdx = 0; readIdx < ret.length; ++readIdx) {
++                  int slot = ret[readIdx];
++                  ItemStack stack = inv.getStackInSlot(slot);
++                  if ((!checkExtract || !isEmpty(stack) && (sidedInv == null || sidedInv.canExtractItem(slot, stack, side))) && (!checkInsert || isEmpty(stack) || getSize(stack) < stack.getMaxStackSize() && getSize(stack) < inv.getInventoryStackLimit() && (sidedInv == null || sidedInv.canInsertItem(slot, stack, side)))) {
++                     ret[writeIdx] = slot;
++                     ++writeIdx;
+                   }
+                }
+ 
+-               if (k1 != aint1.length) {
+-                  aint1 = Arrays.copyOf(aint1, k1);
++               if (writeIdx != ret.length) {
++                  ret = Arrays.copyOf(ret, writeIdx);
+                }
+             }
+ 
+-            return aint1;
++            return ret;
+          } else {
+             return emptySlotArray;
+          }
+       } else if (!te.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, side)) {
+          return emptySlotArray;
+       } else {
+-         IItemHandler iitemhandler = (IItemHandler)te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, side);
+-         if (iitemhandler == null) {
++         IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, side);
++         if (handler == null) {
+             return emptySlotArray;
+          } else {
+-            int i = iitemhandler.getSlots();
+-            if (i <= 0) {
++            int size = handler.getSlots();
++            if (size <= 0) {
+                return emptySlotArray;
+             } else {
+-               int[] aint = new int[i];
++               int[] ret = new int[size];
+ 
+-               for(int j = 0; j < aint.length; aint[j] = j++) {
++               for(int j = 0; j < ret.length; ret[j] = j++) {
+                   ;
+                }
+ 
+                if (checkInsert || checkExtract) {
+-                  int i1 = 0;
++                  int writeIdx = 0;
+ 
+-                  for(int k = 0; k < aint.length; ++k) {
+-                     int l = aint[k];
+-                     ItemStack itemstack = iitemhandler.getStackInSlot(l);
+-                     if ((!checkExtract || !isEmpty(itemstack) && !isEmpty(iitemhandler.extractItem(l, Integer.MAX_VALUE, true))) && (!checkInsert || checkInsert(iitemhandler, l, itemstack))) {
+-                        aint[i1] = l;
+-                        ++i1;
++                  for(int readIdx = 0; readIdx < ret.length; ++readIdx) {
++                     int slot = ret[readIdx];
++                     ItemStack itemstack = handler.getStackInSlot(slot);
++                     if ((!checkExtract || !isEmpty(itemstack) && !isEmpty(handler.extractItem(slot, Integer.MAX_VALUE, true))) && (!checkInsert || checkInsert(handler, slot, itemstack))) {
++                        ret[writeIdx] = slot;
++                        ++writeIdx;
+                      }
+                   }
+ 
+-                  if (i1 != aint.length) {
+-                     aint = Arrays.copyOf(aint, i1);
++                  if (writeIdx != ret.length) {
++                     ret = Arrays.copyOf(ret, writeIdx);
+                   }
+                }
+ 
+-               return aint;
++               return ret;
+             }
+          }
+       }
+@@ -735,42 +741,42 @@
+ 
+    private static boolean checkInsert(IItemHandler handler, int slot, ItemStack stack) {
+       if (!isEmpty(stack) && getSize(stack) < stack.getMaxStackSize()) {
+-         int i = Integer.MAX_VALUE;
+-         ItemStack itemstack = handler.insertItem(slot, copyWithSize(stack, Integer.MAX_VALUE), true);
+-         return isEmpty(itemstack) || getSize(itemstack) < Integer.MAX_VALUE;
++         int testSize = Integer.MAX_VALUE;
++         ItemStack result = handler.insertItem(slot, copyWithSize(stack, Integer.MAX_VALUE), true);
++         return isEmpty(result) || getSize(result) < Integer.MAX_VALUE;
+       } else {
+          return true;
+       }
+    }
+ 
+    public static boolean consumeFromPlayerInventory(EntityPlayer player, Predicate<ItemStack> request, int amount, boolean simulate) {
+-      NonNullList<ItemStack> nonnulllist = player.inventory.mainInventory;
+-
+-      for(int i = 0; i < 2; ++i) {
+-         int j = amount;
+-
+-         for(int k = 0; k < nonnulllist.size(); ++k) {
+-            ItemStack itemstack = (ItemStack)nonnulllist.get(k);
+-            if (request.apply(itemstack)) {
++      NonNullList<ItemStack> contents = player.inventory.mainInventory;
++
++      for(int pass = 0; pass < 2; ++pass) {
++         int amountNeeded = amount;
++
++         for(int i = 0; i < contents.size(); ++i) {
++            ItemStack stack = contents.get(i);
++            if (request.apply(stack)) {
+                if (player.capabilities.isCreativeMode) {
+                   return true;
+                }
+ 
+-               int l = Math.min(getSize(itemstack), j);
+-               j -= l;
+-               if (i == 1) {
+-                  nonnulllist.set(k, decSize(itemstack, l));
++               int cAmount = Math.min(getSize(stack), amountNeeded);
++               amountNeeded -= cAmount;
++               if (pass == 1) {
++                  contents.set(i, decSize(stack, cAmount));
+                }
+ 
+-               if (j <= 0) {
++               if (amountNeeded <= 0) {
+                   break;
+                }
+             }
+          }
+ 
+-         if (j > 0) {
+-            if (i == 1) {
+-               IC2.log.warn(LogCategory.General, "Inconsistent inventory transaction for player %s, request %s: %d missing", player, request, j);
++         if (amountNeeded > 0) {
++            if (pass == 1) {
++               IC2.log.warn(LogCategory.General, "Inconsistent inventory transaction for player %s, request %s: %d missing", player, request, amountNeeded);
+             }
+ 
+             return false;
+@@ -871,26 +877,26 @@
+       if (amount <= 0) {
+          throw new IllegalArgumentException("negative/zero amount");
+       } else {
+-         ItemStack itemstack = get(player, hand);
+-         if (isEmpty(itemstack)) {
++         ItemStack stack = get(player, hand);
++         if (isEmpty(stack)) {
+             return emptyStack;
+-         } else if (!request.apply(itemstack)) {
++         } else if (!request.apply(stack)) {
+             return emptyStack;
+          } else if (player.capabilities.isCreativeMode) {
+-            return copyOutput ? copyWithSize(itemstack, amount) : itemstack;
+-         } else if (getSize(itemstack) < amount) {
++            return copyOutput ? copyWithSize(stack, amount) : stack;
++         } else if (getSize(stack) < amount) {
+             return emptyStack;
+          } else {
+-            ItemStack itemstack1;
+-            if (getSize(itemstack) == amount) {
+-               itemstack1 = itemstack;
++            ItemStack ret;
++            if (getSize(stack) == amount) {
++               ret = stack;
+                clear(player, hand);
+             } else {
+-               itemstack1 = copyOutput ? copyWithSize(itemstack, amount) : itemstack;
+-               set(player, hand, decSize(itemstack, amount));
++               ret = copyOutput ? copyWithSize(stack, amount) : stack;
++               set(player, hand, decSize(stack, amount));
+             }
+ 
+-            return itemstack1;
++            return ret;
+          }
+       }
+    }
+@@ -913,29 +919,29 @@
+       if (amount <= 0) {
+          throw new IllegalArgumentException("negative/zero amount");
+       } else {
+-         ItemStack itemstack = get(player, hand);
+-         if (isEmpty(itemstack)) {
++         ItemStack stack = get(player, hand);
++         if (isEmpty(stack)) {
+             return emptyStack;
+          } else {
+-            int i = itemstack.getMaxDamage();
+-            if (i <= 0) {
+-               return emptyStack;
+-            } else if (!request.apply(itemstack)) {
+-               return emptyStack;
+-            } else if (!player.capabilities.isCreativeMode && itemstack.isItemStackDamageable()) {
+-               itemstack.damageItem(amount, player);
+-               ItemStack itemstack1;
+-               if (isEmpty(itemstack)) {
+-                  itemstack1 = itemstack;
++            int maxDamage = stack.getMaxDamage();
++            if (maxDamage <= 0) {
++               return emptyStack;
++            } else if (!request.apply(stack)) {
++               return emptyStack;
++            } else if (!player.capabilities.isCreativeMode && stack.isItemStackDamageable()) {
++               stack.damageItem(amount, player);
++               ItemStack ret;
++               if (isEmpty(stack)) {
++                  ret = stack;
+                   clear(player, hand);
+                } else {
+-                  itemstack1 = copyOutput ? copy(itemstack) : itemstack;
+-                  set(player, hand, itemstack);
++                  ret = copyOutput ? copy(stack) : stack;
++                  set(player, hand, stack);
+                }
+ 
+-               return itemstack1;
++               return ret;
+             } else {
+-               return copyOutput ? copy(itemstack) : itemstack;
++               return copyOutput ? copy(stack) : stack;
+             }
+          }
+       }
+@@ -950,15 +956,15 @@
+          stack = emptyStack;
+       }
+ 
+-      InventoryPlayer inventoryplayer = player.inventory;
++      InventoryPlayer inv = player.inventory;
+       if (hand == EnumHand.MAIN_HAND) {
+-         inventoryplayer.mainInventory.set(inventoryplayer.currentItem, stack);
++         inv.mainInventory.set(inv.currentItem, stack);
+       } else {
+          if (hand != EnumHand.OFF_HAND) {
+             throw new IllegalArgumentException("invalid hand: " + hand);
+          }
+ 
+-         inventoryplayer.offHandInventory.set(0, stack);
++         inv.offHandInventory.set(0, stack);
+       }
+ 
+    }
+@@ -976,13 +982,13 @@
+ 
+    public static void dropAsEntity(World world, BlockPos pos, ItemStack stack) {
+       if (!isEmpty(stack)) {
+-         double d0 = 0.7D;
+-         double d1 = (double)world.rand.nextFloat() * d0 + (1.0D - d0) * 0.5D;
+-         double d2 = (double)world.rand.nextFloat() * d0 + (1.0D - d0) * 0.5D;
+-         double d3 = (double)world.rand.nextFloat() * d0 + (1.0D - d0) * 0.5D;
+-         EntityItem entityitem = new EntityItem(world, (double)pos.getX() + d1, (double)pos.getY() + d2, (double)pos.getZ() + d3, stack.copy());
+-         entityitem.setDefaultPickupDelay();
+-         world.spawnEntity(entityitem);
++         double f = 0.7D;
++         double dx = (double)world.rand.nextFloat() * f + (1.0D - f) * 0.5D;
++         double dy = (double)world.rand.nextFloat() * f + (1.0D - f) * 0.5D;
++         double dz = (double)world.rand.nextFloat() * f + (1.0D - f) * 0.5D;
++         EntityItem entityItem = new EntityItem(world, (double)pos.getX() + dx, (double)pos.getY() + dy, (double)pos.getZ() + dz, stack.copy());
++         entityItem.setDefaultPickupDelay();
++         world.spawnEntity(entityItem);
+       }
+    }
+ 
+@@ -1007,29 +1013,29 @@
+    }
+ 
+    public static ItemStack copyWithWildCard(ItemStack stack) {
+-      ItemStack itemstack = copy(stack);
+-      setRawMeta(itemstack, 32767);
+-      return itemstack;
++      ItemStack ret = copy(stack);
++      setRawMeta(ret, 32767);
++      return ret;
+    }
+ 
+    public static Collection<ItemStack> copy(Collection<ItemStack> c) {
+-      List<ItemStack> list = new ArrayList<ItemStack>(c.size());
++      List<ItemStack> ret = new ArrayList<>(c.size());
+ 
+-      for(ItemStack itemstack : c) {
+-         list.add(copy(itemstack));
++      for(ItemStack stack : c) {
++         ret.add(copy(stack));
+       }
+ 
+-      return list;
++      return ret;
+    }
+ 
+    public static NBTTagCompound getOrCreateNbtData(ItemStack stack) {
+-      NBTTagCompound nbttagcompound = stack.getTagCompound();
+-      if (nbttagcompound == null) {
+-         nbttagcompound = new NBTTagCompound();
+-         stack.setTagCompound(nbttagcompound);
++      NBTTagCompound ret = stack.getTagCompound();
++      if (ret == null) {
++         ret = new NBTTagCompound();
++         stack.setTagCompound(ret);
+       }
+ 
+-      return nbttagcompound;
++      return ret;
+    }
+ 
+    public static boolean checkItemEquality(ItemStack a, ItemStack b) {
+@@ -1052,32 +1058,32 @@
+       if (a == b) {
+          return true;
+       } else {
+-         Set<String> set = a != null ? a.getKeySet() : Collections.emptySet();
+-         Set<String> set1 = b != null ? b.getKeySet() : Collections.emptySet();
+-         Set<String> set2 = new HashSet<String>(Math.max(set.size(), set1.size()));
+-
+-         for(String s : set) {
+-            if (!ignoredNbtKeys.contains(s)) {
+-               if (!set1.contains(s)) {
+-                  return false;
+-               }
+-
+-               set2.add(s);
+-            }
+-         }
+-
+-         for(String s1 : set1) {
+-            if (!ignoredNbtKeys.contains(s1)) {
+-               if (!set.contains(s1)) {
+-                  return false;
+-               }
+-
+-               set2.add(s1);
+-            }
+-         }
+-
+-         for(String s2 : set2) {
+-            if (!a.getTag(s2).equals(b.getTag(s2))) {
++         Set<String> keysA = a != null ? a.getKeySet() : Collections.emptySet();
++         Set<String> keysB = b != null ? b.getKeySet() : Collections.emptySet();
++         Set<String> toCheck = new HashSet<>(Math.max(keysA.size(), keysB.size()));
++
++         for(String key : keysA) {
++            if (!ignoredNbtKeys.contains(key)) {
++               if (!keysB.contains(key)) {
++                  return false;
++               }
++
++               toCheck.add(key);
++            }
++         }
++
++         for(String key : keysB) {
++            if (!ignoredNbtKeys.contains(key)) {
++               if (!keysA.contains(key)) {
++                  return false;
++               }
++
++               toCheck.add(key);
++            }
++         }
++
++         for(String key : toCheck) {
++            if (!a.getTag(key).equals(b.getTag(key))) {
+                return false;
+             }
+          }
+@@ -1087,19 +1093,19 @@
+    }
+ 
+    public static boolean checkNbtEqualityStrict(ItemStack a, ItemStack b) {
+-      NBTTagCompound nbttagcompound = a.getTagCompound();
+-      NBTTagCompound nbttagcompound1 = b.getTagCompound();
+-      if (nbttagcompound == nbttagcompound1) {
++      NBTTagCompound nbtA = a.getTagCompound();
++      NBTTagCompound nbtB = b.getTagCompound();
++      if (nbtA == nbtB) {
+          return true;
+       } else {
+-         return nbttagcompound != null && nbttagcompound1 != null && nbttagcompound.equals(nbttagcompound1);
++         return nbtA != null && nbtB != null && nbtA.equals(nbtB);
+       }
+    }
+ 
+    public static ItemStack getPickStack(World world, BlockPos pos, IBlockState state, EntityPlayer player) {
+-      RayTraceResult raytraceresult = new RayTraceResult(net.minecraft.util.math.RayTraceResult.Type.BLOCK, new Vec3d(pos), EnumFacing.DOWN, pos);
+-      ItemStack itemstack = state.getBlock().getPickBlock(state, raytraceresult, world, pos, player);
+-      return isEmpty(itemstack) ? emptyStack : itemstack;
++      RayTraceResult target = new RayTraceResult(net.minecraft.util.math.RayTraceResult.Type.BLOCK, new Vec3d(pos), EnumFacing.DOWN, pos);
++      ItemStack ret = state.getBlock().getPickBlock(state, target, world, pos, player);
++      return isEmpty(ret) ? emptyStack : ret;
+    }
+ 
+    public static List<ItemStack> getDrops(IBlockAccess world, BlockPos pos, IBlockState state, int fortune) {
+@@ -1107,34 +1113,34 @@
+    }
+ 
+    public static List<ItemStack> getDrops(IBlockAccess world, BlockPos pos, IBlockState state, Block block, int fortune) {
+-      NonNullList<ItemStack> nonnulllist = NonNullList.create();
++      NonNullList<ItemStack> drops = NonNullList.create();
+ 
+       assert world.getBlockState(pos).getBlock() == block;
+ 
+-      block.getDrops(nonnulllist, world, pos, state, fortune);
+-      return nonnulllist;
++      block.getDrops(drops, world, pos, state, fortune);
++      return drops;
     }
  
     public static List<ItemStack> getDrops(IBlockAccess world, BlockPos pos, IBlockState state, EntityPlayer player, int fortune, boolean silkTouch) {
@@ -43,7 +1301,32 @@
     }
  
     public static boolean placeBlock(ItemStack stack, World world, BlockPos pos) {
-@@ -1196,8 +1196,8 @@
+@@ -1145,15 +1151,15 @@
+          if (!(item instanceof ItemBlock) && !(item instanceof ItemBlockSpecial)) {
+             return false;
+          } else {
+-            int i = getSize(stack);
+-            EntityPlayer entityplayer = Ic2Player.get(world);
+-            EnumHand enumhand = EnumHand.MAIN_HAND;
+-            ItemStack itemstack = entityplayer.getHeldItem(enumhand);
+-            entityplayer.setHeldItem(enumhand, stack);
+-            EnumActionResult enumactionresult = item.onItemUse(entityplayer, world, pos, enumhand, EnumFacing.DOWN, 0.0F, 0.0F, 0.0F);
+-            entityplayer.setHeldItem(enumhand, itemstack);
+-            setSize(stack, i);
+-            return enumactionresult == EnumActionResult.SUCCESS;
++            int oldSize = getSize(stack);
++            EntityPlayer player = Ic2Player.get(world);
++            EnumHand hand = EnumHand.MAIN_HAND;
++            ItemStack prev = player.getHeldItem(hand);
++            player.setHeldItem(hand, stack);
++            EnumActionResult result = item.onItemUse(player, world, pos, hand, EnumFacing.DOWN, 0.0F, 0.0F, 0.0F);
++            player.setHeldItem(hand, prev);
++            setSize(stack, oldSize);
++            return result == EnumActionResult.SUCCESS;
+          }
+       }
+    }
+@@ -1196,8 +1202,8 @@
     }
  
     public static boolean check2(Iterable<List<ItemStack>> list) {
@@ -54,18 +1337,298 @@
              return false;
           }
        }
-@@ -1226,12 +1226,12 @@
+@@ -1210,8 +1216,8 @@
+    }
+ 
+    public static boolean check(Iterable<ItemStack> list) {
+-      for(ItemStack itemstack : list) {
+-         if (!check(itemstack)) {
++      for(ItemStack stack : list) {
++         if (!check(stack)) {
+             return false;
+          }
+       }
+@@ -1224,17 +1230,17 @@
+    }
+ 
     public static String toStringSafe2(Iterable<List<ItemStack>> list) {
-       StringBuilder stringbuilder = new StringBuilder("[");
+-      StringBuilder stringbuilder = new StringBuilder("[");
++      StringBuilder ret = new StringBuilder("[");
  
 -      for(List<ItemStack> list : list) {
+-         if (stringbuilder.length() > 1) {
+-            stringbuilder.append(", ");
 +      for(List<ItemStack> list1 : list) {
-          if (stringbuilder.length() > 1) {
-             stringbuilder.append(", ");
++         if (ret.length() > 1) {
++            ret.append(", ");
           }
  
 -         stringbuilder.append(toStringSafe(list));
-+         stringbuilder.append(toStringSafe(list1));
++         ret.append(toStringSafe(list1));
        }
  
-       return stringbuilder.append(']').toString();
+-      return stringbuilder.append(']').toString();
++      return ret.append(']').toString();
+    }
+ 
+    public static String toStringSafe(ItemStack[] array) {
+@@ -1242,17 +1248,17 @@
+    }
+ 
+    public static String toStringSafe(Iterable<ItemStack> list) {
+-      StringBuilder stringbuilder = new StringBuilder("[");
++      StringBuilder ret = new StringBuilder("[");
+ 
+-      for(ItemStack itemstack : list) {
+-         if (stringbuilder.length() > 1) {
+-            stringbuilder.append(", ");
++      for(ItemStack stack : list) {
++         if (ret.length() > 1) {
++            ret.append(", ");
+          }
+ 
+-         stringbuilder.append(toStringSafe(itemstack));
++         ret.append(toStringSafe(stack));
+       }
+ 
+-      return stringbuilder.append(']').toString();
++      return ret.append(']').toString();
+    }
+ 
+    public static String toStringSafe(ItemStack stack) {
+@@ -1267,19 +1273,19 @@
+       if (!simulate) {
+          return player.inventory.addItemStackToInventory(stack);
+       } else {
+-         int i = getSize(stack);
+-         int j = Math.min(player.inventory.getInventoryStackLimit(), stack.getMaxStackSize());
++         int sizeLeft = getSize(stack);
++         int maxStackSize = Math.min(player.inventory.getInventoryStackLimit(), stack.getMaxStackSize());
+ 
+-         for(int k = 0; k < player.inventory.mainInventory.size() && i > 0; ++k) {
+-            ItemStack itemstack = (ItemStack)player.inventory.mainInventory.get(k);
+-            if (isEmpty(itemstack)) {
+-               i -= j;
+-            } else if (checkItemEqualityStrict(stack, itemstack) && getSize(itemstack) < j) {
+-               i -= j - getSize(itemstack);
++         for(int i = 0; i < player.inventory.mainInventory.size() && sizeLeft > 0; ++i) {
++            ItemStack invStack = player.inventory.mainInventory.get(i);
++            if (isEmpty(invStack)) {
++               sizeLeft -= maxStackSize;
++            } else if (checkItemEqualityStrict(stack, invStack) && getSize(invStack) < maxStackSize) {
++               sizeLeft -= maxStackSize - getSize(invStack);
+             }
+          }
+ 
+-         return i <= 0;
++         return sizeLeft <= 0;
+       }
+    }
+ 
+@@ -1296,13 +1302,13 @@
+    }
+ 
+    public static TIntSet getSlotsFromInv(IInventory inv) {
+-      TIntSet tintset = new TIntHashSet();
++      TIntSet set = new TIntHashSet();
+ 
+       for(int i = 0; i < inv.getSizeInventory(); ++i) {
+-         tintset.add(i);
++         set.add(i);
+       }
+ 
+-      return tintset;
++      return set;
+    }
+ 
+    public static Tuple.T2<List<ItemStack>, ? extends TIntCollection> balanceStacks(IInventory craftMatrix) {
+@@ -1316,7 +1322,7 @@
+    public static Tuple.T2<List<ItemStack>, ? extends TIntCollection> balanceStacks(final IInventory inv, Collection<ItemStack> additionalItems) {
+       return balanceStacks(inv, new Predicate<Tuple.T2<ItemStack, Integer>>() {
+          public boolean apply(Tuple.T2<ItemStack, Integer> input) {
+-            return !StackUtil.isEmpty(inv.getStackInSlot(((Integer)input.b).intValue()));
++            return !StackUtil.isEmpty(inv.getStackInSlot(input.b));
+          }
+       }, getSlotsFromInv(inv), additionalItems);
+    }
+@@ -1326,84 +1332,84 @@
+    }
+ 
+    public static Tuple.T2<List<ItemStack>, ? extends TIntCollection> balanceStacks(IInventory inv, Predicate<Tuple.T2<ItemStack, Integer>> canInsert, TIntSet originalAvailableSlots, Collection<ItemStack> additionalStacksOriginal) {
+-      List<ItemStack> list = new LinkedList<ItemStack>(additionalStacksOriginal);
+-      TIntSet tintset = new TIntHashSet(originalAvailableSlots);
+-      List<ItemStack> list1 = new ArrayList<ItemStack>();
++      List<ItemStack> additionalStacks = new LinkedList<>(additionalStacksOriginal);
++      TIntSet availableSlots = new TIntHashSet(originalAvailableSlots);
++      List<ItemStack> leftOvers = new ArrayList<>();
+ 
+       for(int i = 0; i < inv.getSizeInventory(); ++i) {
+-         if (tintset.contains(i)) {
+-            ItemStack itemstack = inv.getStackInSlot(i);
+-            if (!isEmpty(itemstack)) {
+-               int j = 0;
+-               ListIterator<ItemStack> listiterator = list.listIterator();
++         if (availableSlots.contains(i)) {
++            ItemStack stack = inv.getStackInSlot(i);
++            if (!isEmpty(stack)) {
++               int amount = 0;
++               ListIterator<ItemStack> iter = additionalStacks.listIterator();
+ 
+-               while(listiterator.hasNext()) {
+-                  ItemStack itemstack1 = listiterator.next();
+-                  if (checkItemEqualityStrict(itemstack1, itemstack)) {
+-                     listiterator.remove();
+-                     j += getSize(itemstack1);
++               while(iter.hasNext()) {
++                  ItemStack currentStack = iter.next();
++                  if (checkItemEqualityStrict(currentStack, stack)) {
++                     iter.remove();
++                     amount += getSize(currentStack);
+                   }
+                }
+ 
+-               j = distributeStackToSlots(inv, itemstack, tintset, canInsert, j);
++               amount = distributeStackToSlots(inv, stack, availableSlots, canInsert, amount);
+ 
+-               while(j > 0) {
+-                  int l = Math.min(itemstack.getMaxStackSize(), j);
+-                  j -= l;
+-                  list1.add(copyWithSize(itemstack, l));
++               while(amount > 0) {
++                  int size = Math.min(stack.getMaxStackSize(), amount);
++                  amount -= size;
++                  leftOvers.add(copyWithSize(stack, size));
+                }
+             }
+          }
+       }
+ 
+-      for(ItemStack itemstack2 : list) {
+-         int k = distributeStackToSlots(inv, itemstack2, tintset, canInsert, getSize(itemstack2));
+-         if (k > 0) {
+-            list1.add(copyWithSize(itemstack2, k));
++      for(ItemStack stack : additionalStacks) {
++         int amount = distributeStackToSlots(inv, stack, availableSlots, canInsert, getSize(stack));
++         if (amount > 0) {
++            leftOvers.add(copyWithSize(stack, amount));
+          }
+       }
+ 
+-      originalAvailableSlots.removeAll(tintset);
+-      return new Tuple.T2<List<ItemStack>, TIntCollection>(list1, originalAvailableSlots);
++      originalAvailableSlots.removeAll(availableSlots);
++      return new Tuple.T2<>(leftOvers, originalAvailableSlots);
+    }
+ 
+    private static int distributeStackToSlots(final IInventory inv, ItemStack stack, TIntSet availableSlots, Predicate<Tuple.T2<ItemStack, Integer>> canInsert, int amount) {
+-      TIntList tintlist = new TIntArrayList();
+-      TIntIterator tintiterator = availableSlots.iterator();
+-
+-      while(tintiterator.hasNext()) {
+-         int i = tintiterator.next();
+-         ItemStack itemstack = inv.getStackInSlot(i);
+-         if ((checkItemEqualityStrict(stack, itemstack) || isEmpty(itemstack)) && canInsert.apply(new Tuple.T2(stack, i))) {
+-            amount += getSize(itemstack);
+-            tintlist.add(i);
+-            tintiterator.remove();
+-         }
+-      }
+-
+-      tintlist.sort();
+-      int l = Math.min(stack.getMaxStackSize(), inv.getInventoryStackLimit());
+-      int i1 = tintlist.size();
+-      TIntIterator tintiterator1 = tintlist.iterator();
+-
+-      while(tintiterator1.hasNext() && amount > 0) {
+-         int j = tintiterator1.next();
+-         int k = amount / i1;
+-         if (amount % i1 > 0) {
+-            ++k;
+-         }
+-
+-         k = Math.min(k, l);
+-         inv.setInventorySlotContents(j, copyWithSize(stack, k));
+-         amount -= k;
+-         --i1;
+-         tintiterator1.remove();
+-      }
+-
+-      if (!tintlist.isEmpty()) {
++      TIntList currentWorkingSet = new TIntArrayList();
++      TIntIterator iter = availableSlots.iterator();
++
++      while(iter.hasNext()) {
++         int currentSlot = iter.next();
++         ItemStack currentStack = inv.getStackInSlot(currentSlot);
++         if ((checkItemEqualityStrict(stack, currentStack) || isEmpty(currentStack)) && canInsert.apply(new Tuple.T2(stack, currentSlot))) {
++            amount += getSize(currentStack);
++            currentWorkingSet.add(currentSlot);
++            iter.remove();
++         }
++      }
++
++      currentWorkingSet.sort();
++      int maxStackSize = Math.min(stack.getMaxStackSize(), inv.getInventoryStackLimit());
++      int slotsLeft = currentWorkingSet.size();
++      TIntIterator iter2 = currentWorkingSet.iterator();
++
++      while(iter2.hasNext() && amount > 0) {
++         int currentSlot = iter2.next();
++         int itemsToPut = amount / slotsLeft;
++         if (amount % slotsLeft > 0) {
++            ++itemsToPut;
++         }
++
++         itemsToPut = Math.min(itemsToPut, maxStackSize);
++         inv.setInventorySlotContents(currentSlot, copyWithSize(stack, itemsToPut));
++         amount -= itemsToPut;
++         --slotsLeft;
++         iter2.remove();
++      }
++
++      if (!currentWorkingSet.isEmpty()) {
+          assert amount <= 0;
+ 
+-         tintlist.forEach(new TIntProcedure() {
++         currentWorkingSet.forEach(new TIntProcedure() {
+             public boolean execute(int currentSlot) {
+                inv.setInventorySlotContents(currentSlot, StackUtil.emptyStack);
+                return true;
+@@ -1411,7 +1417,7 @@
+          });
+       }
+ 
+-      assert amount <= 0 || i1 == 0;
++      assert amount <= 0 || slotsLeft == 0;
+ 
+       return amount;
+    }
+@@ -1430,14 +1436,14 @@
+       } else if (target == null) {
+          return true;
+       } else {
+-         for(String s : target.getKeySet()) {
+-            NBTBase nbtbase = target.getTag(s);
+-            if (!subject.hasKey(s) || nbtbase.getId() != subject.getTagId(s)) {
++         for(String key : target.getKeySet()) {
++            NBTBase targetNBT = target.getTag(key);
++            if (!subject.hasKey(key) || targetNBT.getId() != subject.getTagId(key)) {
+                return false;
+             }
+ 
+-            NBTBase nbtbase1 = subject.getTag(s);
+-            if (!nbtbase.equals(nbtbase1)) {
++            NBTBase subjectNBT = subject.getTag(key);
++            if (!targetNBT.equals(subjectNBT)) {
+                return false;
+             }
+          }
+@@ -1464,7 +1470,7 @@
+       }
+    }
+ 
+-   public static class PersonalAdjacentInv extends StackUtil.AdjacentInv {
++   public static class PersonalAdjacentInv extends AdjacentInv {
+       public final GameProfile accessor;
+ 
+       PersonalAdjacentInv(TileEntity te, EnumFacing dir, GameProfile accessor) {

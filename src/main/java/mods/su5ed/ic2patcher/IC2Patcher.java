@@ -23,6 +23,7 @@ public final class IC2Patcher {
     @Mod.EventHandler
     public void start(FMLConstructionEvent event) {
         MinecraftForge.EVENT_BUS.register(this);
+        IC2PatcherConfig.get();
     }
 
     @Mod.EventHandler
@@ -40,7 +41,7 @@ public final class IC2Patcher {
 
     @Mod.EventHandler
     public void onServerStopped(FMLServerStoppedEvent event) {
-//        WorldData.resetMaps();
+        if (!IC2PatcherConfig.get().worldReferenceSwitch) WorldData.resetMaps();
     }
 
     private static void fixUraniumCellRecipe() {

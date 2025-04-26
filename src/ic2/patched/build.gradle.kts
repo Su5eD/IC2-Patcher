@@ -4,7 +4,6 @@ import net.minecraftforge.gradle.patcher.tasks.GenerateBinPatches
 import net.minecraftforge.gradle.patcher.tasks.GeneratePatches
 import net.minecraftforge.gradle.patcher.tasks.ApplyPatches
 import net.minecraftforge.gradle.mcp.tasks.GenerateSRG
-import net.minecraftforge.gradle.userdev.tasks.RenameJarInPlace
 
 plugins {
     java
@@ -31,7 +30,6 @@ val patchedMod:     Configuration by configurations.creating
 val projectBase:    Project = project(":$baseProjectName-Base")
 val taskGroup:      String = "$baseProjectName patcher ~ patched"
 val patchedJar:     File = File(buildDir, "applyPatches/patched.jar")
-val patchesDir:     File = File(projectDir, "patches")
 val baseSrc:        File = File(projectBase.projectDir, "src")
 val src:            File = File(projectDir, "src")
 val libs:           File = File(buildDir, "libs")
@@ -70,6 +68,7 @@ dependencies {
     minecraft(group = "net.minecraftforge", name = "forge", version = "1.12.2-${versionForge}")
 
     patchedMod(group = "net.industrial-craft", name = "industrialcraft-2", version = "${versionIC2}-ex112")
+    implementation(project(":api"))
     compileOnly(group = "mezz.jei", name = "jei_1.12.2", version = versionJEI)
     compileOnly(group = "com.mod-buildcraft", name = "buildcraft-lib", version = versionBuildCraft)
     compileOnly(group = "com.mod-buildcraft", name = "buildcraft-main", version = versionBuildCraft)

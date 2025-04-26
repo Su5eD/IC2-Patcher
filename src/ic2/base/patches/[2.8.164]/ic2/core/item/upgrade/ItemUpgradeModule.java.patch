@@ -1,0 +1,555 @@
+--- a/ic2/core/item/upgrade/ItemUpgradeModule.java
++++ b/ic2/core/item/upgrade/ItemUpgradeModule.java
+@@ -57,8 +57,8 @@
+       super(ItemName.upgrade, ItemUpgradeModule.UpgradeType.class);
+       this.setHasSubtypes(true);
+ 
+-      for(ItemUpgradeModule.UpgradeType itemupgrademodule$upgradetype : ItemUpgradeModule.UpgradeType.values()) {
+-         UpgradeRegistry.register(new ItemStack(this, 1, itemupgrademodule$upgradetype.getId()));
++      for(ItemUpgradeModule.UpgradeType type : ItemUpgradeModule.UpgradeType.values()) {
++         UpgradeRegistry.register(new ItemStack(this, 1, type.getId()));
+       }
+ 
+    }
+@@ -67,29 +67,28 @@
+    public void registerModels(final ItemName name) {
+       ModelLoader.setCustomMeshDefinition(this, new ItemMeshDefinition() {
+          public ModelResourceLocation getModelLocation(ItemStack stack) {
+-            ItemUpgradeModule.UpgradeType itemupgrademodule$upgradetype1 = (ItemUpgradeModule.UpgradeType)ItemUpgradeModule.this.getType(stack);
+-            if (itemupgrademodule$upgradetype1 == null) {
+-               return new ModelResourceLocation("builtin/missing", "missing");
+-            } else {
+-               EnumFacing enumfacing1;
+-               return itemupgrademodule$upgradetype1.directional && (enumfacing1 = ItemUpgradeModule.getDirection(stack)) != null ? ItemIC2.getModelLocation(name, itemupgrademodule$upgradetype1.getName() + '_' + enumfacing1.getName()) : ItemIC2.getModelLocation(name, itemupgrademodule$upgradetype1.getName());
+-            }
++            ItemUpgradeModule.UpgradeType type = ItemUpgradeModule.this.getType(stack);
++            if (type == null) return new ModelResourceLocation("builtin/missing", "missing");
++            EnumFacing enumfacing1;
++            return type.directional && (enumfacing1 = ItemUpgradeModule.getDirection(stack)) != null ?
++                ItemIC2.getModelLocation(name, type.getName() + '_' + enumfacing1.getName()) :
++                ItemIC2.getModelLocation(name, type.getName()
++             );
+          }
+       });
+ 
+-      for(ItemUpgradeModule.UpgradeType itemupgrademodule$upgradetype : this.typeProperty.getAllowedValues()) {
+-         ModelBakery.registerItemVariants(this, new ResourceLocation[]{getModelLocation(name, itemupgrademodule$upgradetype.getName())});
+-         if (itemupgrademodule$upgradetype.directional) {
++      for (ItemUpgradeModule.UpgradeType type : this.typeProperty.getAllowedValues()) {
++         ModelBakery.registerItemVariants(this, getModelLocation(name, type.getName()));
++         if (type.directional) {
+             for(EnumFacing enumfacing : EnumFacing.VALUES) {
+-               ModelBakery.registerItemVariants(this, new ResourceLocation[]{getModelLocation(name, itemupgrademodule$upgradetype.getName() + '_' + enumfacing.getName())});
++               ModelBakery.registerItemVariants(this, getModelLocation(name, type.getName() + '_' + enumfacing.getName()));
+             }
+          }
+       }
+-
+    }
+ 
+    public List<String> getHudInfo(ItemStack stack, boolean advanced) {
+-      List<String> list = new LinkedList<String>();
++      List<String> list = new LinkedList<>();
+       list.add("Machine Upgrade");
+       return list;
+    }
+@@ -97,50 +96,41 @@
+    @SideOnly(Side.CLIENT)
+    public void addInformation(ItemStack stack, World world, List<String> tooltip, ITooltipFlag advanced) {
+       super.addInformation(stack, world, tooltip, advanced);
+-      ItemUpgradeModule.UpgradeType itemupgrademodule$upgradetype = (ItemUpgradeModule.UpgradeType)this.getType(stack);
+-      if (itemupgrademodule$upgradetype != null) {
+-         switch(itemupgrademodule$upgradetype) {
+-         case overclocker:
+-            tooltip.add(Localization.translate("ic2.tooltip.upgrade.overclocker.time", decimalformat.format(100.0D * Math.pow(this.getProcessTimeMultiplier(stack, (IUpgradableBlock)null), (double)StackUtil.getSize(stack)))));
+-            tooltip.add(Localization.translate("ic2.tooltip.upgrade.overclocker.power", decimalformat.format(100.0D * Math.pow(this.getEnergyDemandMultiplier(stack, (IUpgradableBlock)null), (double)StackUtil.getSize(stack)))));
+-            break;
+-         case transformer:
+-            tooltip.add(Localization.translate("ic2.tooltip.upgrade.transformer", this.getExtraTier(stack, (IUpgradableBlock)null) * StackUtil.getSize(stack)));
+-            break;
+-         case energy_storage:
+-            tooltip.add(Localization.translate("ic2.tooltip.upgrade.storage", this.getExtraEnergyStorage(stack, (IUpgradableBlock)null) * StackUtil.getSize(stack)));
+-            break;
+-         case ejector:
+-         case advanced_ejector:
+-            String s3 = getSideName(stack);
+-            tooltip.add(Localization.translate("ic2.tooltip.upgrade.ejector", Localization.translate(s3)));
+-            break;
+-         case pulling:
+-         case advanced_pulling:
+-            String s2 = getSideName(stack);
+-            tooltip.add(Localization.translate("ic2.tooltip.upgrade.pulling", Localization.translate(s2)));
+-            break;
+-         case fluid_ejector:
+-            String s1 = getSideName(stack);
+-            tooltip.add(Localization.translate("ic2.tooltip.upgrade.ejector", Localization.translate(s1)));
+-            break;
+-         case fluid_pulling:
+-            String s = getSideName(stack);
+-            tooltip.add(Localization.translate("ic2.tooltip.upgrade.pulling", Localization.translate(s)));
+-            break;
+-         case redstone_inverter:
+-            tooltip.add(Localization.translate("ic2.tooltip.upgrade.redstone"));
++      ItemUpgradeModule.UpgradeType type = this.getType(stack);
++      if (type != null) {
++         switch(type) {
++            case overclocker:
++               tooltip.add(Localization.translate("ic2.tooltip.upgrade.overclocker.time", decimalformat.format(100.0D * Math.pow(this.getProcessTimeMultiplier(stack, null), (double)StackUtil.getSize(stack)))));
++               tooltip.add(Localization.translate("ic2.tooltip.upgrade.overclocker.power", decimalformat.format(100.0D * Math.pow(this.getEnergyDemandMultiplier(stack, null), (double)StackUtil.getSize(stack)))));
++               break;
++            case transformer:
++               tooltip.add(Localization.translate("ic2.tooltip.upgrade.transformer", this.getExtraTier(stack, null) * StackUtil.getSize(stack)));
++               break;
++            case energy_storage:
++               tooltip.add(Localization.translate("ic2.tooltip.upgrade.storage", this.getExtraEnergyStorage(stack, null) * StackUtil.getSize(stack)));
++               break;
++            case ejector:
++            case advanced_ejector:
++            case fluid_ejector:
++               String s3 = getSideName(stack);
++               tooltip.add(Localization.translate("ic2.tooltip.upgrade.ejector", Localization.translate(s3)));
++               break;
++            case pulling:
++            case advanced_pulling:
++            case fluid_pulling:
++               String s2 = getSideName(stack);
++               tooltip.add(Localization.translate("ic2.tooltip.upgrade.pulling", Localization.translate(s2)));
++               break;
++            case redstone_inverter:
++               tooltip.add(Localization.translate("ic2.tooltip.upgrade.redstone"));
+          }
+-
+       }
+    }
+ 
+    private static String getSideName(ItemStack stack) {
+       EnumFacing enumfacing = getDirection(stack);
+-      if (enumfacing == null) {
+-         return "ic2.tooltip.upgrade.ejector.anyside";
+-      } else {
+-         switch(enumfacing) {
++      if (enumfacing == null) return "ic2.tooltip.upgrade.ejector.anyside";
++      switch(enumfacing) {
+          case WEST:
+             return "ic2.dir.west";
+          case EAST:
+@@ -155,54 +145,42 @@
+             return "ic2.dir.south";
+          default:
+             throw new RuntimeException("invalid dir: " + enumfacing);
+-         }
+       }
+    }
+ 
+    public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing side, float xOffset, float yOffset, float zOffset) {
+       ItemStack itemstack = StackUtil.get(player, hand);
+-      ItemUpgradeModule.UpgradeType itemupgrademodule$upgradetype = (ItemUpgradeModule.UpgradeType)this.getType(itemstack);
+-      if (itemupgrademodule$upgradetype == null) {
+-         return EnumActionResult.PASS;
+-      } else if (itemupgrademodule$upgradetype.directional) {
+-         int i = 1 + side.ordinal();
+-         NBTTagCompound nbttagcompound = StackUtil.getOrCreateNbtData(itemstack);
+-         if (nbttagcompound.getByte("dir") == i) {
+-            nbttagcompound.setByte("dir", (byte)0);
+-         } else {
+-            nbttagcompound.setByte("dir", (byte)i);
+-         }
++      ItemUpgradeModule.UpgradeType type = this.getType(itemstack);
++      if (type == null || !type.directional) return EnumActionResult.PASS;
++      int i = 1 + side.ordinal();
++      NBTTagCompound nbttagcompound = StackUtil.getOrCreateNbtData(itemstack);
++      if (nbttagcompound.getByte("dir") == i) {
++         nbttagcompound.setByte("dir", (byte)0);
++      } else {
++         nbttagcompound.setByte("dir", (byte)i);
++      }
+ 
+-         if (IC2.platform.isRendering()) {
+-            switch(itemupgrademodule$upgradetype) {
++      if (IC2.platform.isRendering()) {
++         switch(type) {
+             case ejector:
+             case advanced_ejector:
++            case fluid_ejector:
+                IC2.platform.messagePlayer(player, Localization.translate("ic2.tooltip.upgrade.ejector", Localization.translate(getSideName(itemstack))));
+                break;
+             case pulling:
+             case advanced_pulling:
+-               IC2.platform.messagePlayer(player, Localization.translate("ic2.tooltip.upgrade.pulling", Localization.translate(getSideName(itemstack))));
+-               break;
+-            case fluid_ejector:
+-               IC2.platform.messagePlayer(player, Localization.translate("ic2.tooltip.upgrade.ejector", Localization.translate(getSideName(itemstack))));
+-               break;
+             case fluid_pulling:
+                IC2.platform.messagePlayer(player, Localization.translate("ic2.tooltip.upgrade.pulling", Localization.translate(getSideName(itemstack))));
+-            }
+          }
+-
+-         return EnumActionResult.SUCCESS;
+-      } else {
+-         return EnumActionResult.PASS;
+       }
++
++      return EnumActionResult.SUCCESS;
+    }
+ 
+    public boolean isSuitableFor(ItemStack stack, Set<UpgradableProperty> types) {
+-      ItemUpgradeModule.UpgradeType itemupgrademodule$upgradetype = (ItemUpgradeModule.UpgradeType)this.getType(stack);
+-      if (itemupgrademodule$upgradetype == null) {
+-         return false;
+-      } else {
+-         switch(itemupgrademodule$upgradetype) {
++      ItemUpgradeModule.UpgradeType type = this.getType(stack);
++      if (type == null) return false;
++      switch(type) {
+          case overclocker:
+             return types.contains(UpgradableProperty.Processing) || types.contains(UpgradableProperty.Augmentable);
+          case transformer:
+@@ -223,21 +201,17 @@
+             return types.contains(UpgradableProperty.RedstoneSensitive);
+          default:
+             return false;
+-         }
+       }
+    }
+ 
+    public int getAugmentation(ItemStack stack, IUpgradableBlock parent) {
+-      ItemUpgradeModule.UpgradeType itemupgrademodule$upgradetype = (ItemUpgradeModule.UpgradeType)this.getType(stack);
+-      if (itemupgrademodule$upgradetype == null) {
+-         return 0;
+-      } else {
+-         switch(itemupgrademodule$upgradetype) {
++      ItemUpgradeModule.UpgradeType type = this.getType(stack);
++      if (type == null) return 0;
++      switch(type) {
+          case overclocker:
+             return 1;
+          default:
+             return 0;
+-         }
+       }
+    }
+ 
+@@ -246,16 +220,13 @@
+    }
+ 
+    public double getProcessTimeMultiplier(ItemStack stack, IUpgradableBlock parent) {
+-      ItemUpgradeModule.UpgradeType itemupgrademodule$upgradetype = (ItemUpgradeModule.UpgradeType)this.getType(stack);
+-      if (itemupgrademodule$upgradetype == null) {
+-         return 1.0D;
+-      } else {
+-         switch(itemupgrademodule$upgradetype) {
++      ItemUpgradeModule.UpgradeType type = this.getType(stack);
++      if (type == null) return 1.0D;
++      switch(type) {
+          case overclocker:
+             return 0.7D;
+          default:
+             return 1.0D;
+-         }
+       }
+    }
+ 
+@@ -264,30 +235,24 @@
+    }
+ 
+    public double getEnergyDemandMultiplier(ItemStack stack, IUpgradableBlock parent) {
+-      ItemUpgradeModule.UpgradeType itemupgrademodule$upgradetype = (ItemUpgradeModule.UpgradeType)this.getType(stack);
+-      if (itemupgrademodule$upgradetype == null) {
+-         return 1.0D;
+-      } else {
+-         switch(itemupgrademodule$upgradetype) {
++      ItemUpgradeModule.UpgradeType type = this.getType(stack);
++      if (type == null) return 1.0D;
++      switch(type) {
+          case overclocker:
+             return 1.6D;
+          default:
+             return 1.0D;
+-         }
+       }
+    }
+ 
+    public int getExtraEnergyStorage(ItemStack stack, IUpgradableBlock parent) {
+-      ItemUpgradeModule.UpgradeType itemupgrademodule$upgradetype = (ItemUpgradeModule.UpgradeType)this.getType(stack);
+-      if (itemupgrademodule$upgradetype == null) {
+-         return 0;
+-      } else {
+-         switch(itemupgrademodule$upgradetype) {
++      ItemUpgradeModule.UpgradeType type = this.getType(stack);
++      if (type == null) return 0;
++      switch(type) {
+          case energy_storage:
+             return 10000;
+          default:
+             return 0;
+-         }
+       }
+    }
+ 
+@@ -296,115 +261,97 @@
+    }
+ 
+    public int getExtraTier(ItemStack stack, IUpgradableBlock parent) {
+-      ItemUpgradeModule.UpgradeType itemupgrademodule$upgradetype = (ItemUpgradeModule.UpgradeType)this.getType(stack);
+-      if (itemupgrademodule$upgradetype == null) {
+-         return 0;
+-      } else {
+-         switch(itemupgrademodule$upgradetype) {
++      ItemUpgradeModule.UpgradeType type = this.getType(stack);
++      if (type == null) return 0;
++      switch(type) {
+          case transformer:
+             return 1;
+          default:
+             return 0;
+-         }
+       }
+    }
+ 
+    public boolean modifiesRedstoneInput(ItemStack stack, IUpgradableBlock parent) {
+-      ItemUpgradeModule.UpgradeType itemupgrademodule$upgradetype = (ItemUpgradeModule.UpgradeType)this.getType(stack);
+-      if (itemupgrademodule$upgradetype == null) {
+-         return false;
+-      } else {
+-         switch(itemupgrademodule$upgradetype) {
++      ItemUpgradeModule.UpgradeType type = this.getType(stack);
++      if (type == null) return false;
++      switch(type) {
+          case redstone_inverter:
+             return true;
+          default:
+             return false;
+-         }
+       }
+    }
+ 
+    public int getRedstoneInput(ItemStack stack, IUpgradableBlock parent, int externalInput) {
+-      ItemUpgradeModule.UpgradeType itemupgrademodule$upgradetype = (ItemUpgradeModule.UpgradeType)this.getType(stack);
+-      if (itemupgrademodule$upgradetype == null) {
+-         return externalInput;
+-      } else {
+-         switch(itemupgrademodule$upgradetype) {
++      ItemUpgradeModule.UpgradeType type = this.getType(stack);
++      if (type == null) return externalInput;
++      switch(type) {
+          case redstone_inverter:
+             return 15 - externalInput;
+          default:
+             return externalInput;
+-         }
+       }
+    }
+ 
+    public boolean onTick(ItemStack stack, IUpgradableBlock parent) {
+-      ItemUpgradeModule.UpgradeType itemupgrademodule$upgradetype = (ItemUpgradeModule.UpgradeType)this.getType(stack);
+-      if (itemupgrademodule$upgradetype == null) {
+-         return false;
+-      } else {
+-         int i = StackUtil.getSize(stack);
+-         TileEntity tileentity = (TileEntity)parent;
+-         boolean flag = false;
+-         switch(itemupgrademodule$upgradetype) {
++      ItemUpgradeModule.UpgradeType type = this.getType(stack);
++      if (type == null) return false;
++      int i = StackUtil.getSize(stack);
++      TileEntity tileEntity = (TileEntity)parent;
++      boolean flag = false;
++      switch(type) {
+          case ejector:
+             int k1 = (int)Math.pow(4.0D, (double)Math.min(4, i - 1));
+ 
+-            for(StackUtil.AdjacentInv stackutil$adjacentinv3 : getTargetInventories(stack, tileentity)) {
+-               StackUtil.transfer(tileentity, stackutil$adjacentinv3.te, stackutil$adjacentinv3.dir, k1);
++            for(StackUtil.AdjacentInv adjacentInv : getTargetInventories(stack, tileEntity)) {
++               StackUtil.transfer(tileEntity, adjacentInv.te, adjacentInv.dir, k1);
+             }
+ 
+             return flag;
+          case advanced_ejector:
+             int j1 = (int)Math.pow(4.0D, (double)Math.min(4, i - 1));
+ 
+-            for(StackUtil.AdjacentInv stackutil$adjacentinv2 : getTargetInventories(stack, tileentity)) {
+-               StackUtil.transfer(tileentity, stackutil$adjacentinv2.te, stackutil$adjacentinv2.dir, j1, stackChecker(stack));
++            for(StackUtil.AdjacentInv adjacentInv : getTargetInventories(stack, tileEntity)) {
++               StackUtil.transfer(tileEntity, adjacentInv.te, adjacentInv.dir, j1, stackChecker(stack));
+             }
+ 
+             return flag;
+          case pulling:
+             int i1 = (int)Math.pow(4.0D, (double)Math.min(4, i - 1));
+ 
+-            for(StackUtil.AdjacentInv stackutil$adjacentinv1 : getTargetInventories(stack, tileentity)) {
+-               StackUtil.transfer(stackutil$adjacentinv1.te, tileentity, stackutil$adjacentinv1.dir.getOpposite(), i1);
++            for(StackUtil.AdjacentInv adjacentInv : getTargetInventories(stack, tileEntity)) {
++               StackUtil.transfer(adjacentInv.te, tileEntity, adjacentInv.dir.getOpposite(), i1);
+             }
+ 
+             return flag;
+          case advanced_pulling:
+             int l = (int)Math.pow(4.0D, (double)Math.min(4, i - 1));
+ 
+-            for(StackUtil.AdjacentInv stackutil$adjacentinv : getTargetInventories(stack, tileentity)) {
+-               StackUtil.transfer(stackutil$adjacentinv.te, tileentity, stackutil$adjacentinv.dir.getOpposite(), l, stackChecker(stack));
++            for(StackUtil.AdjacentInv adjacentInv : getTargetInventories(stack, tileEntity)) {
++               StackUtil.transfer(adjacentInv.te, tileEntity, adjacentInv.dir.getOpposite(), l, stackChecker(stack));
+             }
+ 
+             return flag;
+          case fluid_ejector:
+-            if (!LiquidUtil.isFluidTile(tileentity, (EnumFacing)null)) {
+-               return false;
+-            }
+-
++            if (!LiquidUtil.isFluidTile(tileEntity, null)) return false;
+             int k = (int)(50.0D * Math.pow(4.0D, (double)Math.min(4, i - 1)));
+ 
+-            for(LiquidUtil.AdjacentFluidHandler liquidutil$adjacentfluidhandler1 : getTargetFluidHandlers(stack, tileentity)) {
+-               LiquidUtil.transfer(tileentity, liquidutil$adjacentfluidhandler1.dir, liquidutil$adjacentfluidhandler1.handler, k);
++            for(LiquidUtil.AdjacentFluidHandler adjacentFluidHandler : getTargetFluidHandlers(stack, tileEntity)) {
++               LiquidUtil.transfer(tileEntity, adjacentFluidHandler.dir, adjacentFluidHandler.handler, k);
+             }
+ 
+             return flag;
+          case fluid_pulling:
+-            if (!LiquidUtil.isFluidTile(tileentity, (EnumFacing)null)) {
+-               return false;
+-            }
+-
++            if (!LiquidUtil.isFluidTile(tileEntity, null)) return false;
+             int j = (int)(50.0D * Math.pow(4.0D, (double)Math.min(4, i - 1)));
+ 
+-            for(LiquidUtil.AdjacentFluidHandler liquidutil$adjacentfluidhandler : getTargetFluidHandlers(stack, tileentity)) {
+-               LiquidUtil.transfer(liquidutil$adjacentfluidhandler.handler, liquidutil$adjacentfluidhandler.dir.getOpposite(), tileentity, j);
++            for(LiquidUtil.AdjacentFluidHandler adjacentFluidHandler : getTargetFluidHandlers(stack, tileEntity)) {
++               LiquidUtil.transfer(adjacentFluidHandler.handler, adjacentFluidHandler.dir.getOpposite(), tileEntity, j);
+             }
+ 
+             return flag;
+          default:
+             return false;
+-         }
+       }
+    }
+ 
+@@ -485,41 +432,35 @@
+          }
+ 
+          public boolean apply(ItemStack stackx) {
+-            if (!this.hasInitialised) {
+-               this.initalise();
+-            }
++            if (!this.hasInitialised) this.initalise();
+ 
+             boolean flag;
+             if (!this.meta.comparison.ignoreFilters()) {
+-               if (!this.meta.doComparison(stack.getMetadata())) {
+-                  return false;
+-               }
+-
++               if (!this.meta.doComparison(stack.getMetadata())) return false;
+                flag = false;
+             } else {
+                flag = this.meta.active;
+             }
+ 
+             boolean flag1 = stack.getItem() instanceof ICustomDamageItem;
++            //FIXME: This is always false, resulting in always true in the loop below - is this intentional?
+             boolean flag2 = false;
+             boolean flag3;
+             if (!this.energy.comparison.ignoreFilters()) {
+-               if (!(stack.getItem() instanceof IElectricItem) || !this.energy.doComparison((int)ElectricItem.manager.getCharge(stack))) {
+-                  return false;
+-               }
+-
++               if (!(stack.getItem() instanceof IElectricItem) || !this.energy.doComparison((int)ElectricItem.manager.getCharge(stack))) return false;
+                flag3 = false;
+             } else {
+                flag3 = this.energy.active;
+-               if (flag3 && !(stack.getItem() instanceof IElectricItem)) {
+-                  return false;
+-               }
++               if (flag3 && !(stack.getItem() instanceof IElectricItem)) return false;
+             }
+ 
+             for(ItemStack itemstack : this.filters) {
+-               if (itemstack.getItem() == stack.getItem() && (!flag || this.checkMeta(stack, itemstack)) && (!flag2 || this.checkDamage(stack, itemstack, flag1)) && this.checkNBT(stack, itemstack) && (!flag3 || this.checkEnergy(stack, itemstack))) {
+-                  return true;
+-               }
++               if (itemstack.getItem() == stack.getItem() &&
++                   (!flag || this.checkMeta(stack, itemstack)) &&
++                   (!flag2 || this.checkDamage(stack, itemstack, flag1)) &&
++                   this.checkNBT(stack, itemstack) &&
++                   (!flag3 || this.checkEnergy(stack, itemstack))
++               ) return true;
+             }
+ 
+             return this.filters.isEmpty() && this.meta.active && !flag && this.energy.active && !flag3;
+@@ -529,22 +470,16 @@
+ 
+    private static List<StackUtil.AdjacentInv> getTargetInventories(ItemStack stack, TileEntity parent) {
+       EnumFacing enumfacing = getDirection(stack);
+-      if (enumfacing == null) {
+-         return StackUtil.getAdjacentInventories(parent);
+-      } else {
+-         StackUtil.AdjacentInv stackutil$adjacentinv = StackUtil.getAdjacentInventory(parent, enumfacing);
+-         return stackutil$adjacentinv == null ? emptyInvList : Collections.singletonList(stackutil$adjacentinv);
+-      }
++      if (enumfacing == null) return StackUtil.getAdjacentInventories(parent);
++      StackUtil.AdjacentInv adjacentInv = StackUtil.getAdjacentInventory(parent, enumfacing);
++      return adjacentInv == null ? emptyInvList : Collections.singletonList(adjacentInv);
+    }
+ 
+    private static List<LiquidUtil.AdjacentFluidHandler> getTargetFluidHandlers(ItemStack stack, TileEntity parent) {
+       EnumFacing enumfacing = getDirection(stack);
+-      if (enumfacing == null) {
+-         return LiquidUtil.getAdjacentHandlers(parent);
+-      } else {
+-         LiquidUtil.AdjacentFluidHandler liquidutil$adjacentfluidhandler = LiquidUtil.getAdjacentHandler(parent, enumfacing);
+-         return liquidutil$adjacentfluidhandler == null ? emptyFhList : Collections.singletonList(liquidutil$adjacentfluidhandler);
+-      }
++      if (enumfacing == null) return LiquidUtil.getAdjacentHandlers(parent);
++      LiquidUtil.AdjacentFluidHandler adjacentHandler = LiquidUtil.getAdjacentHandler(parent, enumfacing);
++      return adjacentHandler == null ? emptyFhList : Collections.singletonList(adjacentHandler);
+    }
+ 
+    public Collection<ItemStack> onProcessEnd(ItemStack stack, IUpgradableBlock parent, Collection<ItemStack> output) {
+@@ -552,32 +487,26 @@
+    }
+ 
+    public IHasGui getInventory(EntityPlayer player, ItemStack stack) {
+-      ItemUpgradeModule.UpgradeType itemupgrademodule$upgradetype = (ItemUpgradeModule.UpgradeType)this.getType(stack);
+-      if (itemupgrademodule$upgradetype == null) {
+-         return null;
+-      } else {
+-         switch(itemupgrademodule$upgradetype) {
++      ItemUpgradeModule.UpgradeType type = this.getType(stack);
++      if (type == null) return null;
++      switch(type) {
+          case advanced_ejector:
+          case advanced_pulling:
+             return new HandHeldAdvancedUpgrade(player, stack);
+          default:
+             return null;
+-         }
+       }
+    }
+ 
+    public IHasGui getSubInventory(EntityPlayer player, ItemStack stack, int ID) {
+-      ItemUpgradeModule.UpgradeType itemupgrademodule$upgradetype = (ItemUpgradeModule.UpgradeType)this.getType(stack);
+-      if (itemupgrademodule$upgradetype == null) {
+-         return null;
+-      } else {
+-         switch(itemupgrademodule$upgradetype) {
++      ItemUpgradeModule.UpgradeType type = this.getType(stack);
++      if (type == null) return null;
++      switch(type) {
+          case advanced_ejector:
+          case advanced_pulling:
+             return HandHeldAdvancedUpgrade.delegate(player, stack, ID);
+          default:
+             return null;
+-         }
+       }
+    }
+ 

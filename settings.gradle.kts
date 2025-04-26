@@ -30,6 +30,8 @@ rootProject.name = "$baseProjectName-Patcher"
 
 include(":$baseProjectName-Base")
 include(":$baseProjectName-Patched")
+include(":api")
 
 project(":$baseProjectName-Base").projectDir = file("src/${baseProjectName.toLowerCase()}/base")
 project(":$baseProjectName-Patched").projectDir = file("src/${baseProjectName.toLowerCase()}/patched")
+project(":api").projectDir = file("src/api")

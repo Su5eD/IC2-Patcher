@@ -1,35 +1,38 @@
 --- a/ic2/core/WindSim.java
 +++ b/ic2/core/WindSim.java
-@@ -1,17 +1,18 @@
+@@ -1,6 +1,8 @@
  package ic2.core;
  
++import mods.su5ed.ic2patcher.IC2PatcherConfig;
  import net.minecraft.world.World;
 +import net.minecraftforge.common.DimensionManager;
  import org.ejml.simple.SimpleMatrix;
  
  public class WindSim {
-    private int windStrength = 5 + IC2.random.nextInt(20);
+@@ -8,10 +10,12 @@
     private int windDirection = IC2.random.nextInt(360);
     public int windTicker;
--   private final World world;
+    private final World world;
 +   private final int worldId;
     private final SimpleMatrix windHeightCoefficients;
  
     public WindSim(World world) {
--      this.world = world;
+       this.world = world;
 +      this.worldId = world.provider.getDimension();
        this.windHeightCoefficients = calculateCoefficients(IC2.getWorldHeight(world), IC2.getSeaLevel(world));
     }
  
-@@ -74,9 +75,9 @@
+@@ -74,9 +78,11 @@
        double d1 = Math.max(0.0D, simplematrix.mult(this.windHeightCoefficients).get(0));
        d0 = d0 * d1;
  
 -      if (this.world.isThundering()) {
-+      if (DimensionManager.getWorld(worldId).isThundering()) {
++      World localWorld = IC2PatcherConfig.get().worldReferenceSwitch? DimensionManager.getWorld(worldId): world;
++
++      if (localWorld.isThundering()) {
           d0 *= 1.5D;
 -      } else if (this.world.isRaining()) {
-+      } else if (DimensionManager.getWorld(worldId).isRaining()) {
++      } else if (localWorld.isRaining()) {
           d0 *= 1.25D;
        }
  
