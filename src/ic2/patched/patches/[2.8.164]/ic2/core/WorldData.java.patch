@@ -64,8 +64,8 @@
 +            }
 +         }
        }
--
-        return worldData;
+
+       return worldData;
     }
  
     public static void onWorldUnload(World world) {

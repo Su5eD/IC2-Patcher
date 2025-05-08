@@ -1,6 +1,6 @@
 --- a/ic2/core/WorldData.java
 +++ b/ic2/core/WorldData.java
-@@ -20,19 +20,19 @@
+@@ -21,32 +21,31 @@
  import net.minecraftforge.fml.common.FMLCommonHandler;
  
  public class WorldData {
@@ -11,6 +11,8 @@
 -   boolean continuousUpdatesInUse = false;
 -   final List<IWorldTickCallback> continuousUpdatesToAdd = new ArrayList<IWorldTickCallback>();
 -   final List<IWorldTickCallback> continuousUpdatesToRemove = new ArrayList<IWorldTickCallback>();
+-   public final EnergyNetLocal energyNet;
+-   public final Map<TileEntity, TeUpdateDataServer> tesToUpdate = new IdentityHashMap<TileEntity, TeUpdateDataServer>();
 +   private static ConcurrentMap<Integer, WorldData> idxClient = FMLCommonHandler.instance().getSide().isClient() ? new ConcurrentHashMap<>() : null;
 +   private static ConcurrentMap<Integer, WorldData> idxServer = new ConcurrentHashMap<>();
 +   final Queue<IWorldTickCallback> singleUpdates = new ConcurrentLinkedQueue<>();
@@ -21,8 +23,8 @@
 +   public final Map<Chunk, NBTTagCompound> worldGenData = new IdentityHashMap<>();
 +   public final Set<Chunk> chunksToDecorate = Collections.newSetFromMap(new IdentityHashMap<>());
 +   public final Set<Chunk> pendingUnloadChunks = Collections.newSetFromMap(new IdentityHashMap<>());
-    public final EnergyNetLocal energyNet;
--   public final Map<TileEntity, TeUpdateDataServer> tesToUpdate = new IdentityHashMap<TileEntity, TeUpdateDataServer>();
+    public final TradingMarket tradeMarket;
++   public final EnergyNetLocal energyNet;
     public final WindSim windSim;
 -   public final Map<Chunk, NBTTagCompound> worldGenData = new IdentityHashMap<Chunk, NBTTagCompound>();
 -   public final Set<Chunk> chunksToDecorate = Collections.<Chunk>newSetFromMap(new IdentityHashMap());
@@ -31,15 +33,21 @@
  
     private WorldData(World world) {
        if (!world.isRemote) {
-@@ -42,7 +42,6 @@
-          this.energyNet = null;
+-         this.energyNet = EnergyNetLocal.create(world);
+          this.tradeMarket = new TradingMarket(world);
++         this.energyNet = EnergyNetLocal.create(world);
+          this.windSim = new WindSim(world);
+       } else {
+-         this.energyNet = null;
+          this.tradeMarket = null;
++         this.energyNet = null;
           this.windSim = null;
        }
 -
     }
  
     public static WorldData get(World world) {
-@@ -50,27 +49,24 @@
+@@ -54,27 +53,24 @@
     }
  
     public static WorldData get(World world, boolean load) {
@@ -70,7 +78,7 @@
 +            worldData = oldWorldData;
           }
        }
-+
++      
 +      return worldData;
     }
  
