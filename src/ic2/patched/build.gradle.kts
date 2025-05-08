@@ -71,7 +71,7 @@ dependencies {
     compileOnly(group = "mezz.jei", name = "jei_1.12.2", version = versionJEI)
     compileOnly(group = "com.mod-buildcraft", name = "buildcraft-lib", version = versionBuildCraft)
     compileOnly(group = "com.mod-buildcraft", name = "buildcraft-main", version = versionBuildCraft)
-    implementation(project(":api"))
+    implementation(project(":shared"))
 
     val ejml = create(group = "com.googlecode.efficient-java-matrix-library", name = "core", version = "0.26")
     implementation(ejml)

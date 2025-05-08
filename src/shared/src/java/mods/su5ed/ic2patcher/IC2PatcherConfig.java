@@ -19,12 +19,13 @@ public class IC2PatcherConfig extends net.minecraftforge.common.config.Configura
 
         upgradeTickInterval = this.getInt("upgradeSlotTickInterval", "patches", 5, 1, 20,
             "[Experimental] Forces the Push/Pull upgrades to tick only once every x ticks with few exceptions.\n" +
-                "- For Push: Ticked if output is full, if full amount wasn't transferred, triggers a 20 tick cooldown.\n" +
+                "- For Push: Ticked if output is full, if transferred failed, triggers a 20 tick cooldown.\n" +
                 "- For Pull: Tick is skipped if output/input is full.\n ");
 
         worldReferenceSwitch = this.getBoolean("worldReferenceSwitch", "patches", false,
             "[Experimental] Changes the way EnergyNet handles and stores World Reference, to possibly fix randomly disconnecting wires.\n" +
-                "Enabling this switches out the previous patch for this new solution. Please report any issues related to EnergyNet if you have this patch enabled.");
+                "Enabling this switches out the previous patch for this new solution. Please report any issues related to EnergyNet if you have this patch enabled.\n" +
+                "Creating a backup of the world before turning this patch on is recommended.");
 
         if (this.hasChanged()) this.save();
     }
