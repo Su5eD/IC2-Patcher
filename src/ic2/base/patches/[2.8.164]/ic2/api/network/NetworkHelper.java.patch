@@ -1,0 +1,7 @@
+--- a/ic2/api/network/NetworkHelper.java
++++ b/ic2/api/network/NetworkHelper.java
+@@ -167,4 +167,3 @@
+ 		clientInstance = client;
+ 	}
+ }
+-

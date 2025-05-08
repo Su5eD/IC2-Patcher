@@ -1,0 +1,7 @@
+--- a/ic2/api/energy/tile/IEnergySource.java
++++ b/ic2/api/energy/tile/IEnergySource.java
+@@ -37,4 +37,3 @@
+ 	 */
+ 	int getSourceTier();
+ }
+-

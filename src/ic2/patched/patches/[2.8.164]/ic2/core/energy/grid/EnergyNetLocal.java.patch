@@ -1,0 +1,54 @@
+--- a/ic2/core/energy/grid/EnergyNetLocal.java
++++ b/ic2/core/energy/grid/EnergyNetLocal.java
+@@ -20,10 +20,13 @@
+ import java.util.Map;
+ import java.util.Queue;
+ import java.util.Set;
++
++import mods.su5ed.ic2patcher.IC2PatcherConfig;
+ import net.minecraft.block.Block;
+ import net.minecraft.util.EnumFacing;
+ import net.minecraft.util.math.BlockPos;
+ import net.minecraft.world.World;
++import net.minecraftforge.common.DimensionManager;
+ 
+ public class EnergyNetLocal {
+    static final GridChange QUEUE_DELAY_CHANGE = new GridChange(null, null, null);
+@@ -32,6 +35,7 @@
+    private final Set<BlockPos> positionsToNotify = new HashSet<>();
+    private final GridUpdater updater = new GridUpdater(this);
+    private final World world;
++   private final int worldId;
+    int nextNodeId;
+    int nextGridId;
+    final Map<IEnergyTile, Tile> registeredIoTiles = new IdentityHashMap<>();
+@@ -45,6 +49,7 @@
+ 
+    private EnergyNetLocal(World world) {
+       this.world = world;
++      worldId = world.provider.getDimension();
+ 
+       for(int i = 0; i < 1; ++i) {
+          this.gridChangesQueue.add(QUEUE_DELAY_CHANGE);
+@@ -188,9 +193,10 @@
+          if (!this.positionsToNotify.isEmpty()) {
+             Block block = BlockName.te.getInstance();
+ 
++            World world = IC2PatcherConfig.get().worldReferenceSwitch? DimensionManager.getWorld(worldId): this.world;
+             for(BlockPos blockpos : this.positionsToNotify) {
+-               if (this.world.isBlockLoaded(blockpos)) {
+-                  this.world.getBlockState(blockpos).neighborChanged(this.world, blockpos, block, blockpos);
++               if (world.isBlockLoaded(blockpos)) {
++                  world.getBlockState(blockpos).neighborChanged(world, blockpos, block, blockpos);
+                }
+             }
+ 
+@@ -217,7 +223,7 @@
+    }
+ 
+    public World getWorld() {
+-      return this.world;
++      return IC2PatcherConfig.get().worldReferenceSwitch? DimensionManager.getWorld(worldId): this.world;
+    }
+ 
+    int allocateNodeId() {

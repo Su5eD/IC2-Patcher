@@ -1,0 +1,7 @@
+--- a/ic2/api/energy/event/EnergyTileEvent.java
++++ b/ic2/api/energy/event/EnergyTileEvent.java
+@@ -21,4 +21,3 @@
+ 
+ 	public final IEnergyTile tile;
+ }
+-

@@ -1,0 +1,7 @@
+--- a/ic2/api/network/INetworkItemEventListener.java
++++ b/ic2/api/network/INetworkItemEventListener.java
+@@ -16,4 +16,3 @@
+ 	 */
+ 	void onNetworkEvent(ItemStack stack, EntityPlayer player, int event);
+ }
+-

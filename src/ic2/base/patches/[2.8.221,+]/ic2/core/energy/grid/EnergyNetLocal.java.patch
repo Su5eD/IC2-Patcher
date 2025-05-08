@@ -1,0 +1,224 @@
+--- a/ic2/core/energy/grid/EnergyNetLocal.java
++++ b/ic2/core/energy/grid/EnergyNetLocal.java
+@@ -26,18 +26,18 @@
+ import net.minecraft.world.World;
+ 
+ public class EnergyNetLocal {
+-   static final GridChange QUEUE_DELAY_CHANGE = new GridChange((GridChange.Type)null, (BlockPos)null, (IEnergyTile)null);
+-   private final World world;
+-   private final Queue<GridChange> gridChangesQueue = new ArrayDeque<GridChange>();
+-   private final Map<IEnergyTile, GridChange> gridAdditionsMap = new IdentityHashMap<IEnergyTile, GridChange>();
+-   private final Set<BlockPos> positionsToNotify = new HashSet<BlockPos>();
++   static final GridChange QUEUE_DELAY_CHANGE = new GridChange(null, null, null);
++   private final Queue<GridChange> gridChangesQueue = new ArrayDeque<>();
++   private final Map<IEnergyTile, GridChange> gridAdditionsMap = new IdentityHashMap<>();
++   private final Set<BlockPos> positionsToNotify = new HashSet<>();
+    private final GridUpdater updater = new GridUpdater(this);
++   private final World world;
+    int nextNodeId;
+    int nextGridId;
+-   final Map<IEnergyTile, Tile> registeredIoTiles = new IdentityHashMap<IEnergyTile, Tile>();
+-   final Map<BlockPos, Tile> registeredTiles = new HashMap<BlockPos, Tile>();
+-   final Set<Tile> sources = Collections.<Tile>newSetFromMap(new IdentityHashMap());
+-   private final List<Grid> grids = new ArrayList<Grid>();
++   final Map<IEnergyTile, Tile> registeredIoTiles = new IdentityHashMap<>();
++   final Map<BlockPos, Tile> registeredTiles = new HashMap<>();
++   final Set<Tile> sources = Collections.newSetFromMap(new IdentityHashMap<>());
++   private final List<Grid> grids = new ArrayList<>();
+ 
+    public static EnergyNetLocal create(World world) {
+       return new EnergyNetLocal(world);
+@@ -49,56 +49,46 @@
+       for(int i = 0; i < 1; ++i) {
+          this.gridChangesQueue.add(QUEUE_DELAY_CHANGE);
+       }
+-
+    }
+ 
+    IEnergyTile getIoTile(BlockPos pos) {
+       Tile tile = this.getTile(pos);
+-      if (tile != null) {
+-         return tile.getMainTile();
+-      } else {
+-         IEnergyTile ienergytile = null;
+-
+-         for(GridChange gridchange : this.gridChangesQueue) {
+-            if (gridchange != QUEUE_DELAY_CHANGE && gridchange.pos.equals(pos)) {
+-               ienergytile = gridchange.type == GridChange.Type.REMOVAL ? null : gridchange.ioTile;
+-            }
++      if (tile != null) return tile.getMainTile();
++
++      IEnergyTile ienergytile = null;
++
++      for(GridChange gridchange : this.gridChangesQueue) {
++         if (gridchange != QUEUE_DELAY_CHANGE && gridchange.pos.equals(pos)) {
++            ienergytile = gridchange.type == GridChange.Type.REMOVAL ? null : gridchange.ioTile;
+          }
+-
+-         return ienergytile;
+       }
++
++      return ienergytile;
+    }
+ 
+    IEnergyTile getSubTile(BlockPos pos) {
+       Tile tile = this.getTile(pos);
+-      if (tile != null) {
+-         return tile.getSubTileAt(pos);
+-      } else {
+-         IEnergyTile ienergytile = null;
+-
+-         label43:
+-         for(GridChange gridchange : this.gridChangesQueue) {
+-            if (gridchange != QUEUE_DELAY_CHANGE) {
+-               Iterable<IEnergyTile> iterable = gridchange.subTiles != null ? gridchange.subTiles : Collections.singletonList(gridchange.ioTile);
+-               Iterator iterator = iterable.iterator();
+-
+-               while(true) {
+-                  if (!iterator.hasNext()) {
+-                     continue label43;
+-                  }
+-
+-                  IEnergyTile ienergytile1 = (IEnergyTile)iterator.next();
+-                  if (EnergyNet.instance.getPos(ienergytile1).equals(pos)) {
+-                     break;
+-                  }
+-               }
+-
+-               ienergytile = gridchange.type == GridChange.Type.REMOVAL ? null : gridchange.ioTile;
++      if (tile != null) return tile.getSubTileAt(pos);
++      IEnergyTile ienergytile = null;
++
++      label43:
++      for(GridChange gridchange : this.gridChangesQueue) {
++         if (gridchange != QUEUE_DELAY_CHANGE) {
++            Iterable<IEnergyTile> iterable = gridchange.subTiles != null ? gridchange.subTiles : Collections.singletonList(gridchange.ioTile);
++            Iterator<IEnergyTile> iterator = iterable.iterator();
++
++            while(true) {
++               if (!iterator.hasNext()) continue label43;
++
++               IEnergyTile ienergytile1 = iterator.next();
++               if (EnergyNet.instance.getPos(ienergytile1).equals(pos)) break;
+             }
++
++            ienergytile = gridchange.type == GridChange.Type.REMOVAL ? null : gridchange.ioTile;
+          }
+-
+-         return ienergytile;
+       }
++
++      return ienergytile;
+    }
+ 
+    public Tile getTile(BlockPos pos) {
+@@ -111,16 +101,15 @@
+ 
+    void addTile(IEnergyTile ioTile, BlockPos pos) {
+       GridChange gridchange = new GridChange(GridChange.Type.ADDITION, pos, ioTile);
+-      GridChange gridchange1;
+-      if ((gridchange1 = this.gridAdditionsMap.put(ioTile, gridchange)) != null) {
+-         this.gridAdditionsMap.put(ioTile, gridchange1);
++      GridChange newGridChange;
++      if ((newGridChange = this.gridAdditionsMap.put(ioTile, gridchange)) != null) {
++         this.gridAdditionsMap.put(ioTile, newGridChange);
+          if (EnergyNetSettings.logGridUpdateIssues) {
+             IC2.log.warn(LogCategory.EnergyNet, "Tile %s was attempted to be queued twice for addition.", Util.toString(ioTile, this.getWorld(), pos));
+          }
+       } else {
+          this.gridChangesQueue.add(gridchange);
+       }
+-
+    }
+ 
+    void removeTile(IEnergyTile ioTile, BlockPos pos) {
+@@ -143,7 +132,6 @@
+             IC2.log.warn(LogCategory.EnergyNet, "Missing tile %s.", Util.toString(ioTile, this.getWorld(), pos));
+          }
+       }
+-
+    }
+ 
+    public Collection<Tile> getSources() {
+@@ -161,7 +149,7 @@
+          this.updater.awaitCompletion();
+       }
+ 
+-      List<GridInfo> list = new ArrayList<GridInfo>();
++      List<GridInfo> list = new ArrayList<>();
+ 
+       for(Grid grid : this.grids) {
+          list.add(grid.getInfo());
+@@ -173,32 +161,30 @@
+    boolean dumpDebugInfo(BlockPos pos, PrintStream console, PrintStream chat) {
+       this.updater.awaitCompletion();
+       Tile tile = this.registeredTiles.get(pos);
+-      if (tile == null) {
+-         return false;
+-      } else {
+-         chat.println("Tile " + tile + " info:");
+-         chat.println(" disabled: " + tile.isDisabled());
+-         chat.println(" main: " + tile.getMainTile());
+-         chat.println(" sub: " + tile.subTiles);
+-         chat.println(" nodes: " + tile.nodes.size());
+-         Set<Grid> set = new HashSet<Grid>();
++      if (tile == null) return false;
++      chat.println("Tile " + tile + " info:");
++      chat.println(" disabled: " + tile.isDisabled());
++      chat.println(" main: " + tile.getMainTile());
++      chat.println(" sub: " + tile.subTiles);
++      chat.println(" nodes: " + tile.nodes.size());
++      Set<Grid> set = new HashSet<>();
+ 
+-         for(Node node : tile.nodes) {
+-            Grid grid = node.getGrid();
+-            if (set.add(grid)) {
+-               grid.dumpNodeInfo(node, " ", console, chat);
+-               grid.dumpInfo(" ", console, chat);
+-               grid.dumpGraph();
+-            }
++      for(Node node : tile.nodes) {
++         Grid grid = node.getGrid();
++         if (set.add(grid)) {
++            grid.dumpNodeInfo(node, " ", console, chat);
++            grid.dumpInfo(" ", console, chat);
++            grid.dumpGraph();
+          }
+-
+-         return true;
+       }
++
++      return true;
+    }
+ 
+    void onTickStart() {
+       if (this.updater.isInChangeStep()) {
+          this.updater.awaitCompletion();
++
+          if (!this.positionsToNotify.isEmpty()) {
+             Block block = BlockName.te.getInstance();
+ 
+@@ -213,7 +199,6 @@
+ 
+          this.updater.startTransferCalc();
+       }
+-
+    }
+ 
+    void onTickEnd() {
+@@ -249,7 +234,6 @@
+       for(EnumFacing enumfacing : EnumFacing.VALUES) {
+          this.positionsToNotify.add(pos.offset(enumfacing));
+       }
+-
+    }
+ 
+    boolean hasGrid(Grid grid) {
+@@ -274,7 +258,6 @@
+       boolean flag = this.grids.remove(grid);
+ 
+       assert flag;
+-
+    }
+ 
+    void shuffleGrids() {

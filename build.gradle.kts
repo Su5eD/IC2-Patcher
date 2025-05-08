@@ -1,9 +1,8 @@
 import fr.brouillard.oss.jgitver.GitVersionCalculator
 import fr.brouillard.oss.jgitver.Strategies
 import net.minecraftforge.gradle.common.util.RunConfig
-import wtf.gofancy.fancygradle.script.extensions.deobf
 import net.minecraftforge.gradle.patcher.tasks.GenerateBinPatches
-import org.apache.tools.ant.types.resources.Last
+import wtf.gofancy.fancygradle.script.extensions.deobf
 
 buildscript {
     dependencies { 
@@ -20,20 +19,23 @@ plugins {
     id("wtf.gofancy.fancygradle") version "1.1.+"
 }
 
-evaluationDependsOnChildren()
 java.toolchain.languageVersion.set(JavaLanguageVersion.of(8))
 
 val versionMc = "1.12.2"
 val mappingsChannel: String by project
 val mappingsVersion: String by project
 
-val versionIC2: String by project
-val versionJEI: String by project
 val versionForge: String by project
+val versionJEI: String by project
+
+val taskGroup: String by project
+val baseArchiveName: String by project
+val baseProjectName: String by project
+val modPackage: String by project;
 
 version = getGitVersion()
-group = "mods.su5ed"
-setProperty("archivesBaseName", "ic2patcher")
+setProperty("archivesBaseName", baseArchiveName)
+evaluationDependsOnChildren()
 
 minecraft {
     mappings(mappingsChannel, mappingsVersion)
@@ -77,18 +79,26 @@ repositories {
         url = uri("https://modmaven.dev")
     }
     maven {
-        // IC2 Repository
-        name = "ic2"
-        url = uri("https://maven2.ic2.player.to/")
+        // Curse Maven
+        url = uri("https://cursemaven.com")
     }
 }
 
 dependencies {
     minecraft(group = "net.minecraftforge", name = "forge", version = "1.12.2-${versionForge}")
-    
-    implementation(project(":IC2-Patched"))
+
+    implementation(project(":$baseProjectName-Patched"))
+    implementation(project(":shared"))
     implementation(fg.deobf(group = "mezz.jei", name = "jei_1.12.2", version = versionJEI))
-//    compileOnly(fg.deobf(group = "mezz.jei", name = "jei_1.12.2", version = versionJEI))
+    runtimeOnly(fg.deobf(group = "curse.maven", name = "thermal_expansions-69163", version = "2926431"))
+    runtimeOnly(fg.deobf(group = "curse.maven", name = "thermal_foundation-222880", version = "2926428"))
+    runtimeOnly(fg.deobf(group = "curse.maven", name = "thermal_dynamics-227443", version = "2920505"))
+    runtimeOnly(fg.deobf(group = "curse.maven", name = "cofh_core-69162", version = "2920433"))
+    runtimeOnly(fg.deobf(group = "curse.maven", name = "ccl-242818", version = "2779848"))
+    runtimeOnly(fg.deobf(group = "curse.maven", name = "cofh_world-271384", version = "2920434"))
+    runtimeOnly(fg.deobf(group = "curse.maven", name = "rf-270789", version = "2920436"))
+    runtimeOnly(fg.deobf(group = "curse.maven", name = "ae2-223794", version = "2747063"))
+    runtimeOnly(fg.deobf(group = "curse.maven", name = "flux_networks-248020", version = "3178199"))
 }
 
 tasks {
@@ -109,106 +119,81 @@ tasks {
     named("jar") {
         enabled = false
     }
-            
-    register<Jar>("devJar") {
-        val generateDevBinPatches = project(":IC2-Patched").tasks.getByName<GenerateBinPatches>("generateDevBinPatches")
-        dependsOn(generateDevBinPatches)
-        from(sourceSets.main.get().output) {
-            exclude("patches");
-        }
-        from(generateDevBinPatches.output)
 
-        manifest {
-            attributes(
-                    "FMLCorePlugin" to "mods.su5ed.ic2patcher.asm.PatcherFMLPlugin",
-                    "FMLCorePluginContainsFMLMod" to true
-            )
-        }
-    }
+    //TODO: Add Generate Binary Patches ~ Dev 1.12 task and configure this one to use patches from that.
+//    register<Jar>("Dev Jar ~ Patcher") {
+//        group = taskGroup;
+//        archiveFileName.set("${baseArchiveName}-dev.jar")
+//
+//        from(sourceSets.main.get().output) {
+//            exclude("patches");
+//        }
+//
+//        manifest {
+//            attributes(
+//                "FMLCorePlugin" to "${modPackage}.${baseProjectName.toLowerCase()}patcher.asm.PatcherFMLPlugin",
+//                "FMLCorePluginContainsFMLMod" to true
+//            )
+//        }
+//    }
 
-    register<Jar>("releaseJar") {
+    register<Jar>("Release Jar ~ Patcher") {
+        group = taskGroup;
+        val binPatches = project(":$baseProjectName-Patched").tasks.getByName<GenerateBinPatches>("Generate Binary Patches ~ Patched");
+        dependsOn(binPatches)
+        mustRunAfter(binPatches)
+
         archiveClassifier.set("")
-        val generateBinPatches = project(":IC2-Patched").tasks.getByName<GenerateBinPatches>("generateBinPatches")
-        dependsOn(generateBinPatches)
-
-        from(sourceSets.main.get().output)
+        from(sourceSets.main.get().output, project(":shared").the<JavaPluginExtension>().sourceSets["main"].output)
         manifest {
             attributes(
-                    "FMLCorePlugin" to "mods.su5ed.ic2patcher.asm.PatcherFMLPlugin",
-                    "FMLCorePluginContainsFMLMod" to true
+                "FMLCorePlugin" to "$modPackage.${baseProjectName.toLowerCase()}patcher.asm.PatcherFMLPlugin",
+                "FMLCorePluginContainsFMLMod" to true
             )
         }
     }
-    
-    register("setup") {
-        group = "env setup"
-        dependsOn("srcCleanup")
-        dependsOn(":IC2-Patched:setup").mustRunAfter("srcCleanup")
+
+    register("Setup $baseProjectName Source") {
+        group = taskGroup
+        dependsOn(project(":$baseProjectName-Patched").tasks.getByName<Copy>("Setup Source ~ Patched"))
     }
 
-    register("srcCleanup") {
-        group = "env setup"
-        doFirst {
-            cleanIC2Srcs()
-        }
-    }
-    
-    whenTaskAdded { 
-        if (name.startsWith("prepareRun")) {
-            dependsOn(project(":IC2-Patched").tasks.getByName("patchRunJar"))
-            dependsOn("devJar")
-            dependsOn("patchModifyClassPath")
-            dependsOn("patchGenerateObfToSrg")
-            dependsOn("patchExtractMappingsZip")
-        }
-    }
+//    whenTaskAdded {
+//        if (name.startsWith("prepareRun")) {
+//            dependsOn(project(":UX2-Patched").tasks.getByName("patchRunJar"))
+//            dependsOn("devJar")
+//            dependsOn("patchModifyClassPath")
+//            dependsOn("patchGenerateObfToSrg")
+//            dependsOn("patchExtractMappingsZip")
+//        }
+//    }
 }
 
 reobf {
     create("jar") {
-        dependsOn("releaseJar")
+        dependsOn("Release Jar ~ Patcher")
     }
 }
 
 artifacts {
-    archives(tasks.getByName("releaseJar"))
+    archives(tasks.getByName("Release Jar ~ Patcher"))
 }
 
 sourceSets {
     main {
         resources {
-            srcDir("src/main/generatedResources")
+            srcDir("src/main/generated")
         }
     }
 }
 
+/**
+ * @author Su5eD
+ */
 fun getGitVersion(): String {
     val jgitver = GitVersionCalculator.location(rootDir)
             .setNonQualifierBranches("master")
             .setVersionPattern("\${M}\${<m}\${<meta.COMMIT_DISTANCE}\${-~meta.QUALIFIED_BRANCH_NAME}")
             .setStrategy(Strategies.PATTERN)
     return jgitver.version
-}
-
-fun cleanIC2Srcs() {
-    val basesrc = file(project(":IC2-Base").projectDir.path + "/src")
-    val patchsrc = file(project(":IC2-Patched").projectDir.path + "/src")
-    val versionBaseFile = file(basesrc.path + "_IC2_VERSION")
-    val versionPatchedFile = file(patchsrc.path + "_IC2_VERSION")
-    var versionBase: String? = null
-    var versionPatched: String? = null
-
-    if (versionBaseFile.exists()) versionBase = versionBaseFile.readLines()[0]
-    if (versionPatchedFile.exists()) versionPatched = versionPatchedFile.readLines()[0]
-
-    if (versionBase == versionPatched && versionBase == versionIC2 && versionPatched == versionIC2) {
-        println("IC2 Sources are from the correct version. No cleanup is required.")
-    } else {
-        println("Cleaning up source directories from IC2 Projects due to IC2 Versions mismatch. Please close all opened source files if this process fails.")
-        if (basesrc.exists() && !basesrc.deleteRecursively()) throw IllegalStateException("Failed deleting base source directory!")
-        if (patchsrc.exists() && !patchsrc.deleteRecursively()) throw IllegalStateException("Failed deleting patched source directory!")
-        versionBaseFile.writeText(versionIC2)
-        versionPatchedFile.writeText(versionIC2)
-        println("Source cleaned up, and IC2 Version was saved to IC2_VERSION file in the src folder.")
-    }
 }

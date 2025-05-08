@@ -1,0 +1,7 @@
+--- a/ic2/api/energy/EnergyNet.java
++++ b/ic2/api/energy/EnergyNet.java
+@@ -15,4 +15,3 @@
+ 	 */
+ 	public static IEnergyNet instance;
+ }
+-

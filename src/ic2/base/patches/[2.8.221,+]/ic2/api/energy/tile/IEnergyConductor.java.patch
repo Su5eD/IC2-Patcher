@@ -1,0 +1,7 @@
+--- a/ic2/api/energy/tile/IEnergyConductor.java
++++ b/ic2/api/energy/tile/IEnergyConductor.java
+@@ -50,4 +50,3 @@
+ 	 */
+ 	void removeConductor();
+ }
+-

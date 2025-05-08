@@ -1,0 +1,11 @@
+--- a/ic2/core/util/StackUtil.java
++++ b/ic2/core/util/StackUtil.java
+@@ -98,7 +98,7 @@
+ 
+    public static AdjacentInv getAdjacentInventory(TileEntity source, EnumFacing dir) {
+       TileEntity target = source.getWorld().getTileEntity(source.getPos().offset(dir));
+-      if (!isInventoryTile(target, dir)) {
++      if (!isInventoryTile(target, dir.getOpposite())) {
+          return null;
+       } else {
+          GameProfile srcOwner;

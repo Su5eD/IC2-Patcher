@@ -2,7 +2,6 @@ package mods.su5ed.ic2patcher.asm;
 
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 
-import java.io.File;
 import java.util.Map;
 
 @IFMLLoadingPlugin.MCVersion("1.12.2")

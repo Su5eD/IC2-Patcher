@@ -1,0 +1,82 @@
+--- a/ic2/core/WorldData.java
++++ b/ic2/core/WorldData.java
+@@ -20,19 +20,19 @@
+ import net.minecraftforge.fml.common.FMLCommonHandler;
+ 
+ public class WorldData {
+-   private static ConcurrentMap<Integer, WorldData> idxClient = FMLCommonHandler.instance().getSide().isClient() ? new ConcurrentHashMap() : null;
+-   private static ConcurrentMap<Integer, WorldData> idxServer = new ConcurrentHashMap<Integer, WorldData>();
+-   final Queue<IWorldTickCallback> singleUpdates = new ConcurrentLinkedQueue<IWorldTickCallback>();
+-   final Set<IWorldTickCallback> continuousUpdates = new HashSet<IWorldTickCallback>();
+-   boolean continuousUpdatesInUse = false;
+-   final List<IWorldTickCallback> continuousUpdatesToAdd = new ArrayList<IWorldTickCallback>();
+-   final List<IWorldTickCallback> continuousUpdatesToRemove = new ArrayList<IWorldTickCallback>();
++   private static ConcurrentMap<Integer, WorldData> idxClient = FMLCommonHandler.instance().getSide().isClient() ? new ConcurrentHashMap<>() : null;
++   private static ConcurrentMap<Integer, WorldData> idxServer = new ConcurrentHashMap<>();
++   final Queue<IWorldTickCallback> singleUpdates = new ConcurrentLinkedQueue<>();
++   final Set<IWorldTickCallback> continuousUpdates = new HashSet<>();
++   final List<IWorldTickCallback> continuousUpdatesToAdd = new ArrayList<>();
++   final List<IWorldTickCallback> continuousUpdatesToRemove = new ArrayList<>();
++   public final Map<TileEntity, TeUpdateDataServer> tesToUpdate = new IdentityHashMap<>();
++   public final Map<Chunk, NBTTagCompound> worldGenData = new IdentityHashMap<>();
++   public final Set<Chunk> chunksToDecorate = Collections.newSetFromMap(new IdentityHashMap<>());
++   public final Set<Chunk> pendingUnloadChunks = Collections.newSetFromMap(new IdentityHashMap<>());
+    public final EnergyNetLocal energyNet;
+-   public final Map<TileEntity, TeUpdateDataServer> tesToUpdate = new IdentityHashMap<TileEntity, TeUpdateDataServer>();
+    public final WindSim windSim;
+-   public final Map<Chunk, NBTTagCompound> worldGenData = new IdentityHashMap<Chunk, NBTTagCompound>();
+-   public final Set<Chunk> chunksToDecorate = Collections.<Chunk>newSetFromMap(new IdentityHashMap());
+-   public final Set<Chunk> pendingUnloadChunks = Collections.<Chunk>newSetFromMap(new IdentityHashMap());
++   boolean continuousUpdatesInUse = false;
+ 
+    private WorldData(World world) {
+       if (!world.isRemote) {
+@@ -42,7 +42,6 @@
+          this.energyNet = null;
+          this.windSim = null;
+       }
+-
+    }
+ 
+    public static WorldData get(World world) {
+@@ -50,27 +49,24 @@
+    }
+ 
+    public static WorldData get(World world, boolean load) {
+-      if (world == null) {
+-         throw new IllegalArgumentException("world is null");
+-      } else {
+-         ConcurrentMap<Integer, WorldData> concurrentmap = getIndex(!world.isRemote);
+-         WorldData worlddata = (WorldData)concurrentmap.get(Integer.valueOf(world.provider.getDimension()));
+-         if (worlddata == null && load) {
+-            worlddata = new WorldData(world);
+-            WorldData worlddata1 = concurrentmap.putIfAbsent(Integer.valueOf(world.provider.getDimension()), worlddata);
+-            if (worlddata1 != null) {
+-               worlddata = worlddata1;
+-            }
+-
+-            return worlddata;
+-         } else {
+-            return worlddata;
++      if (world == null) throw new IllegalArgumentException("world is null");
++
++      ConcurrentMap<Integer, WorldData> idxMap = getIndex(!world.isRemote);
++      WorldData worldData = idxMap.get(world.provider.getDimension());
++
++      if (worldData == null && load) {
++         worldData = new WorldData(world);
++         WorldData oldWorldData = idxMap.putIfAbsent(world.provider.getDimension(), worldData);
++         if (oldWorldData != null) {
++            worldData = oldWorldData;
+          }
+       }
++
++      return worldData;
+    }
+ 
+    public static void onWorldUnload(World world) {
+-      getIndex(!world.isRemote).remove(Integer.valueOf(world.provider.getDimension()));
++      getIndex(!world.isRemote).remove(world.provider.getDimension());
+    }
+ 
+    private static ConcurrentMap<Integer, WorldData> getIndex(boolean simulating) {

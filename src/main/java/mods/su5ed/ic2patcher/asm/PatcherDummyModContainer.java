@@ -13,8 +13,8 @@ public class PatcherDummyModContainer extends DummyModContainer {
         meta.modId = "ic2patcher-core";
         meta.name = "IC2 Patcher Core";
         meta.version = "1.0";
-        meta.authorList = Lists.newArrayList("Su5eD");
-        meta.description = "IC2 Patcher Coremod";
+        meta.authorList = Lists.newArrayList("Su5eD, Kanzaji");
+        meta.description = "IC2 Patcher Core mod used to patch IC2 on runtime.";
         meta.screenshots = new String[0];
     }
 

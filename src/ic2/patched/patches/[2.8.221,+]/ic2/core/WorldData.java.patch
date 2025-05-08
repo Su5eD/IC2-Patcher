@@ -1,0 +1,76 @@
+--- a/ic2/core/WorldData.java
++++ b/ic2/core/WorldData.java
+@@ -14,6 +14,9 @@
+ import java.util.concurrent.ConcurrentHashMap;
+ import java.util.concurrent.ConcurrentLinkedQueue;
+ import java.util.concurrent.ConcurrentMap;
++
++import ic2.core.util.LogCategory;
++import mods.su5ed.ic2patcher.IC2PatcherConfig;
+ import net.minecraft.nbt.NBTTagCompound;
+ import net.minecraft.tileentity.TileEntity;
+ import net.minecraft.world.World;
+@@ -35,6 +38,7 @@
+    public final EnergyNetLocal energyNet;
+    public final WindSim windSim;
+    boolean continuousUpdatesInUse = false;
++   private final World world;
+ 
+    private WorldData(World world) {
+       if (!world.isRemote) {
+@@ -46,12 +50,14 @@
+          this.energyNet = null;
+          this.windSim = null;
+       }
++      this.world = world;
+    }
+ 
+    public static WorldData get(World world) {
+       return get(world, true);
+    }
+ 
++   private static boolean worldDataWarningDetails = false;
+    public static WorldData get(World world, boolean load) {
+       if (world == null) throw new IllegalArgumentException("world is null");
+ 
+@@ -64,6 +70,25 @@
+          if (oldWorldData != null) {
+             worldData = oldWorldData;
+          }
++         IC2.log.debug(LogCategory.EnergyNet, "World with id %d loaded on %s.", world.provider.getDimension(), world.isRemote? "client": "server");
++      } else if (!IC2PatcherConfig.get().worldReferenceSwitch) {
++         if (load && world != worldData.world) {
++            if (world.getClass().equals(worldData.world.getClass())) {
++               World oldWorld = worldData.world;
++               worldData = new WorldData(world);
++               idxMap.put(world.provider.getDimension(), worldData);
++               IC2.log.warn(LogCategory.EnergyNet, "The dimension %d had the wrong world referenced (%s) and was replaced with the current one (%s).", world.provider.getDimension(), oldWorld.toString(), world.toString());
++               IC2.log.warn(LogCategory.EnergyNet, "This is likely caused by missing or incorrect ordered world load / unload events.");
++            } else {
++               IC2.log.error(LogCategory.EnergyNet, "The dimension %d has the wrong world referenced (%s), however new reference (%s) isn't the same class as the original!", worldData.world.provider.getDimension(), worldData.world.toString(), world.toString());
++               if (!worldDataWarningDetails) {
++                  IC2.log.error(LogCategory.EnergyNet, "This might cause issues with your EnergyNet, and counts as incompatibility with mod overriding the world object.");
++                  IC2.log.error(LogCategory.EnergyNet, "World reference wasn't replaced, leaving old WorldData, EnergyNet and WindSim in place.");
++                  IC2.log.error(LogCategory.EnergyNet, "Expected: Object of %s, got: %s", worldData.world.toString(), world.toString());
++                  worldDataWarningDetails = true;
++               }
++            }
++         }
+       }
+       
+       return worldData;
+@@ -71,6 +96,14 @@
+ 
+    public static void onWorldUnload(World world) {
+       getIndex(!world.isRemote).remove(world.provider.getDimension());
++      IC2.log.debug(LogCategory.EnergyNet, "World with id %d unloaded on %s.", world.provider.getDimension(), world.isRemote? "client": "server");
++   }
++
++   public static void resetMaps() {
++      idxServer.clear();
++      if (idxClient != null) {
++         idxClient.clear();
++      }
+    }
+ 
+    private static ConcurrentMap<Integer, WorldData> getIndex(boolean simulating) {
