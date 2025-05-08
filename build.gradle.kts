@@ -31,6 +31,7 @@ val versionJEI: String by project
 val taskGroup: String by project
 val baseArchiveName: String by project
 val baseProjectName: String by project
+val modPackage: String by project;
 
 version = getGitVersion()
 setProperty("archivesBaseName", baseArchiveName)
@@ -130,7 +131,7 @@ tasks {
 //
 //        manifest {
 //            attributes(
-//                "FMLCorePlugin" to "${group}.${baseProjectName.toLowerCase()}patcher.asm.PatcherFMLPlugin",
+//                "FMLCorePlugin" to "${modPackage}.${baseProjectName.toLowerCase()}patcher.asm.PatcherFMLPlugin",
 //                "FMLCorePluginContainsFMLMod" to true
 //            )
 //        }
@@ -146,7 +147,7 @@ tasks {
         from(sourceSets.main.get().output, project(":api").the<JavaPluginExtension>().sourceSets["main"].output)
         manifest {
             attributes(
-                "FMLCorePlugin" to "$group.${baseProjectName.toLowerCase()}patcher.asm.PatcherFMLPlugin",
+                "FMLCorePlugin" to "$modPackage.${baseProjectName.toLowerCase()}patcher.asm.PatcherFMLPlugin",
                 "FMLCorePluginContainsFMLMod" to true
             )
         }

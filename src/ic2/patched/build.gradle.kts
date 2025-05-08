@@ -68,10 +68,10 @@ dependencies {
     minecraft(group = "net.minecraftforge", name = "forge", version = "1.12.2-${versionForge}")
 
     patchedMod(group = "net.industrial-craft", name = "industrialcraft-2", version = "${versionIC2}-ex112")
-    implementation(project(":api"))
     compileOnly(group = "mezz.jei", name = "jei_1.12.2", version = versionJEI)
     compileOnly(group = "com.mod-buildcraft", name = "buildcraft-lib", version = versionBuildCraft)
     compileOnly(group = "com.mod-buildcraft", name = "buildcraft-main", version = versionBuildCraft)
+    implementation(project(":api"))
 
     val ejml = create(group = "com.googlecode.efficient-java-matrix-library", name = "core", version = "0.26")
     implementation(ejml)
@@ -176,9 +176,11 @@ tasks {
     }
 
     named<ShadowJar>("shadowJar") {
+        group = taskGroup
         dependsOn("classes")
         configurations = listOf(project.configurations["shade"])
         archiveClassifier.set("")
+        relocate("org.ejml", "ic2.shades.org.ejml")
     }
 
     register<GeneratePatches>("Generate Patches ~ Patched") {

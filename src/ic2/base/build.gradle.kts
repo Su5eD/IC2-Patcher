@@ -7,7 +7,7 @@ plugins {
     java
     id("de.undercouch.download")
     id("net.minecraftforge.gradle")
-    id("com.github.johnrengelman.shadow") version "6.1.0"
+    id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
 java.toolchain.languageVersion.set(JavaLanguageVersion.of(8))
@@ -26,7 +26,6 @@ val patchedMod:         Configuration by configurations.creating
 val shade:              Configuration by configurations.creating
 val decompiledJar:      File = File(buildDir, "decompileMod/source.jar")
 val patchedJar:         File = File(buildDir, "applyPatches/patched.jar")
-val sourceDirty:        File = File(buildDir, "unpackSource")
 val src:                File = File(projectDir, "src")
 
 tasks {
@@ -76,7 +75,7 @@ tasks {
                     !it.path.startsWith("ic2/profiles")
                 ) ||
                 it.path.startsWith("org") ||
-                // We don't copy META-INF as that contains signature data, which ofc will be incorrect and cause security excetions.
+                // We don't copy META-INF as that contains signature data, which ofc will be incorrect and cause security exceptions.
                 it.path.startsWith("META-INF")
             }
 
