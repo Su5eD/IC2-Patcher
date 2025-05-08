@@ -69,7 +69,7 @@ that the patch is applicable to, and then port the changes to the newer versions
 
 ## Building & Exporting
 1. Run the `Generate Binary Patches` task of the `Patched` project for each version you have done changes to.
-2. Run `Release Jar` of the `Patcher` project to build the mod.<br>
+2. Run `build` of the `Patcher` project to build the mod.<br>
    The resulting jar will be located in the `build/libs` folder.  
    Remember that the jar built by the `jar` task **will NOT work** outside the dev environment.
 
