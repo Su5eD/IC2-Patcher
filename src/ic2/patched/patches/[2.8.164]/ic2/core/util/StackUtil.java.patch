@@ -4,8 +4,8 @@
  
     public static AdjacentInv getAdjacentInventory(TileEntity source, EnumFacing dir) {
        TileEntity target = source.getWorld().getTileEntity(source.getPos().offset(dir));
--      if (!isInventoryTile(target, dir.getOpposite())) {
-+      if (!isInventoryTile(target, dir)) {
+-      if (!isInventoryTile(target, dir)) {
++      if (!isInventoryTile(target, dir.getOpposite())) {
           return null;
        } else {
           GameProfile srcOwner;
