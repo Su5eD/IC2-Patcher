@@ -33,7 +33,7 @@
  import net.minecraft.util.math.BlockPos;
  import net.minecraft.world.World;
  import net.minecraftforge.client.model.ModelLoader;
-@@ -299,60 +297,120 @@
+@@ -299,60 +297,116 @@
        int i = StackUtil.getSize(stack);
        TileEntity tileEntity = (TileEntity)parent;
        boolean flag = false;
@@ -90,7 +90,6 @@
           case fluid_ejector:
              if (!LiquidUtil.isFluidTile(tileEntity, null)) return false;
 -            int k = (int)(50.0D * Math.pow(4.0D, (double)Math.min(4, i - 1)));
-+            if (!shouldTickEjector(type, tileEntity)) return flag;
 +            int amount5 = (int)(50.0D * Math.pow(4.0D, (double)Math.min(4, i - 1)));
  
              for(LiquidUtil.AdjacentFluidHandler adjacentFluidHandler : getTargetFluidHandlers(stack, tileEntity)) {
@@ -102,7 +101,6 @@
           case fluid_pulling:
              if (!LiquidUtil.isFluidTile(tileEntity, null)) return false;
 -            int j = (int)(50.0D * Math.pow(4.0D, (double)Math.min(4, i - 1)));
-+            if (!shouldTickEjector(type, tileEntity)) return flag;
 +            int amount6 = (int)(50.0D * Math.pow(4.0D, (double)Math.min(4, i - 1)));
  
              for(LiquidUtil.AdjacentFluidHandler adjacentFluidHandler : getTargetFluidHandlers(stack, tileEntity)) {
@@ -119,23 +117,21 @@
 +   private static boolean shouldTickEjector(UpgradeType type, TileEntity parent) {
 +      if (!IC2PatcherConfig.get().enableUpgradeTickInterval) return true;
 +      long time = parent.getWorld().getTotalWorldTime();
-+      if (type != UpgradeType.fluid_ejector && parent.getTileData().getLong("pushCooldown") + 20 > time) return false;
-+      if (time % IC2PatcherConfig.get().upgradeTickInterval == 0 || type == UpgradeType.fluid_ejector) return true;
++      if (parent.getTileData().getLong("pushCooldown") + IC2PatcherConfig.get().pushCooldown > time) return false;
 +
 +      // Some machines (like batch crafter) have differently named IO slots, making those optimizations non-functional in few scenarios.
 +      TileEntityInventory inv = (TileEntityInventory) parent;
 +      InvSlot output = inv.getInvSlot("output");
 +      if (output != null) {
-+         for (ItemStack itemStack : output) {
++         if (output.isEmpty()) return false;
++         for (ItemStack itemStack : output)
 +            if (itemStack.getCount() >= output.getStackSizeLimit()) return true;
-+         }
 +      }
 +
-+      return false;
++      return time % IC2PatcherConfig.get().upgradeTickInterval == 0;
 +   }
 +
 +   private static boolean shouldTickPulling(UpgradeType type, TileEntity parent) {
-+      if (type == UpgradeType.fluid_pulling) return true;
 +      if (
 +         !IC2PatcherConfig.get().enableUpgradeTickInterval ||
 +         parent.getWorld().getTotalWorldTime() % IC2PatcherConfig.get().upgradeTickInterval == 0
