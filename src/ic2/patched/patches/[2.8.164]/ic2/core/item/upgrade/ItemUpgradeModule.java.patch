@@ -33,7 +33,7 @@
  import net.minecraft.util.math.BlockPos;
  import net.minecraft.world.World;
  import net.minecraftforge.client.model.ModelLoader;
-@@ -299,60 +297,119 @@
+@@ -299,60 +297,120 @@
        int i = StackUtil.getSize(stack);
        TileEntity tileEntity = (TileEntity)parent;
        boolean flag = false;
@@ -50,7 +50,7 @@
 +               moved1 += StackUtil.transfer(tileEntity, adjacentInv.te, adjacentInv.dir, amount1);
              }
  
-+            if (moved1 != amount1) tileEntity.getTileData().setLong("pushCooldown", tileEntity.getWorld().getTotalWorldTime());
++            if (moved1 == 0) tileEntity.getTileData().setLong("pushCooldown", tileEntity.getWorld().getTotalWorldTime());
              return flag;
           case advanced_ejector:
 -            int j1 = (int)Math.pow(4.0D, (double)Math.min(4, i - 1));
@@ -63,7 +63,7 @@
 +               moved2 += StackUtil.transfer(tileEntity, adjacentInv.te, adjacentInv.dir, amount2, stackChecker(stack));
              }
  
-+            if (moved2 != amount2) tileEntity.getTileData().setLong("pushCooldown", tileEntity.getWorld().getTotalWorldTime());
++            if (moved2 == 0) tileEntity.getTileData().setLong("pushCooldown", tileEntity.getWorld().getTotalWorldTime());
              return flag;
           case pulling:
 -            int i1 = (int)Math.pow(4.0D, (double)Math.min(4, i - 1));
@@ -135,33 +135,34 @@
 +   }
 +
 +   private static boolean shouldTickPulling(UpgradeType type, TileEntity parent) {
++      if (type == UpgradeType.fluid_pulling) return true;
 +      if (
 +         !IC2PatcherConfig.get().enableUpgradeTickInterval ||
-+         parent.getWorld().getTotalWorldTime() % IC2PatcherConfig.get().upgradeTickInterval == 0 ||
-+         type == UpgradeType.fluid_pulling
-+      ) return true;
++         parent.getWorld().getTotalWorldTime() % IC2PatcherConfig.get().upgradeTickInterval == 0
++      ) {
++         // Some machines (like batch crafter) have differently named IO slots, making those optimizations non-functional in few scenarios.
++         TileEntityInventory inv = (TileEntityInventory) parent;
++         InvSlot output = inv.getInvSlot("output");
++         if (output != null) {
++            boolean outputFull = true;
++            for (int i = 0; i < output.size() && outputFull; i++)
++               outputFull = output.get(i).getCount() >= output.getStackSizeLimit();
++            if (outputFull) return false;
++         }
 +
-+      // Some machines (like batch crafter) have differently named IO slots, making those optimizations non-functional in few scenarios.
-+      TileEntityInventory inv = (TileEntityInventory) parent;
-+      InvSlot output = inv.getInvSlot("output");
-+      if (output != null) {
-+         boolean outputFull = true;
-+         for (ItemStack itemStack : output)
-+            outputFull = outputFull && itemStack.getCount() >= output.getStackSizeLimit();
-+         if (outputFull) return false;
++         InvSlot input = inv.getInvSlot("input");
++         boolean inputFull = true;
++
++         if (input != null) {
++            for (int i = 0; i < input.size() && inputFull; i++)
++               inputFull = input.get(i).getCount() >= input.getStackSizeLimit();
++         } else {
++            inputFull = false;
++         }
++
++         return !inputFull;
 +      }
-+
-+      InvSlot input = inv.getInvSlot("input");
-+      boolean inputFull = true;
-+
-+      if (input != null) {
-+         for (ItemStack itemStack : input)
-+            inputFull = inputFull && itemStack.getCount() >= input.getStackSizeLimit();
-+      } else {
-+         inputFull = false;
-+      }
-+
-+      return !inputFull;
++      return false;
     }
  
     private static Predicate<ItemStack> stackChecker(final ItemStack stack) {
