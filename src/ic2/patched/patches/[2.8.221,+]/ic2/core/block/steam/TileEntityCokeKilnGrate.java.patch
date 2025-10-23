@@ -14,5 +14,5 @@
  
 +@NotClassic
  public class TileEntityCokeKilnGrate extends TileEntityInventory implements IHasGui {
-    protected final Fluids fluids = (Fluids)this.addComponent(new Fluids(this));
+    protected final Fluids fluids = this.addComponent(new Fluids(this));
     @GuiSynced

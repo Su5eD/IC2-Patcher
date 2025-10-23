@@ -21,33 +21,33 @@
     public ItemArmorNightvisionGoggles() {
        super(ItemName.nightvision_goggles, "nightvision", EntityEquipmentSlot.HEAD);
        this.setMaxDamage(27);
-@@ -53,6 +56,7 @@
-       NBTTagCompound nbttagcompound = StackUtil.getOrCreateNbtData(stack);
-       boolean flag = nbttagcompound.getBoolean("active");
-       byte b0 = nbttagcompound.getByte("toggleTimer");
-+      int i = player.getEntityWorld().getLightFromNeighbors(new BlockPos(player));
-       if (IC2.keyboard.isAltKeyDown(player) && IC2.keyboard.isModeSwitchKeyDown(player) && b0 == 0) {
-          b0 = 10;
-          flag = !flag;
-@@ -62,6 +66,8 @@
+@@ -58,6 +61,7 @@
+       NBTTagCompound nbtData = StackUtil.getOrCreateNbtData(stack);
+       boolean active = nbtData.getBoolean("active");
+       byte toggleTimer = nbtData.getByte("toggleTimer");
++      int skylight = player.getEntityWorld().getLightFromNeighbors(new BlockPos(player));
+       if (IC2.keyboard.isAltKeyDown(player) && IC2.keyboard.isModeSwitchKeyDown(player) && toggleTimer == 0) {
+          toggleTimer = 10;
+          active = !active;
+@@ -67,6 +71,8 @@
                 IC2.platform.messagePlayer(player, "Nightvision enabled.");
              } else {
                 IC2.platform.messagePlayer(player, "Nightvision disabled.");
-+               if (i > 8) IC2.platform.removePotion(player, MobEffects.BLINDNESS);
++               if (skylight > 8) IC2.platform.removePotion(player, MobEffects.BLINDNESS);
 +               else IC2.platform.removePotion(player, MobEffects.NIGHT_VISION);
              }
           }
        }
-@@ -73,7 +79,6 @@
+@@ -77,7 +83,6 @@
  
-       boolean flag1 = false;
-       if (flag && IC2.platform.isSimulating() && ElectricItem.manager.use(stack, 1.0D, player)) {
--         int i = player.getEntityWorld().getLightFromNeighbors(new BlockPos(player));
-          if (i > 8) {
+       boolean ret = false;
+       if (active && IC2.platform.isSimulating() && ElectricItem.manager.use(stack, 1.0, player)) {
+-         int skylight = player.getEntityWorld().getLightFromNeighbors(new BlockPos(player));
+          if (skylight > 8) {
              IC2.platform.removePotion(player, MobEffects.NIGHT_VISION);
              player.addPotionEffect(new PotionEffect(MobEffects.BLINDNESS, 100, 0, true, true));
-@@ -99,5 +104,17 @@
- 
+@@ -103,5 +108,17 @@
+    @Override
     public boolean getIsRepairable(ItemStack par1ItemStack, ItemStack par2ItemStack) {
        return false;
 +   }

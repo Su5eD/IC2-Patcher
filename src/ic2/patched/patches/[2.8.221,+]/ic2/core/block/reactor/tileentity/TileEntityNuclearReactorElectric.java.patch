@@ -1,14 +1,20 @@
 --- a/ic2/core/block/reactor/tileentity/TileEntityNuclearReactorElectric.java
 +++ b/ic2/core/block/reactor/tileentity/TileEntityNuclearReactorElectric.java
-@@ -1,5 +1,7 @@
+@@ -1,11 +1,9 @@
  package ic2.core.block.reactor.tileentity;
  
 +import ic2.api.energy.EnergyNet;
-+import ic2.api.energy.tile.IMultiEnergySource;
  import ic2.api.energy.event.EnergyTileLoadEvent;
  import ic2.api.energy.event.EnergyTileUnloadEvent;
- import ic2.api.energy.tile.IEnergyAcceptor;
-@@ -75,7 +77,7 @@
+-import ic2.api.energy.tile.IEnergyAcceptor;
+-import ic2.api.energy.tile.IEnergySource;
+-import ic2.api.energy.tile.IEnergyTile;
+-import ic2.api.energy.tile.IMetaDelegate;
++import ic2.api.energy.tile.*;
+ import ic2.api.reactor.IBaseReactorComponent;
+ import ic2.api.reactor.IReactor;
+ import ic2.api.reactor.IReactorChamber;
+@@ -73,7 +71,7 @@
  import org.apache.commons.lang3.mutable.MutableBoolean;
  import org.apache.logging.log4j.Level;
  
@@ -17,8 +23,8 @@
     public AudioSource audioSourceMain;
     public AudioSource audioSourceGeiger;
     private float lastOutput = 0.0F;
-@@ -852,5 +854,15 @@
- 
+@@ -903,5 +901,15 @@
+    @Override
     public int getInventoryStackLimit() {
        return 1;
 +   }

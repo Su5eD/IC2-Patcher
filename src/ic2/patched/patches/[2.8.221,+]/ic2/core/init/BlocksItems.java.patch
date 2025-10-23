@@ -1,6 +1,11 @@
 --- a/ic2/core/init/BlocksItems.java
 +++ b/ic2/core/init/BlocksItems.java
-@@ -147,10 +147,16 @@
+@@ -140,14 +140,21 @@
+ import net.minecraft.item.Item;
+ import net.minecraft.item.Item.ToolMaterial;
+ import net.minecraft.item.ItemArmor.ArmorMaterial;
++import net.minecraft.item.ItemStack;
+ import net.minecraft.util.ResourceLocation;
  import net.minecraftforge.common.util.EnumHelper;
  import net.minecraftforge.fluids.Fluid;
  import net.minecraftforge.fluids.FluidRegistry;
@@ -17,33 +22,27 @@
  public class BlocksItems {
     public static void init() {
        initPotions();
-@@ -282,8 +288,9 @@
+@@ -282,8 +289,9 @@
              return !IC2.version.isClassic();
           }
        };
--      new ItemBattery(ItemName.energy_crystal, 1000000.0D, 2048.0D, 3);
--      (new ItemBattery(ItemName.lapotron_crystal, 1.0E7D, 8092.0D, 4)).setRarity(EnumRarity.UNCOMMON);
+-      new ItemBattery(ItemName.energy_crystal, 1000000.0, 2048.0, 3);
+-      new ItemBattery(ItemName.lapotron_crystal, 1.0E7, 8092.0, 4).setRarity(EnumRarity.UNCOMMON);
 +      boolean classic = IC2.version.isClassic();
 +      new ItemBattery(ItemName.energy_crystal, classic ? 100000 : 1000000, classic ? 250 : 2048, classic ? 2 : 3);
-+      (new ItemBattery(ItemName.lapotron_crystal, classic ? 1000000 : 1.0E7D, classic ? 600 : 8092.0D, classic ? 3 : 4)).setRarity(EnumRarity.UNCOMMON);
++      new ItemBattery(ItemName.lapotron_crystal, classic ? 1000000 : 1.0E7D, classic ? 600 : 8092.0D, classic ? 3 : 4).setRarity(EnumRarity.UNCOMMON);
        new ItemBatterySU(ItemName.single_use_battery, 1200, 1);
-       new ItemBatteryChargeHotbar(ItemName.charging_re_battery, 40000.0D, 128.0D, 1);
-       new ItemBatteryChargeHotbar(ItemName.advanced_charging_re_battery, 400000.0D, 1024.0D, 2);
-@@ -363,15 +370,45 @@
-       itemmulti3.setUseHandler(CellType.empty, ItemHandlers.emptyCellFill);
-       itemmulti3.addCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, (stack) -> {
-          CellType celltype = (CellType)itemmulti3.getType(stack);
--         CellType.CellFluidHandler celltype$cellfluidhandler;
-+         IFluidHandlerItem fluidHandler;
-          if (celltype.isFluidContainer()) {
-             itemmulti3.getClass();
--            celltype$cellfluidhandler = new CellType.CellFluidHandler(stack, itemmulti3::getType);
-+            fluidHandler = new CellType.CellFluidHandler(stack, itemmulti3::getType);
-          } else {
--            celltype$cellfluidhandler = null;
-+            // Dummy FluidHandler that doesn't accept any I/O. See IC2-Patcher/#26
-+            fluidHandler = new IFluidHandlerItem() {
-+
+       new ItemBatteryChargeHotbar(ItemName.charging_re_battery, 40000.0, 128.0, 1);
+       new ItemBatteryChargeHotbar(ItemName.advanced_charging_re_battery, 400000.0, 1024.0, 2);
+@@ -364,7 +372,38 @@
+       cell.setUseHandler(CellType.empty, ItemHandlers.emptyCellFill);
+       cell.addCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, stack -> {
+          CellType type = cell.getType(stack);
+-         return type.isFluidContainer() ? new CellType.CellFluidHandler(stack, cell::getType) : null;
++         return type.isFluidContainer() ?
++             new CellType.CellFluidHandler(stack, cell::getType) :
++             // Dummy FluidHandler that doesn't accept any I/O. See IC2-Patcher/#26
++             new IFluidHandlerItem() {
 +               @Override
 +               public IFluidTankProperties[] getTankProperties() {
 +                  return new IFluidTankProperties[0];
@@ -72,10 +71,6 @@
 +                  return stack;
 +               }
 +            };
-          }
- 
--         return celltype$cellfluidhandler;
-+         return fluidHandler;
        });
        new ItemCable();
-       ItemMulti<ItemUpgradeModule.UpgradeType> itemmulti4 = new ItemUpgradeModule();
+       ItemMulti<ItemUpgradeModule.UpgradeType> upgrade = new ItemUpgradeModule();

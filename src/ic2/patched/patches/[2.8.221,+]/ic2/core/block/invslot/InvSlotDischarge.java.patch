@@ -6,11 +6,11 @@
  public class InvSlotDischarge extends InvSlot implements IDischargingSlot {
 +   public int baseTier;
     public int tier;
-    public boolean allowRedstoneDust;
+    public boolean allowRedstoneDust = true;
  
-@@ -24,6 +25,7 @@
+@@ -23,6 +24,7 @@
+    public InvSlotDischarge(IInventorySlotHolder<?> base, InvSlot.Access access, int tier, boolean allowRedstoneDust, InvSlot.InvSide preferredSide) {
        super(base, "discharge", access, 1, preferredSide);
-       this.allowRedstoneDust = true;
        this.tier = tier;
 +      this.baseTier = tier;
        this.allowRedstoneDust = allowRedstoneDust;

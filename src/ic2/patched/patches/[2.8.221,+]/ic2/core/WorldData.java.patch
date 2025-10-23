@@ -11,15 +11,15 @@
  import net.minecraft.tileentity.TileEntity;
  import net.minecraft.world.World;
 @@ -35,6 +38,7 @@
-    public final EnergyNetLocal energyNet;
-    public final WindSim windSim;
-    boolean continuousUpdatesInUse = false;
+    public final Map<Chunk, NBTTagCompound> worldGenData = new IdentityHashMap<>();
+    public final Set<Chunk> chunksToDecorate = Collections.newSetFromMap(new IdentityHashMap<>());
+    public final Set<Chunk> pendingUnloadChunks = Collections.newSetFromMap(new IdentityHashMap<>());
 +   private final World world;
  
     private WorldData(World world) {
        if (!world.isRemote) {
-@@ -46,12 +50,14 @@
-          this.energyNet = null;
+@@ -46,34 +50,59 @@
+          this.tradeMarket = null;
           this.windSim = null;
        }
 +      this.world = world;
@@ -31,35 +31,53 @@
  
 +   private static boolean worldDataWarningDetails = false;
     public static WorldData get(World world, boolean load) {
-       if (world == null) throw new IllegalArgumentException("world is null");
- 
-@@ -64,6 +70,25 @@
-          if (oldWorldData != null) {
-             worldData = oldWorldData;
-          }
+-      if (world == null) {
+-         throw new IllegalArgumentException("world is null");
+-      } else {
+-         ConcurrentMap<Integer, WorldData> index = getIndex(!world.isRemote);
+-         WorldData ret = index.get(world.provider.getDimension());
+-         if (ret == null && load) {
+-            ret = new WorldData(world);
+-            WorldData prev = index.putIfAbsent(world.provider.getDimension(), ret);
+-            if (prev != null) {
+-               ret = prev;
++      if (world == null) throw new IllegalArgumentException("world is null");
++
++      ConcurrentMap<Integer, WorldData> index = getIndex(!world.isRemote);
++      WorldData ret = index.get(world.provider.getDimension());
++      if (ret == null && load) {
++         ret = new WorldData(world);
++         WorldData prev = index.putIfAbsent(world.provider.getDimension(), ret);
++         if (prev != null) {
++            ret = prev;
++         }
 +         IC2.log.debug(LogCategory.EnergyNet, "World with id %d loaded on %s.", world.provider.getDimension(), world.isRemote? "client": "server");
 +      } else if (!IC2PatcherConfig.get().worldReferenceSwitch) {
-+         if (load && world != worldData.world) {
-+            if (world.getClass().equals(worldData.world.getClass())) {
-+               World oldWorld = worldData.world;
-+               worldData = new WorldData(world);
-+               idxMap.put(world.provider.getDimension(), worldData);
++         if (load && world != ret.world) {
++            if (world.getClass().equals(ret.world.getClass())) {
++               World oldWorld = ret.world;
++               ret = new WorldData(world);
++               index.put(world.provider.getDimension(), ret);
 +               IC2.log.warn(LogCategory.EnergyNet, "The dimension %d had the wrong world referenced (%s) and was replaced with the current one (%s).", world.provider.getDimension(), oldWorld.toString(), world.toString());
 +               IC2.log.warn(LogCategory.EnergyNet, "This is likely caused by missing or incorrect ordered world load / unload events.");
 +            } else {
-+               IC2.log.error(LogCategory.EnergyNet, "The dimension %d has the wrong world referenced (%s), however new reference (%s) isn't the same class as the original!", worldData.world.provider.getDimension(), worldData.world.toString(), world.toString());
++               IC2.log.error(LogCategory.EnergyNet, "The dimension %d has the wrong world referenced (%s), however new reference (%s) isn't the same class as the original!", ret.world.provider.getDimension(), ret.world.toString(), world.toString());
 +               if (!worldDataWarningDetails) {
 +                  IC2.log.error(LogCategory.EnergyNet, "This might cause issues with your EnergyNet, and counts as incompatibility with mod overriding the world object.");
 +                  IC2.log.error(LogCategory.EnergyNet, "World reference wasn't replaced, leaving old WorldData, EnergyNet and WindSim in place.");
-+                  IC2.log.error(LogCategory.EnergyNet, "Expected: Object of %s, got: %s", worldData.world.toString(), world.toString());
++                  IC2.log.error(LogCategory.EnergyNet, "Expected: Object of %s, got: %s", ret.world.toString(), world.toString());
 +                  worldDataWarningDetails = true;
 +               }
-+            }
-+         }
+             }
+-
+-            return ret;
+-         } else {
+-            return ret;
+          }
        }
-       
-       return worldData;
-@@ -71,6 +96,14 @@
++
++      return ret;
+    }
  
     public static void onWorldUnload(World world) {
        getIndex(!world.isRemote).remove(world.provider.getDimension());

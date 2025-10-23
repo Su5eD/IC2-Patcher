@@ -1,18 +1,19 @@
 --- a/ic2/core/item/armor/ItemArmorJetpack.java
 +++ b/ic2/core/item/armor/ItemArmorJetpack.java
-@@ -1,5 +1,6 @@
- package ic2.core.item.armor;
- 
-+import ic2.core.util.StackUtil;
+@@ -3,6 +3,7 @@
  import ic2.core.item.armor.jetpack.IJetpack;
  import ic2.core.ref.FluidName;
  import ic2.core.ref.ItemName;
-@@ -56,7 +57,7 @@
-    }
++import ic2.core.util.StackUtil;
+ import ic2.core.util.Util;
+ import net.minecraft.creativetab.CreativeTabs;
+ import net.minecraft.item.ItemStack;
+@@ -60,7 +61,7 @@
  
+    @Override
     public boolean isJetpackActive(ItemStack stack) {
 -      return true;
 +      return !StackUtil.getOrCreateNbtData(stack).getBoolean("jetpackDisabled");
     }
  
-    public double getChargeLevel(ItemStack stack) {
+    @Override

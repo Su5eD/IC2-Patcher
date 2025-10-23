@@ -1,21 +1,20 @@
 --- a/ic2/core/block/transport/TileEntityFluidPipe.java
 +++ b/ic2/core/block/transport/TileEntityFluidPipe.java
-@@ -437,6 +437,8 @@
+@@ -450,6 +450,7 @@
        }
  
        public IFluidTankProperties[] getTankProperties() {
 +         if (TileEntityFluidPipe.this.tank == null) return new IFluidTankProperties[0];
-+
           return TileEntityFluidPipe.this.tank.getTankProperties();
        }
  
-@@ -467,7 +469,8 @@
+@@ -480,7 +481,8 @@
        public FluidStack drain(int maxDrain, boolean doDrain) {
           if (TileEntityFluidPipe.this.coversComponent.hasCover(this.side)) {
-             ICoverItem icoveritem = TileEntityFluidPipe.this.coversComponent.getCoverItem(this.side);
--            if (!icoveritem.allowsOutput(new FluidStack((FluidStack)Objects.requireNonNull(TileEntityFluidPipe.this.tank.getFluid()), maxDrain))) {
+             ICoverItem cover = TileEntityFluidPipe.this.coversComponent.getCoverItem(this.side);
+-            if (!cover.allowsOutput(new FluidStack(Objects.requireNonNull(TileEntityFluidPipe.this.tank.getFluid()), maxDrain))) {
 +            FluidStack fluid = TileEntityFluidPipe.this.tank.getFluid();
-+            if (fluid != null && !icoveritem.allowsOutput(new FluidStack(fluid, maxDrain))) {
++            if (fluid != null && !cover.allowsOutput(new FluidStack(fluid, maxDrain))) {
                 return null;
              }
           }
