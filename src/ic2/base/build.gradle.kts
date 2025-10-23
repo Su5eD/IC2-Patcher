@@ -20,7 +20,7 @@ val versionIC2:         String by project
 val versionJEI:         String by project
 val versionBuildCraft:  String by project
 val versionForge:       String by project
-val versionForgeFlower: String by project
+val versionVineflower: String by project
 
 val patchedMod:         Configuration by configurations.creating
 val shade:              Configuration by configurations.creating
@@ -31,10 +31,17 @@ val src:                File = File(projectDir, "src")
 tasks {
     register<JarExec>("Decompile $baseProjectName") {
         setup(this)
-        tool.set("net.minecraftforge:forgeflower:$versionForgeFlower")
+
+        tool.set("org.vineflower:vineflower:$versionVineflower")
+        setRuntimeJavaVersion(17)
         val input = patchedMod.singleFile.absolutePath
         outputs.file(decompiledJar)
-        args.set(listOf("-din=1", "-rbr=1", "-dgs=1", "-asc=1", "-rsy=1", "-iec=1", "-jvn=1", "-log=TRACE", input, decompiledJar.absolutePath))
+        args.set(listOf(
+            "--ascii-strings=1", // Encode non-ASCII characters in string and character literals as Unicode escapes.
+            "--log-level=debug", // Log Level
+            input,
+            decompiledJar.absolutePath
+        ))
     }
 
     register<ApplyPatches>("Apply Patches ~ Base") {
@@ -107,6 +114,11 @@ tasks {
             }
             ver.writeText(versionIC2)
         }
+    }
+
+    register("Build ~ Base") {
+        setup(this)
+        dependsOn("build")
     }
 
     register<Jar>("Source Jar ~ Base") {

@@ -1,0 +1,13 @@
+--- a/ic2/core/recipe/RecipeInputFactory.java
++++ b/ic2/core/recipe/RecipeInputFactory.java
+@@ -62,8 +62,8 @@
+    @Override
+    public IRecipeInput forAny(Iterable<IRecipeInput> options) {
+       return options instanceof Collection
+-         ? new RecipeInputMultiple(((Collection)options).toArray(new IRecipeInput[0]))
+-         : new RecipeInputMultiple((IRecipeInput[])Iterables.toArray(options, IRecipeInput.class));
++         ? new RecipeInputMultiple((IRecipeInput[]) ((Collection) options).toArray(new IRecipeInput[0]))
++         : new RecipeInputMultiple(Iterables.toArray(options, IRecipeInput.class));
+    }
+ 
+    @Override

@@ -1,11 +1,11 @@
 --- a/ic2/core/item/tool/ItemDebug.java
 +++ b/ic2/core/item/tool/ItemDebug.java
-@@ -369,7 +369,7 @@
-                } else if (object instanceof Map) {
-                   ps.println("  values (" + ((Map)object).size() + "):");
+@@ -401,7 +401,7 @@
+                } else if (value instanceof Map) {
+                   ps.println("  values (" + ((Map)value).size() + "):");
  
--                  for(Entry<?, ?> entry : ((Map)object).entrySet()) {
-+                  for(Entry<?, ?> entry : ((Map<?, ?>)object).entrySet()) {
+-                  for (Entry<?, ?> entry : ((Map)value).entrySet()) {
++                  for (Entry<?, ?> entry : ((Map<?,?>)value).entrySet()) {
                       ps.print("    " + entry.getKey() + ": ");
                       dumpValueString(entry.getValue(), field, "      ", ps);
                    }

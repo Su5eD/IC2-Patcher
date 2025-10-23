@@ -4,15 +4,15 @@
     }
  
     public static boolean hasAssertions() {
--      boolean flag = false;
+-      boolean ret = false;
 -      if (!$assertionsDisabled) {
--         flag = true;
+-         ret = true;
 -         if (false) {
 -            throw new AssertionError();
 -         }
 -      }
 -
--      return flag;
+-      return ret;
 +      return !Util.class.desiredAssertionStatus();
     }
  

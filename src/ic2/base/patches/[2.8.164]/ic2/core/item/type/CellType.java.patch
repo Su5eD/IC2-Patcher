@@ -1,13 +1,26 @@
 --- a/ic2/core/item/type/CellType.java
 +++ b/ic2/core/item/type/CellType.java
-@@ -135,9 +135,7 @@
+@@ -99,17 +99,17 @@
  
-       public CellFluidHandler(ItemStack container, Function<ItemStack, CellType> typeGetter) {
-          super(container);
--         this.typeGetter = () -> {
--            return (void)((CellType)typeGetter.apply(this.container));
--         };
-+         this.typeGetter = () -> ((CellType)typeGetter.apply(this.container));
-       }
+       switch (this) {
+          case weed_ex:
+-            IFluidHandlerItem handler = new CellType.WeedExHandler(stack);
+-            if (crop.applyWeedEx(handler, manual)) {
+-               result.accept(handler.getContainer());
++            IFluidHandlerItem weedExHandler = new CellType.WeedExHandler(stack);
++            if (crop.applyWeedEx(weedExHandler, manual)) {
++               result.accept(weedExHandler.getContainer());
+                return EnumActionResult.SUCCESS;
+             }
  
-       public FluidStack getFluid() {
+             return EnumActionResult.FAIL;
+          case hydration:
+-            IFluidHandlerItem handler = new CellType.HydrationHandler(stack, manual);
+-            if (crop.applyHydration(handler)) {
+-               result.accept(handler.getContainer());
++            IFluidHandlerItem hydrationHandler = new CellType.HydrationHandler(stack, manual);
++            if (crop.applyHydration(hydrationHandler)) {
++               result.accept(hydrationHandler.getContainer());
+                return EnumActionResult.SUCCESS;
+             }
+ 

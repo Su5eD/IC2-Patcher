@@ -14,21 +14,12 @@
  import java.util.ArrayList;
  import java.util.Collections;
  import java.util.List;
-@@ -64,7 +61,7 @@
-          if (file1.exists()) {
-             for(File file2 : file1.listFiles()) {
-                if (file2.isDirectory()) {
--                  for(File file3 : file2.listFiles(new NameFileFilter("profile.xml"))) {
-+                  for(File file3 : file2.listFiles((FileFilter) new NameFileFilter("profile.xml"))) {
+@@ -61,7 +58,7 @@
+          if (root.exists()) {
+             for (File file : root.listFiles()) {
+                if (file.isDirectory()) {
+-                  for (File profile : file.listFiles(new NameFileFilter("profile.xml"))) {
++                  for (File profile : file.listFiles((FileFilter) new NameFileFilter("profile.xml"))) {
                       try {
-                         Profile profile1 = ProfileParser.parse(new ProfileRoot(file3.getParentFile()));
-                         if (!registerProfile(profile1)) {
-@@ -229,7 +226,7 @@
-       list3.removeAll(textureChanges);
- 
-       assert !list3.stream().anyMatch((packx) -> {
--         return pack.getPackName().startsWith("IC2 Profile Pack for ");
-+         return packx.getPackName().startsWith("IC2 Profile Pack for ");
-       });
- 
-       list2.forEach(list3::add);
+                         Profile p = ProfileParser.parse(new ProfileRoot(profile.getParentFile()));
+                         if (!registerProfile(p)) {

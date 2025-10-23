@@ -1,0 +1,45 @@
+--- a/ic2/core/gui/dynamic/DynamicGui.java
++++ b/ic2/core/gui/dynamic/DynamicGui.java
+@@ -34,12 +34,12 @@
+ public class DynamicGui<T extends ContainerBase<? extends IInventory>> extends GuiDefaultBackground<T> {
+    public static <T extends IInventory> DynamicGui<ContainerBase<T>> create(T base, EntityPlayer player, GuiParser.GuiNode guiNode) {
+       DynamicContainer<T> container = DynamicContainer.create(base, player, guiNode);
+-      return new DynamicGui(player, (T)container, guiNode);
++      return new DynamicGui(player, container, guiNode);
+    }
+ 
+    public static <T extends HandHeldInventory> DynamicGui<ContainerBase<T>> create(T base, EntityPlayer player, GuiParser.GuiNode guiNode) {
+       DynamicHandHeldContainer<T> container = DynamicHandHeldContainer.create(base, player, guiNode);
+-      return new DynamicGui(player, (T)container, guiNode);
++      return new DynamicGui(player, container, guiNode);
+    }
+ 
+    protected DynamicGui(EntityPlayer player, T container, GuiParser.GuiNode guiNode) {
+@@ -229,21 +229,21 @@
+                   throw new RuntimeException("invalid base " + this.container.base + " for tank elements");
+                }
+ 
+-               GuiParser.FluidTankNode nodex = (GuiParser.FluidTankNode)rawNode;
++               GuiParser.FluidTankNode fluidTankNode = (GuiParser.FluidTankNode)rawNode;
+                Fluids fluids = ((TileEntityBlock)this.container.base).getComponent(Fluids.class);
+                TankGauge tankGauge;
+-               switch (nodex.type) {
++               switch (fluidTankNode.type) {
+                   case NORMAL:
+-                     tankGauge = TankGauge.createNormal(this, nodex.x, nodex.y, fluids.getFluidTank(nodex.name));
++                     tankGauge = TankGauge.createNormal(this, fluidTankNode.x, fluidTankNode.y, fluids.getFluidTank(fluidTankNode.name));
+                      break;
+                   case PLAIN:
+-                     tankGauge = TankGauge.createPlain(this, nodex.x, nodex.y, nodex.width, nodex.height, fluids.getFluidTank(nodex.name));
++                     tankGauge = TankGauge.createPlain(this, fluidTankNode.x, fluidTankNode.y, fluidTankNode.width, fluidTankNode.height, fluids.getFluidTank(fluidTankNode.name));
+                      break;
+                   case BORDERLESS:
+-                     tankGauge = TankGauge.createBorderless(this, nodex.x, nodex.y, fluids.getFluidTank(nodex.name), nodex.mirrored);
++                     tankGauge = TankGauge.createBorderless(this, fluidTankNode.x, fluidTankNode.y, fluids.getFluidTank(fluidTankNode.name), fluidTankNode.mirrored);
+                      break;
+                   default:
+-                     throw new IllegalStateException("Unexpected type " + nodex.type);
++                     throw new IllegalStateException("Unexpected type " + fluidTankNode.type);
+                }
+ 
+                parentNode.addElement(this, tankGauge);

@@ -1,0 +1,93 @@
+
+--- a/ic2/core/gui/dynamic/DynamicContainer.java
++++ b/ic2/core/gui/dynamic/DynamicContainer.java
+@@ -74,49 +74,49 @@
+                   throw new RuntimeException("invalid base " + this.base + " for slot elements");
+                }
+ 
+-               GuiParser.SlotGridNode node = (GuiParser.SlotGridNode)rawNode;
+-               InvSlot slot = ((TileEntityInventory)this.base).getInvSlot(node.name);
+-               if (slot == null) {
+-                  throw new RuntimeException("invalid invslot name " + node.name + " for base " + this.base);
++               GuiParser.SlotGridNode nodeGrid = (GuiParser.SlotGridNode)rawNode;
++               InvSlot slotGgrid = ((TileEntityInventory)this.base).getInvSlot(nodeGrid.name);
++               if (slotGgrid == null) {
++                  throw new RuntimeException("invalid invslot name " + nodeGrid.name + " for base " + this.base);
+                }
+ 
+-               int size = slot.size();
+-               if (size > node.offset) {
+-                  int x0 = node.x + (node.style.width - 16) / 2;
+-                  int y0 = node.y + (node.style.height - 16) / 2;
+-                  GuiParser.SlotGridNode.SlotGridDimension dim = node.getDimension(size);
++               int size = slotGgrid.size();
++               if (size > nodeGrid.offset) {
++                  int x0 = nodeGrid.x + (nodeGrid.style.width - 16) / 2;
++                  int y0 = nodeGrid.y + (nodeGrid.style.height - 16) / 2;
++                  GuiParser.SlotGridNode.SlotGridDimension dim = nodeGrid.getDimension(size);
+                   int rows = dim.rows;
+                   int cols = dim.cols;
+-                  int width = node.style.width + node.spacing;
+-                  int height = node.style.height + node.spacing;
+-                  int idx = node.offset;
+-                  if (!node.vertical) {
+-                     int y = y0;
++                  int widthGrid = nodeGrid.style.width + nodeGrid.spacing;
++                  int heightGrid = nodeGrid.style.height + nodeGrid.spacing;
++                  int idx = nodeGrid.offset;
++                  if (!nodeGrid.vertical) {
++                     int gridY = y0;
+ 
+                      for (int row = 0; row < rows && idx < size; row++) {
+-                        int x = x0;
++                        int gridX = x0;
+ 
+                         for (int col = 0; col < cols && idx < size; col++) {
+-                           this.addSlotToContainer(new SlotInvSlot(slot, idx, x, y));
++                           this.addSlotToContainer(new SlotInvSlot(slotGgrid, idx, gridX, gridY));
+                            idx++;
+-                           x += width;
++                           gridX += widthGrid;
+                         }
+ 
+-                        y += height;
++                        gridY += heightGrid;
+                      }
+                   } else {
+-                     int x = x0;
++                     int gridX = x0;
+ 
+                      for (int col = 0; col < cols && idx < size; col++) {
+-                        int y = y0;
++                        int gridY = y0;
+ 
+                         for (int row = 0; row < rows && idx < size; row++) {
+-                           this.addSlotToContainer(new SlotInvSlot(slot, idx, x, y));
++                           this.addSlotToContainer(new SlotInvSlot(slotGgrid, idx, gridX, gridY));
+                            idx++;
+-                           y += height;
++                           gridY += heightGrid;
+                         }
+ 
+-                        x += width;
++                        gridX += widthGrid;
+                      }
+                   }
+                }
+@@ -126,12 +126,12 @@
+                   throw new RuntimeException("Invalid base " + this.base + " for holographic slot elements");
+                }
+ 
+-               GuiParser.SlotHologramNode node = (GuiParser.SlotHologramNode)rawNode;
+-               int x = node.x + (node.style.width - 16) / 2;
+-               int y = node.y + (node.style.height - 16) / 2;
++               GuiParser.SlotHologramNode nodeHologram = (GuiParser.SlotHologramNode)rawNode;
++               int xHologam = nodeHologram.x + (nodeHologram.style.width - 16) / 2;
++               int yHologram = nodeHologram.y + (nodeHologram.style.height - 16) / 2;
+                this.addSlotToContainer(
+                   new SlotHologramSlot(
+-                     ((IHolographicSlotProvider)this.base).getStacksForName(node.name), node.index, x, y, node.stackSizeLimit, this.getCallback()
++                     ((IHolographicSlotProvider)this.base).getStacksForName(nodeHologram.name), nodeHologram.index, xHologam, yHologram, nodeHologram.stackSizeLimit, this.getCallback()
+                   )
+                );
+             case gui:

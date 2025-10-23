@@ -1,11 +1,19 @@
 --- a/ic2/core/block/invslot/InvSlotUpgrade.java
 +++ b/ic2/core/block/invslot/InvSlotUpgrade.java
-@@ -32,7 +32,7 @@
-    private List<Redstone.IRedstoneModifier> redstoneModifiers = Collections.<Redstone.IRedstoneModifier>emptyList();
+@@ -10,6 +10,7 @@
+ import ic2.api.upgrade.IUpgradableBlock;
+ import ic2.api.upgrade.IUpgradeItem;
+ import ic2.core.block.IInventorySlotHolder;
++import ic2.core.block.TileEntityInventory;
+ import ic2.core.block.comp.Redstone;
+ import ic2.core.block.comp.TileEntityComponent;
+ import ic2.core.util.StackUtil;
+@@ -32,7 +33,7 @@
+    private List<Redstone.IRedstoneModifier> redstoneModifiers = Collections.emptyList();
  
     public static InvSlotUpgrade createUnchecked(IInventorySlotHolder<?> base, String name, int count) {
--      return new InvSlotUpgrade((IInventorySlotHolder)((IUpgradableBlock)base), name, count);
-+      return new InvSlotUpgrade((IInventorySlotHolder<?> & IUpgradableBlock)base, name, count);
+-      return new InvSlotUpgrade(base, name, count);
++      return new InvSlotUpgrade((TileEntityInventory & IUpgradableBlock) base, name, count);
     }
  
     public <T extends IInventorySlotHolder<?> & IUpgradableBlock> InvSlotUpgrade(T base, String name, int count) {

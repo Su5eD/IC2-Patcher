@@ -1,6 +1,6 @@
 --- a/ic2/core/model/ModelUtil.java
 +++ b/ic2/core/model/ModelUtil.java
-@@ -39,7 +39,7 @@
+@@ -35,7 +35,7 @@
        }
  
        private <T extends Comparable<T>> String getPropertyName(IProperty<T> property, Comparable<?> value) {

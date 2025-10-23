@@ -1,6 +1,6 @@
 --- a/ic2/core/item/upgrade/ItemUpgradeModule.java
 +++ b/ic2/core/item/upgrade/ItemUpgradeModule.java
-@@ -380,31 +380,31 @@
+@@ -420,31 +420,31 @@
           boolean ret = false;
           switch (type) {
              case ejector:
@@ -40,7 +40,7 @@
                 }
                 break;
              case fluid_ejector:
-@@ -412,10 +412,10 @@
+@@ -452,10 +452,10 @@
                    return false;
                 }
  
@@ -53,7 +53,7 @@
                 }
                 break;
              case fluid_pulling:
-@@ -423,10 +423,10 @@
+@@ -463,10 +463,10 @@
                    return false;
                 }
  

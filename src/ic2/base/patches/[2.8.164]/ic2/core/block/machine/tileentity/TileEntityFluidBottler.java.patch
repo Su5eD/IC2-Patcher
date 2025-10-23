@@ -1,11 +1,11 @@
 --- a/ic2/core/block/machine/tileentity/TileEntityFluidBottler.java
 +++ b/ic2/core/block/machine/tileentity/TileEntityFluidBottler.java
-@@ -59,7 +59,7 @@
-       this.outputSlot.add(processResult);
+@@ -68,7 +68,7 @@
     }
  
+    @Override
 -   public MachineRecipeResult<Void, Object, Object> getOutput() {
 +   public MachineRecipeResult getOutput() {
-       MachineRecipeResult<Void, IEmptyFluidContainerRecipeManager.Output, ItemStack> machinereciperesult = Recipes.emptyFluidContainer.apply(this.drainInputSlot.get(), this.fluidTank.getFluid() == null ? null : this.fluidTank.getFluid().getFluid(), FluidContainerOutputMode.EmptyFullToOutput, false);
-       if (machinereciperesult != null && (machinereciperesult.getOutput()).fluid.amount <= this.fluidTank.getCapacity() - this.fluidTank.getFluidAmount() && this.outputSlot.canAdd((machinereciperesult.getOutput()).container)) {
-          return machinereciperesult;
+       MachineRecipeResult<Void, IEmptyFluidContainerRecipeManager.Output, ItemStack> emptyRes = Recipes.emptyFluidContainer
+          .apply(
+             this.drainInputSlot.get(),

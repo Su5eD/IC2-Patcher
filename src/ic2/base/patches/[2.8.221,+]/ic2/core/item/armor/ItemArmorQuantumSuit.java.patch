@@ -1,11 +1,11 @@
 --- a/ic2/core/item/armor/ItemArmorQuantumSuit.java
 +++ b/ic2/core/item/armor/ItemArmorQuantumSuit.java
-@@ -212,7 +212,7 @@
-             IC2.achievements.issueAchievement(player, "starveWithQHelmet");
-          }
+@@ -215,7 +215,7 @@
+                IC2.achievements.issueAchievement(player, "starveWithQHelmet");
+             }
  
--         for(PotionEffect potioneffect : new LinkedList(player.getActivePotionEffects())) {
-+         for(PotionEffect potioneffect : new LinkedList<>(player.getActivePotionEffects())) {
-             Potion potion = potioneffect.getPotion();
-             Integer integer = potionRemovalCost.get(potion);
-             if (integer != null) {
+-            for (PotionEffect effect : new LinkedList(player.getActivePotionEffects())) {
++            for (PotionEffect effect : new LinkedList<>(player.getActivePotionEffects())) {
+                Potion potion = effect.getPotion();
+                Integer cost = potionRemovalCost.get(potion);
+                if (cost != null) {

@@ -1,0 +1,11 @@
+--- a/ic2/core/recipe/ScrapboxRecipeManager.java
++++ b/ic2/core/recipe/ScrapboxRecipeManager.java
+@@ -89,7 +89,7 @@
+             }
+ 
+             ItemStack drop = this.drops.get(low).item.copy();
+-            return new MachineRecipe<>(
++            return new MachineRecipe(
+                   Recipes.inputFactory.forStack(ItemName.crafting.getItemStack(CraftingItemType.scrap_box)), Collections.singletonList(drop)
+                )
+                .getResult(StackUtil.copyShrunk(input, 1));
