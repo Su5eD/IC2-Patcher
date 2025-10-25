@@ -8,12 +8,12 @@
  import net.minecraft.entity.EntityLivingBase;
  import net.minecraft.entity.player.EntityPlayer;
  import net.minecraft.inventory.EntityEquipmentSlot;
-@@ -31,7 +32,7 @@
-    }
+@@ -35,7 +36,7 @@
  
+    @Override
     public boolean isJetpackActive(ItemStack stack) {
 -      return true;
 +      return !StackUtil.getOrCreateNbtData(stack).getBoolean("jetpackDisabled");
     }
  
-    public double getChargeLevel(ItemStack stack) {
+    @Override

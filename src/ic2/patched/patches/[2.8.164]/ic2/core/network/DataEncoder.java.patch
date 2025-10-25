@@ -1,9 +1,9 @@
 --- a/ic2/core/network/DataEncoder.java
 +++ b/ic2/core/network/DataEncoder.java
-@@ -608,6 +608,11 @@
+@@ -619,6 +619,11 @@
           } else if (dst instanceof TileEntityComponent) {
-             NBTTagCompound nbttagcompound = (NBTTagCompound)src;
-             ((TileEntityComponent)dst).readFromNbt(nbttagcompound);
+             NBTTagCompound nbt = (NBTTagCompound)src;
+             ((TileEntityComponent)dst).readFromNbt(nbt);
 +         } else if (dst.getClass().isArray()) {
 +            T[] array1 = (T[]) src;
 +            T[] array2 = (T[]) dst;

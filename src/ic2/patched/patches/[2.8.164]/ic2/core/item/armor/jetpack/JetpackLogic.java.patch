@@ -1,32 +1,32 @@
 --- a/ic2/core/item/armor/jetpack/JetpackLogic.java
 +++ b/ic2/core/item/armor/jetpack/JetpackLogic.java
-@@ -98,37 +98,52 @@
+@@ -98,36 +98,52 @@
     }
  
     public static void onArmorTick(World world, EntityPlayer player, ItemStack stack, IJetpack jetpack) {
 -      if (stack != null && jetpack.isJetpackActive(stack)) {
 +      if (stack != null) {
-          NBTTagCompound nbttagcompound = getJetpackCompound(stack);
-          boolean flag = getHoverMode(nbttagcompound);
-          byte b0 = nbttagcompound.getByte("toggleTimer");
-          boolean flag1 = false;
--         if (IC2.keyboard.isJumpKeyDown(player) && IC2.keyboard.isModeSwitchKeyDown(player) && b0 == 0) {
+          NBTTagCompound nbtData = getJetpackCompound(stack);
+          boolean hoverMode = getHoverMode(nbtData);
+          byte toggleTimer = nbtData.getByte("toggleTimer");
+          boolean jetpackUsed = false;
+-         if (IC2.keyboard.isJumpKeyDown(player) && IC2.keyboard.isModeSwitchKeyDown(player) && toggleTimer == 0) {
 +
-+         if (player.isSneaking() && IC2.keyboard.isModeSwitchKeyDown(player) && b0 == 0) {
-             b0 = 10;
--            flag = !flag;
-+            boolean disabled = !nbttagcompound.getBoolean("jetpackDisabled");
++         if (player.isSneaking() && IC2.keyboard.isModeSwitchKeyDown(player) && toggleTimer == 0) {
+             toggleTimer = 10;
+-            hoverMode = !hoverMode;
++            boolean disabled = !nbtData.getBoolean("jetpackDisabled");
              if (IC2.platform.isSimulating()) {
--               nbttagcompound.setBoolean("hoverMode", flag);
--               if (flag) {
+-               nbtData.setBoolean("hoverMode", hoverMode);
+-               if (hoverMode) {
 -                  IC2.platform.messagePlayer(player, "Hover Mode enabled.");
-+               nbttagcompound.setBoolean("jetpackDisabled", disabled);
++               nbtData.setBoolean("jetpackDisabled", disabled);
 +               if (disabled && jetpack.isJetpackActive(stack)) {
 +                  IC2.platform.messagePlayer(player, "This jetpack can't be disabled.");
-+                  nbttagcompound.setBoolean("jetpackDisabled", false);
++                  nbtData.setBoolean("jetpackDisabled", false);
                 } else {
 +                  IC2.platform.messagePlayer(player, "Jetpack "+(disabled ? "disabled" : "enabled"));
-+                  if (disabled) nbttagcompound.setBoolean("hoverMode", false);
++                  if (disabled) nbtData.setBoolean("hoverMode", false);
 +               }
 +            } else if (disabled && !jetpack.isJetpackActive(stack)) {
 +               IC2.audioManager.removeSources(player);
@@ -34,12 +34,12 @@
 +         }
 +
 +         if (jetpack.isJetpackActive(stack)) {
-+            if (IC2.keyboard.isJumpKeyDown(player) && IC2.keyboard.isModeSwitchKeyDown(player) && b0 == 0) {
-+               b0 = 10;
-+               flag = !flag;
++            if (IC2.keyboard.isJumpKeyDown(player) && IC2.keyboard.isModeSwitchKeyDown(player) && toggleTimer == 0) {
++               toggleTimer = 10;
++               hoverMode = !hoverMode;
 +               if (IC2.platform.isSimulating()) {
-+                  nbttagcompound.setBoolean("hoverMode", flag);
-+                  if (flag) {
++                  nbtData.setBoolean("hoverMode", hoverMode);
++                  if (hoverMode) {
 +                     IC2.platform.messagePlayer(player, "Hover Mode enabled.");
 +                  } else {
 +                     IC2.platform.messagePlayer(player, "Hover Mode disabled.");
@@ -47,40 +47,38 @@
 +               }
 +            }
 +
-+            if (IC2.keyboard.isJumpKeyDown(player) || flag) {
-+               flag1 = useJetpack(player, flag, jetpack, stack);
-+               if (player.onGround && flag && IC2.platform.isSimulating()) {
-+                  setHoverMode(nbttagcompound, false);
++            if (IC2.keyboard.isJumpKeyDown(player) || hoverMode) {
++               jetpackUsed = useJetpack(player, hoverMode, jetpack, stack);
++               if (player.onGround && hoverMode && IC2.platform.isSimulating()) {
++                  setHoverMode(nbtData, false);
                    IC2.platform.messagePlayer(player, "Hover Mode disabled.");
                 }
              }
           }
  
--         if (IC2.keyboard.isJumpKeyDown(player) || flag) {
--            flag1 = useJetpack(player, flag, jetpack, stack);
--            if (player.onGround && flag && IC2.platform.isSimulating()) {
--               setHoverMode(nbttagcompound, false);
+-         if (IC2.keyboard.isJumpKeyDown(player) || hoverMode) {
+-            jetpackUsed = useJetpack(player, hoverMode, jetpack, stack);
+-            if (player.onGround && hoverMode && IC2.platform.isSimulating()) {
+-               setHoverMode(nbtData, false);
 -               IC2.platform.messagePlayer(player, "Hover Mode disabled.");
 -            }
 -         }
 -
--         if (IC2.platform.isSimulating() && b0 > 0) {
--            --b0;
--            nbttagcompound.setByte("toggleTimer", b0);
+-         if (IC2.platform.isSimulating() && toggleTimer > 0) {
+-            nbtData.setByte("toggleTimer", --toggleTimer);
 -         }
 -
           if (IC2.platform.isRendering() && player == IC2.platform.getPlayerInstance()) {
-             if (lastJetpackUsed != flag1) {
-                if (flag1) {
-@@ -150,6 +165,11 @@
+             if (lastJetpackUsed != jetpackUsed) {
+                if (jetpackUsed) {
+@@ -150,6 +166,10 @@
              if (audioSource != null) {
                 audioSource.updatePosition();
              }
 +         }
 +
-+         if (IC2.platform.isSimulating() && b0 > 0) {
-+            --b0;
-+            nbttagcompound.setByte("toggleTimer", b0);
++         if (IC2.platform.isSimulating() && toggleTimer > 0) {
++            nbtData.setByte("toggleTimer", --toggleTimer);
           }
  
-          if (flag1) {
+          if (jetpackUsed) {
