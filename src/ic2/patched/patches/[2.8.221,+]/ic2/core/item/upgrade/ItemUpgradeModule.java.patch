@@ -64,7 +64,7 @@
 +
 +      // Some machines (like batch crafter) have differently named IO slots, making those optimizations non-functional in few scenarios.
 +      TileEntityInventory inv = (TileEntityInventory) parent;
-+      InvSlot output = inv.getInvSlot("output");
++      InvSlot output = inv.getInventorySlot("output");
 +      if (output != null) {
 +         if (output.isEmpty()) return false;
 +         for (ItemStack itemStack : output)
@@ -82,7 +82,7 @@
 +      ) {
 +         // Some machines (like batch crafter) have differently named IO slots, making those optimizations non-functional in few scenarios.
 +         TileEntityInventory inv = (TileEntityInventory) parent;
-+         InvSlot output = inv.getInvSlot("output");
++         InvSlot output = inv.getInventorySlot("output");
 +         if (output != null) {
 +            boolean outputFull = true;
 +            for (int i = 0; i < output.size() && outputFull; i++)
@@ -90,7 +90,7 @@
 +            if (outputFull) return false;
 +         }
 +
-+         InvSlot input = inv.getInvSlot("input");
++         InvSlot input = inv.getInventorySlot("input");
 +         boolean inputFull = true;
 +
 +         if (input != null) {
