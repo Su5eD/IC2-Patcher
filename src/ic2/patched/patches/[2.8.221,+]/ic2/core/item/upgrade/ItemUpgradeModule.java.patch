@@ -7,9 +7,9 @@
 +import ic2.core.block.TileEntityInventory;
 +import ic2.core.block.invslot.InvSlot;
  import ic2.core.block.state.IIdProvider;
+ import ic2.core.gui.dynamic.DynamicHandHeldContainer;
  import ic2.core.init.Localization;
- import ic2.core.item.IHandHeldSubInventory;
-@@ -29,6 +31,8 @@
+@@ -30,6 +32,8 @@
  import java.util.LinkedList;
  import java.util.List;
  import java.util.Set;
@@ -18,7 +18,7 @@
  import net.minecraft.client.renderer.ItemMeshDefinition;
  import net.minecraft.client.renderer.block.model.ModelBakery;
  import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-@@ -380,6 +384,7 @@
+@@ -420,6 +424,7 @@
           boolean ret = false;
           switch (type) {
              case ejector:
@@ -26,7 +26,7 @@
                 int amountE = (int)Math.pow(4.0, Math.min(4, size - 1));
  
                 for (StackUtil.AdjacentInv inv : getTargetInventories(stack, te)) {
-@@ -387,6 +392,7 @@
+@@ -427,6 +432,7 @@
                 }
                 break;
              case advanced_ejector:
@@ -34,7 +34,7 @@
                 int amountAE = (int)Math.pow(4.0, Math.min(4, size - 1));
  
                 for (StackUtil.AdjacentInv inv : getTargetInventories(stack, te)) {
-@@ -394,6 +400,7 @@
+@@ -434,6 +440,7 @@
                 }
                 break;
              case pulling:
@@ -42,7 +42,7 @@
                 int amountP = (int)Math.pow(4.0, Math.min(4, size - 1));
  
                 for (StackUtil.AdjacentInv inv : getTargetInventories(stack, te)) {
-@@ -401,6 +408,7 @@
+@@ -441,6 +448,7 @@
                 }
                 break;
              case advanced_pulling:
@@ -50,7 +50,7 @@
                 int amountAP = (int)Math.pow(4.0, Math.min(4, size - 1));
  
                 for (StackUtil.AdjacentInv inv : getTargetInventories(stack, te)) {
-@@ -435,6 +443,55 @@
+@@ -475,6 +483,55 @@
  
           return ret;
        }

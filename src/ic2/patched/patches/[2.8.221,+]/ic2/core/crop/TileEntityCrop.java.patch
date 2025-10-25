@@ -1,0 +1,14 @@
+--- a/ic2/core/crop/TileEntityCrop.java
++++ b/ic2/core/crop/TileEntityCrop.java
+@@ -513,8 +513,9 @@
+       value += height;
+       int fresh = 9;
+ 
+-      for (int x = this.pos.getX() - 1; x < this.pos.getX() + 1 && fresh > 0; x++) {
+-         for (int z = this.pos.getZ() - 1; z < this.pos.getZ() + 1 && fresh > 0; z++) {
++      // Patch - Air Quality Calculation checks 2x2 area instead of 3x3. (Github #32)
++      for (int x = this.pos.getX() - 1; x <= this.pos.getX() + 1 && fresh > 0; x++) {
++         for (int z = this.pos.getZ() - 1; z <= this.pos.getZ() + 1 && fresh > 0; z++) {
+             if (this.world.isBlockNormalCube(new BlockPos(x, this.pos.getY(), z), false)
+                || this.world.getTileEntity(new BlockPos(x, this.pos.getY(), z)) instanceof TileEntityCrop) {
+                fresh--;
