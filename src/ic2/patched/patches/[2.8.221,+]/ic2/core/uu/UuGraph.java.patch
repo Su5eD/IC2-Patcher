@@ -1,0 +1,43 @@
+--- a/ic2/core/uu/UuGraph.java
++++ b/ic2/core/uu/UuGraph.java
+@@ -63,7 +63,11 @@
+          calculation = IC2.getInstance().threadPool.submit(new Runnable() {
+             @Override
+             public void run() {
+-               UuGraph.processRecipes(transformations);
++               try {
++                  UuGraph.processRecipes(transformations);
++               } catch (Throwable e) {
++                  IC2.log.error(LogCategory.Uu, e, "Calculations failed.");
++               }
+             }
+          });
+       }
+@@ -237,14 +241,16 @@
+ 
+                      assert false;
+                   } else if (node.value > value / outputSize) {
+-                     node.updateValue(nt, outputSize);
++                     // Patch: Call the setValue inside itself instead of in updateValue, decreasing recursion cost. | See #31
++                     // TODO: UU Calculations need a complete rework. This can happen with some other mod as well, but should be way less likely now.
++                     setValue(node.updateValue(nt, outputSize));
+                   }
+                }
+             }
+          }
+       }
+ 
+-      private void updateValue(UuGraph.NodeTransform nt, int outputSize) {
++      private double updateValue(UuGraph.NodeTransform nt, int outputSize) {
+          double newValue = nt.transform.transformCost;
+ 
+          for (List<LeanItemStack> inputs : nt.transform.inputs) {
+@@ -268,7 +274,7 @@
+             newValue += minValue;
+          }
+ 
+-         this.setValue(newValue / outputSize);
++         return newValue / outputSize;
+       }
+    }
+ 
