@@ -1,25 +1,33 @@
 --- a/ic2/core/block/machine/container/ContainerBatchCrafter.java
 +++ b/ic2/core/block/machine/container/ContainerBatchCrafter.java
-@@ -13,6 +13,8 @@
- import java.util.List;
- import net.minecraft.entity.player.EntityPlayer;
- import net.minecraft.item.ItemStack;
+@@ -4,6 +4,7 @@
+ import gnu.trove.iterator.TIntIterator;
+ import gnu.trove.map.TIntIntMap;
+ import gnu.trove.map.hash.TIntIntHashMap;
 +import ic2.api.upgrade.IUpgradeItem;
-+import net.minecraft.inventory.Slot;
- 
- public class ContainerBatchCrafter extends ContainerElectricMachine<TileEntityBatchCrafter> {
-    protected final TIntIntMap indexToSlot = new TIntIntHashMap();
-@@ -41,12 +43,23 @@
+ import ic2.core.block.machine.tileentity.TileEntityBatchCrafter;
+ import ic2.core.slot.SlotHologramSlot;
+ import ic2.core.slot.SlotInvSlot;
+@@ -11,6 +12,8 @@
+ import ic2.core.util.Tuple;
+ import java.util.Collections;
+ import java.util.List;
++import java.util.Stack;
++
+ import net.minecraft.entity.player.EntityPlayer;
+ import net.minecraft.inventory.Slot;
+ import net.minecraft.item.ItemStack;
+@@ -45,12 +48,23 @@
        }
  
-       for(int l = 0; l < 4; ++l) {
--         this.addSlotToContainer(new SlotInvSlot(tileEntity.upgradeSlot, l, 152, 8 + l * 18));
+       for (int slot = 0; slot < 4; slot++) {
+-         this.addSlotToContainer(new SlotInvSlot(tileEntity.upgradeSlot, slot, 152, 8 + slot * 18));
 +         // Ingredients: 0-8 // Upgrades: 9-12
-+         this.indexToSlot.put(l+9, this.addSlotToContainer(new SlotInvSlot(tileEntity.upgradeSlot, l, 152, 8 + l * 18)).slotNumber);
++         this.indexToSlot.put(slot+9, this.addSlotToContainer(new SlotInvSlot(tileEntity.upgradeSlot, slot, 152, 8 + slot * 18)).slotNumber);
        }
- 
     }
  
+    @Override
     protected ItemStack handlePlayerSlotShiftClick(EntityPlayer player, ItemStack sourceItemStack) {
 +      if (sourceItemStack.getItem() instanceof IUpgradeItem && this.base.upgradeSlot.accepts(sourceItemStack)) {
 +         for (int i = 0; i < 4; i++) {
@@ -31,19 +39,23 @@
 +         }
 +      }
 +
-       Tuple.T2<List<ItemStack>, ? extends TIntCollection> t2 = StackUtil.balanceStacks(this.base.ingredients, this.base.acceptPredicate, StackUtil.getSlotsFromInv(this.base.ingredients), Collections.singleton(sourceItemStack));
-       TIntIterator tintiterator = t2.b.iterator();
+       Tuple.T2<List<ItemStack>, ? extends TIntCollection> changes = StackUtil.balanceStacks(
+          this.base.ingredients, this.base.acceptPredicate, StackUtil.getSlotsFromInv(this.base.ingredients), Collections.singleton(sourceItemStack)
+       );
+@@ -58,10 +72,14 @@
  
-@@ -55,7 +68,11 @@
-          this.inventorySlots.get(this.indexToSlot.get(i)).onSlotChanged();
+       while (iter.hasNext()) {
+          int currentSlot = iter.next();
+-         ((Slot)this.inventorySlots.get(this.indexToSlot.get(currentSlot))).onSlotChanged();
++         this.inventorySlots.get(this.indexToSlot.get(currentSlot)).onSlotChanged();
        }
++      if (changes.a.isEmpty()) return StackUtil.emptyStack;
++      sourceItemStack = changes.a.get(0);
++      if (this.base.dischargeSlot.accepts(sourceItemStack))
++         sourceItemStack = this.transfer(sourceItemStack, this.inventorySlots.get(36));
  
--      sourceItemStack = t2.a.isEmpty() ? StackUtil.emptyStack : t2.a.get(0);
-+      if (t2.a.isEmpty()) return StackUtil.emptyStack;
-+      sourceItemStack = t2.a.get(0);
-+
-+      if (this.base.dischargeSlot.accepts(sourceItemStack)) sourceItemStack = this.transfer(sourceItemStack, this.inventorySlots.get(36));
-+
-       return sourceItemStack;
+-      return changes.a.isEmpty() ? StackUtil.emptyStack : changes.a.get(0);
++      return sourceItemStack;
     }
  
+    @Override

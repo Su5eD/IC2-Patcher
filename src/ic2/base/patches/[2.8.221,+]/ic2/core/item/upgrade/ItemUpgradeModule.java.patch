@@ -1,0 +1,68 @@
+--- a/ic2/core/item/upgrade/ItemUpgradeModule.java
++++ b/ic2/core/item/upgrade/ItemUpgradeModule.java
+@@ -420,31 +420,31 @@
+          boolean ret = false;
+          switch (type) {
+             case ejector:
+-               int amount = (int)Math.pow(4.0, Math.min(4, size - 1));
++               int amountE = (int)Math.pow(4.0, Math.min(4, size - 1));
+ 
+                for (StackUtil.AdjacentInv inv : getTargetInventories(stack, te)) {
+-                  StackUtil.transfer(te, inv.te, inv.dir, amount);
++                  StackUtil.transfer(te, inv.te, inv.dir, amountE);
+                }
+                break;
+             case advanced_ejector:
+-               int amount = (int)Math.pow(4.0, Math.min(4, size - 1));
++               int amountAE = (int)Math.pow(4.0, Math.min(4, size - 1));
+ 
+                for (StackUtil.AdjacentInv inv : getTargetInventories(stack, te)) {
+-                  StackUtil.transfer(te, inv.te, inv.dir, amount, stackChecker(stack));
++                  StackUtil.transfer(te, inv.te, inv.dir, amountAE, stackChecker(stack));
+                }
+                break;
+             case pulling:
+-               int amount = (int)Math.pow(4.0, Math.min(4, size - 1));
++               int amountP = (int)Math.pow(4.0, Math.min(4, size - 1));
+ 
+                for (StackUtil.AdjacentInv inv : getTargetInventories(stack, te)) {
+-                  StackUtil.transfer(inv.te, te, inv.dir.getOpposite(), amount);
++                  StackUtil.transfer(inv.te, te, inv.dir.getOpposite(), amountP);
+                }
+                break;
+             case advanced_pulling:
+-               int amount = (int)Math.pow(4.0, Math.min(4, size - 1));
++               int amountAP = (int)Math.pow(4.0, Math.min(4, size - 1));
+ 
+                for (StackUtil.AdjacentInv inv : getTargetInventories(stack, te)) {
+-                  StackUtil.transfer(inv.te, te, inv.dir.getOpposite(), amount, stackChecker(stack));
++                  StackUtil.transfer(inv.te, te, inv.dir.getOpposite(), amountAP, stackChecker(stack));
+                }
+                break;
+             case fluid_ejector:
+@@ -452,10 +452,10 @@
+                   return false;
+                }
+ 
+-               int amount = (int)(50.0 * Math.pow(4.0, Math.min(4, size - 1)));
++               int amountFE = (int)(50.0 * Math.pow(4.0, Math.min(4, size - 1)));
+ 
+                for (LiquidUtil.AdjacentFluidHandler fh : getTargetFluidHandlers(stack, te)) {
+-                  LiquidUtil.transfer(te, fh.dir, fh.handler, amount);
++                  LiquidUtil.transfer(te, fh.dir, fh.handler, amountFE);
+                }
+                break;
+             case fluid_pulling:
+@@ -463,10 +463,10 @@
+                   return false;
+                }
+ 
+-               int amount = (int)(50.0 * Math.pow(4.0, Math.min(4, size - 1)));
++               int amountFP = (int)(50.0 * Math.pow(4.0, Math.min(4, size - 1)));
+ 
+                for (LiquidUtil.AdjacentFluidHandler fh : getTargetFluidHandlers(stack, te)) {
+-                  LiquidUtil.transfer(fh.handler, fh.dir.getOpposite(), te, amount);
++                  LiquidUtil.transfer(fh.handler, fh.dir.getOpposite(), te, amountFP);
+                }
+                break;
+             default:

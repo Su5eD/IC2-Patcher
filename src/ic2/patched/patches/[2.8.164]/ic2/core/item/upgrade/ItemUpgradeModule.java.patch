@@ -9,111 +9,54 @@
  import ic2.core.block.state.IIdProvider;
  import ic2.core.init.Localization;
  import ic2.core.item.IHandHeldSubInventory;
-@@ -23,12 +25,9 @@
- import ic2.core.util.StackUtil;
- import ic2.core.util.Util;
- import java.text.DecimalFormat;
--import java.util.Collection;
--import java.util.Collections;
--import java.util.HashSet;
--import java.util.LinkedList;
--import java.util.List;
--import java.util.Set;
-+import java.util.*;
+@@ -29,6 +31,8 @@
+ import java.util.LinkedList;
+ import java.util.List;
+ import java.util.Set;
 +
 +import mods.su5ed.ic2patcher.IC2PatcherConfig;
  import net.minecraft.client.renderer.ItemMeshDefinition;
  import net.minecraft.client.renderer.block.model.ModelBakery;
  import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-@@ -41,7 +40,6 @@
- import net.minecraft.util.EnumActionResult;
- import net.minecraft.util.EnumFacing;
- import net.minecraft.util.EnumHand;
--import net.minecraft.util.ResourceLocation;
- import net.minecraft.util.math.BlockPos;
- import net.minecraft.world.World;
- import net.minecraftforge.client.model.ModelLoader;
-@@ -299,60 +297,116 @@
-       int i = StackUtil.getSize(stack);
-       TileEntity tileEntity = (TileEntity)parent;
-       boolean flag = false;
-+
-       switch(type) {
-          case ejector:
--            int k1 = (int)Math.pow(4.0D, (double)Math.min(4, i - 1));
-+            if (!shouldTickEjector(type, tileEntity)) return flag;
-+            int amount1 = (int)Math.pow(4.0D, (double)Math.min(4, i - 1));
+@@ -380,6 +384,7 @@
+          boolean ret = false;
+          switch (type) {
+             case ejector:
++               if (!shouldTickEjector(type, te)) break;
+                int amountE = (int)Math.pow(4.0, Math.min(4, size - 1));
  
-+            int moved1 = 0;
-             for(StackUtil.AdjacentInv adjacentInv : getTargetInventories(stack, tileEntity)) {
--               StackUtil.transfer(tileEntity, adjacentInv.te, adjacentInv.dir, k1);
-+               moved1 += StackUtil.transfer(tileEntity, adjacentInv.te, adjacentInv.dir, amount1);
-             }
+                for (StackUtil.AdjacentInv inv : getTargetInventories(stack, te)) {
+@@ -387,6 +392,7 @@
+                }
+                break;
+             case advanced_ejector:
++               if (!shouldTickEjector(type, te)) break;
+                int amountAE = (int)Math.pow(4.0, Math.min(4, size - 1));
  
-+            if (moved1 == 0) tileEntity.getTileData().setLong("pushCooldown", tileEntity.getWorld().getTotalWorldTime());
-             return flag;
-          case advanced_ejector:
--            int j1 = (int)Math.pow(4.0D, (double)Math.min(4, i - 1));
-+            if (!shouldTickEjector(type, tileEntity)) return flag;
-+            int amount2 = (int)Math.pow(4.0D, (double)Math.min(4, i - 1));
+                for (StackUtil.AdjacentInv inv : getTargetInventories(stack, te)) {
+@@ -394,6 +400,7 @@
+                }
+                break;
+             case pulling:
++               if (!shouldTickPulling(type, te)) break;
+                int amountP = (int)Math.pow(4.0, Math.min(4, size - 1));
  
-+            int moved2 = 0;
-             for(StackUtil.AdjacentInv adjacentInv : getTargetInventories(stack, tileEntity)) {
--               StackUtil.transfer(tileEntity, adjacentInv.te, adjacentInv.dir, j1, stackChecker(stack));
-+               moved2 += StackUtil.transfer(tileEntity, adjacentInv.te, adjacentInv.dir, amount2, stackChecker(stack));
-             }
+                for (StackUtil.AdjacentInv inv : getTargetInventories(stack, te)) {
+@@ -401,6 +408,7 @@
+                }
+                break;
+             case advanced_pulling:
++               if (!shouldTickPulling(type, te)) break;
+                int amountAP = (int)Math.pow(4.0, Math.min(4, size - 1));
  
-+            if (moved2 == 0) tileEntity.getTileData().setLong("pushCooldown", tileEntity.getWorld().getTotalWorldTime());
-             return flag;
-          case pulling:
--            int i1 = (int)Math.pow(4.0D, (double)Math.min(4, i - 1));
-+            if (!shouldTickPulling(type, tileEntity)) return flag;
-+            int amount3 = (int)Math.pow(4.0D, (double)Math.min(4, i - 1));
+                for (StackUtil.AdjacentInv inv : getTargetInventories(stack, te)) {
+@@ -435,6 +443,55 @@
  
-             for(StackUtil.AdjacentInv adjacentInv : getTargetInventories(stack, tileEntity)) {
--               StackUtil.transfer(adjacentInv.te, tileEntity, adjacentInv.dir.getOpposite(), i1);
-+               StackUtil.transfer(adjacentInv.te, tileEntity, adjacentInv.dir.getOpposite(), amount3);
-             }
- 
-             return flag;
-          case advanced_pulling:
--            int l = (int)Math.pow(4.0D, (double)Math.min(4, i - 1));
-+            if (!shouldTickPulling(type, tileEntity)) return flag;
-+            int amount4 = (int)Math.pow(4.0D, (double)Math.min(4, i - 1));
- 
-             for(StackUtil.AdjacentInv adjacentInv : getTargetInventories(stack, tileEntity)) {
--               StackUtil.transfer(adjacentInv.te, tileEntity, adjacentInv.dir.getOpposite(), l, stackChecker(stack));
-+               StackUtil.transfer(adjacentInv.te, tileEntity, adjacentInv.dir.getOpposite(), amount4, stackChecker(stack));
-             }
- 
-             return flag;
-          case fluid_ejector:
-             if (!LiquidUtil.isFluidTile(tileEntity, null)) return false;
--            int k = (int)(50.0D * Math.pow(4.0D, (double)Math.min(4, i - 1)));
-+            int amount5 = (int)(50.0D * Math.pow(4.0D, (double)Math.min(4, i - 1)));
- 
-             for(LiquidUtil.AdjacentFluidHandler adjacentFluidHandler : getTargetFluidHandlers(stack, tileEntity)) {
--               LiquidUtil.transfer(tileEntity, adjacentFluidHandler.dir, adjacentFluidHandler.handler, k);
-+               LiquidUtil.transfer(tileEntity, adjacentFluidHandler.dir, adjacentFluidHandler.handler, amount5);
-             }
- 
-             return flag;
-          case fluid_pulling:
-             if (!LiquidUtil.isFluidTile(tileEntity, null)) return false;
--            int j = (int)(50.0D * Math.pow(4.0D, (double)Math.min(4, i - 1)));
-+            int amount6 = (int)(50.0D * Math.pow(4.0D, (double)Math.min(4, i - 1)));
- 
-             for(LiquidUtil.AdjacentFluidHandler adjacentFluidHandler : getTargetFluidHandlers(stack, tileEntity)) {
--               LiquidUtil.transfer(adjacentFluidHandler.handler, adjacentFluidHandler.dir.getOpposite(), tileEntity, j);
-+               LiquidUtil.transfer(adjacentFluidHandler.handler, adjacentFluidHandler.dir.getOpposite(), tileEntity, amount6);
-             }
- 
-             return flag;
-          default:
-             return false;
+          return ret;
        }
 +   }
 +
++   // Patch: Improve efficiency and performance of Ejector upgrades. Making them more smart.
 +   private static boolean shouldTickEjector(UpgradeType type, TileEntity parent) {
 +      if (!IC2PatcherConfig.get().enableUpgradeTickInterval) return true;
 +      long time = parent.getWorld().getTotalWorldTime();
@@ -131,6 +74,7 @@
 +      return time % IC2PatcherConfig.get().upgradeTickInterval == 0;
 +   }
 +
++   // Patch: Improve efficiency and performance of Pulling upgrades. Making them more smart.
 +   private static boolean shouldTickPulling(UpgradeType type, TileEntity parent) {
 +      if (
 +         !IC2PatcherConfig.get().enableUpgradeTickInterval ||

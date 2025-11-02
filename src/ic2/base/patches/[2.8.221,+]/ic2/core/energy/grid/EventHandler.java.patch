@@ -1,18 +1,18 @@
 --- a/ic2/core/energy/grid/EventHandler.java
 +++ b/ic2/core/energy/grid/EventHandler.java
-@@ -32,13 +32,13 @@
-          IC2.log.warn(LogCategory.EnergyNet, "EnergyTileLoadEvent: posted for %s client-side, aborting", Util.toString(event.tile, event.getWorld(), EnergyNet.instance.getPos(event.tile)));
+@@ -40,13 +40,13 @@
+             );
        } else {
           if (event.tile instanceof TileEntity) {
--            EnergyNet.instance.addTile((TileEntity)((IEnergyTile)((TileEntity)event.tile)));
+-            EnergyNet.instance.addTile((TileEntity & IEnergyTile & TileEntity)event.tile);
 +            EnergyNet.instance.addTile((TileEntity & IEnergyTile)event.tile);
           } else {
              if (!(event.tile instanceof ILocatable)) {
                 throw new IllegalArgumentException("invalid tile type: " + event.tile);
              }
  
--            EnergyNet.instance.addTile((ILocatable)((IEnergyTile)((ILocatable)event.tile)));
+-            EnergyNet.instance.addTile((ILocatable & IEnergyTile & ILocatable)event.tile);
 +            EnergyNet.instance.addTile((ILocatable & IEnergyTile)event.tile);
           }
- 
        }
+    }

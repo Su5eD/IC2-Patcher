@@ -1,0 +1,108 @@
+--- a/ic2/core/item/upgrade/ItemUpgradeModule.java
++++ b/ic2/core/item/upgrade/ItemUpgradeModule.java
+@@ -11,6 +11,8 @@
+ import ic2.api.upgrade.UpgradeRegistry;
+ import ic2.core.IC2;
+ import ic2.core.IHasGui;
++import ic2.core.block.TileEntityInventory;
++import ic2.core.block.invslot.InvSlot;
+ import ic2.core.block.state.IIdProvider;
+ import ic2.core.gui.dynamic.DynamicHandHeldContainer;
+ import ic2.core.init.Localization;
+@@ -30,6 +32,8 @@
+ import java.util.LinkedList;
+ import java.util.List;
+ import java.util.Set;
++
++import mods.su5ed.ic2patcher.IC2PatcherConfig;
+ import net.minecraft.client.renderer.ItemMeshDefinition;
+ import net.minecraft.client.renderer.block.model.ModelBakery;
+ import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+@@ -420,6 +424,7 @@
+          boolean ret = false;
+          switch (type) {
+             case ejector:
++               if (!shouldTickEjector(type, te)) break;
+                int amountE = (int)Math.pow(4.0, Math.min(4, size - 1));
+ 
+                for (StackUtil.AdjacentInv inv : getTargetInventories(stack, te)) {
+@@ -427,6 +432,7 @@
+                }
+                break;
+             case advanced_ejector:
++               if (!shouldTickEjector(type, te)) break;
+                int amountAE = (int)Math.pow(4.0, Math.min(4, size - 1));
+ 
+                for (StackUtil.AdjacentInv inv : getTargetInventories(stack, te)) {
+@@ -434,6 +440,7 @@
+                }
+                break;
+             case pulling:
++               if (!shouldTickPulling(type, te)) break;
+                int amountP = (int)Math.pow(4.0, Math.min(4, size - 1));
+ 
+                for (StackUtil.AdjacentInv inv : getTargetInventories(stack, te)) {
+@@ -441,6 +448,7 @@
+                }
+                break;
+             case advanced_pulling:
++               if (!shouldTickPulling(type, te)) break;
+                int amountAP = (int)Math.pow(4.0, Math.min(4, size - 1));
+ 
+                for (StackUtil.AdjacentInv inv : getTargetInventories(stack, te)) {
+@@ -475,6 +483,55 @@
+ 
+          return ret;
+       }
++   }
++
++   // Patch: Improve efficiency and performance of Ejector upgrades. Making them more smart.
++   private static boolean shouldTickEjector(UpgradeType type, TileEntity parent) {
++      if (!IC2PatcherConfig.get().enableUpgradeTickInterval) return true;
++      long time = parent.getWorld().getTotalWorldTime();
++      if (parent.getTileData().getLong("pushCooldown") + IC2PatcherConfig.get().pushCooldown > time) return false;
++
++      // Some machines (like batch crafter) have differently named IO slots, making those optimizations non-functional in few scenarios.
++      TileEntityInventory inv = (TileEntityInventory) parent;
++      InvSlot output = inv.getInventorySlot("output");
++      if (output != null) {
++         if (output.isEmpty()) return false;
++         for (ItemStack itemStack : output)
++            if (itemStack.getCount() >= output.getStackSizeLimit()) return true;
++      }
++
++      return time % IC2PatcherConfig.get().upgradeTickInterval == 0;
++   }
++
++   // Patch: Improve efficiency and performance of Pulling upgrades. Making them more smart.
++   private static boolean shouldTickPulling(UpgradeType type, TileEntity parent) {
++      if (
++         !IC2PatcherConfig.get().enableUpgradeTickInterval ||
++         parent.getWorld().getTotalWorldTime() % IC2PatcherConfig.get().upgradeTickInterval == 0
++      ) {
++         // Some machines (like batch crafter) have differently named IO slots, making those optimizations non-functional in few scenarios.
++         TileEntityInventory inv = (TileEntityInventory) parent;
++         InvSlot output = inv.getInventorySlot("output");
++         if (output != null) {
++            boolean outputFull = true;
++            for (int i = 0; i < output.size() && outputFull; i++)
++               outputFull = output.get(i).getCount() >= output.getStackSizeLimit();
++            if (outputFull) return false;
++         }
++
++         InvSlot input = inv.getInventorySlot("input");
++         boolean inputFull = true;
++
++         if (input != null) {
++            for (int i = 0; i < input.size() && inputFull; i++)
++               inputFull = input.get(i).getCount() >= input.getStackSizeLimit();
++         } else {
++            inputFull = false;
++         }
++
++         return !inputFull;
++      }
++      return false;
+    }
+ 
+    private static Predicate<ItemStack> stackChecker(final ItemStack stack) {

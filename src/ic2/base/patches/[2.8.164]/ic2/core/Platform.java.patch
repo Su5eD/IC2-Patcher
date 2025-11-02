@@ -1,0 +1,11 @@
+--- a/ic2/core/Platform.java
++++ b/ic2/core/Platform.java
+@@ -74,7 +74,7 @@
+       if (player instanceof EntityPlayerMP) {
+          ITextComponent msg;
+          if (args.length > 0) {
+-            msg = new TextComponentTranslation(message, this.getMessageComponents(args));
++            msg = new TextComponentTranslation(message, (Object) this.getMessageComponents(args));
+          } else {
+             msg = new TextComponentTranslation(message, new Object[0]);
+          }

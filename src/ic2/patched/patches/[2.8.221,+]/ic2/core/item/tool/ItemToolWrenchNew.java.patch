@@ -8,7 +8,7 @@
  import ic2.core.ref.ItemName;
  import ic2.core.util.RotationUtil;
  import ic2.core.util.StackUtil;
-@@ -32,6 +33,7 @@
+@@ -31,6 +32,7 @@
  import net.minecraftforge.fml.relauncher.Side;
  import net.minecraftforge.fml.relauncher.SideOnly;
  

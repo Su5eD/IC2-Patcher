@@ -1,23 +1,33 @@
 --- a/ic2/core/block/invslot/InvSlotUpgrade.java
 +++ b/ic2/core/block/invslot/InvSlotUpgrade.java
-@@ -17,6 +17,8 @@
- import java.util.List;
- import net.minecraft.item.Item;
- import net.minecraft.item.ItemStack;
-+import ic2.api.upgrade.UpgradableProperty;
-+import ic2.core.block.machine.tileentity.TileEntityElectricMachine;
+@@ -1,16 +1,10 @@
+ package ic2.core.block.invslot;
  
- public class InvSlotUpgrade extends InvSlot {
-    private static final int maxStackSize = 64;
-@@ -89,6 +91,11 @@
+-import ic2.api.upgrade.IAugmentationUpgrade;
+-import ic2.api.upgrade.IEnergyStorageUpgrade;
+-import ic2.api.upgrade.IFullUpgrade;
+-import ic2.api.upgrade.IProcessingUpgrade;
+-import ic2.api.upgrade.IRedstoneSensitiveUpgrade;
+-import ic2.api.upgrade.ITransformerUpgrade;
+-import ic2.api.upgrade.IUpgradableBlock;
+-import ic2.api.upgrade.IUpgradeItem;
++import ic2.api.upgrade.*;
+ import ic2.core.block.TileEntityInventory;
+ import ic2.core.block.comp.Redstone;
+ import ic2.core.block.comp.TileEntityComponent;
++import ic2.core.block.machine.tileentity.TileEntityElectricMachine;
+ import ic2.core.util.StackUtil;
+ import java.util.ArrayList;
+ import java.util.Collections;
+@@ -91,6 +85,11 @@
                 }
              }
           }
 +      }
 +
-+      if (iupgradableblock instanceof TileEntityElectricMachine && iupgradableblock.getUpgradableProperties().contains(UpgradableProperty.Transformer)) {
-+         TileEntityElectricMachine te = ((TileEntityElectricMachine) iupgradableblock);
++      if (block instanceof TileEntityElectricMachine && block.getUpgradableProperties().contains(UpgradableProperty.Transformer)) {
++         TileEntityElectricMachine te = (TileEntityElectricMachine) block;
 +         te.dischargeSlot.setTier(te.dischargeSlot.baseTier + extraTier);
        }
  
-       for(TileEntityComponent tileentitycomponent : this.base.getComponents()) {
+       for (TileEntityComponent component : this.base.getComponents()) {

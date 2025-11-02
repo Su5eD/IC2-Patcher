@@ -1,11 +1,20 @@
 --- a/ic2/core/ref/MetaTeBlockProperty.java
 +++ b/ic2/core/ref/MetaTeBlockProperty.java
-@@ -152,7 +152,7 @@
-          if (entry1.getKey() != invalid.teBlock.getIdentifier()) {
-             Tuple.T2 tuple$t2 = entry1.getValue();
-             Integer integer = (Integer)tuple$t2.a;
--            Object object = tuple$t2.a = (TA)((Integer)tuple$t2.a).intValue() + 1;
-+            Object object = tuple$t2.a = ((Integer)tuple$t2.a).intValue() + 1;
-             ((List)(entry1.getValue()).b).add(metateblockproperty$metatepair1);
+@@ -38,7 +38,7 @@
+                private final List<MetaTeBlockProperty.MetaTePair> teBlockMap = (List<MetaTeBlockProperty.MetaTePair>)MetaTeBlockProperty.resourceToTeBlock
+                   .get(identifier)
+                   .b;
+-               private final int allTeBlockSize = <unrepresentable>.super.teBlockMap.size();
++               private final int allTeBlockSize = this.teBlockMap.size();
+ 
+                @Override
+                public boolean hasNext() {
+@@ -150,7 +150,7 @@
+          if (type.getKey() != invalid.teBlock.getIdentifier()) {
+             Tuple.T2 var10 = type.getValue();
+             Integer var11 = (Integer)var10.a;
+-            Object var12 = var10.a = (TA)(Integer)var10.a + 1;
++            Object var12 = var10.a = (Integer)var10.a + 1;
+             ((List)type.getValue().b).add(invalidStates);
           }
        }

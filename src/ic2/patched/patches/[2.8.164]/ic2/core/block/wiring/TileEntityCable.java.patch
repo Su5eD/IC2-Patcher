@@ -1,0 +1,11 @@
+--- a/ic2/core/block/wiring/TileEntityCable.java
++++ b/ic2/core/block/wiring/TileEntityCable.java
+@@ -529,6 +529,8 @@
+       ret.add("connectivity");
+       ret.add("obscuration");
+       ret.addAll(super.getNetworkedFields());
++      // Patch: Foam Color is lost on reloading the save. Missing data on Client from the Server - See #30
++      ret.add("foamColor");
+       return ret;
+    }
+ 

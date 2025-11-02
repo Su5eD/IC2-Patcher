@@ -1,14 +1,19 @@
 --- a/ic2/core/item/tool/ItemToolPainter.java
 +++ b/ic2/core/item/tool/ItemToolPainter.java
-@@ -130,9 +130,9 @@
-       UnmodifiableIterator unmodifiableiterator = state.getProperties().keySet().iterator();
+@@ -127,12 +127,12 @@
+    }
  
-       while(unmodifiableiterator.hasNext()) {
--         IProperty<?> iproperty = (IProperty)unmodifiableiterator.next();
-+         IProperty<EnumDyeColor> iproperty = (IProperty)unmodifiableiterator.next();
-          if (iproperty.getValueClass() == EnumDyeColor.class) {
--            EnumDyeColor enumdyecolor = (EnumDyeColor)state.getValue(iproperty);
-+            EnumDyeColor enumdyecolor = state.getValue(iproperty);
-             if (enumdyecolor != newColor && iproperty.getAllowedValues().contains(newColor)) {
-                world.setBlockState(pos, state.withProperty(iproperty, newColor));
+    private boolean colorBlock(World world, BlockPos pos, Block block, IBlockState state, EnumDyeColor newColor) {
+-      UnmodifiableIterator var6 = state.getProperties().keySet().iterator();
++      UnmodifiableIterator<IProperty<?>> it = state.getProperties().keySet().iterator();
+ 
+-      while (var6.hasNext()) {
+-         IProperty<?> property = (IProperty<?>)var6.next();
++      while (it.hasNext()) {
++         IProperty<EnumDyeColor> property = (IProperty<EnumDyeColor>) it.next();
+          if (property.getValueClass() == EnumDyeColor.class) {
+-            EnumDyeColor oldColor = (EnumDyeColor)state.getValue(property);
++            EnumDyeColor oldColor = state.getValue(property);
+             if (oldColor != newColor && property.getAllowedValues().contains(newColor)) {
+                world.setBlockState(pos, state.withProperty(property, newColor));
                 return true;

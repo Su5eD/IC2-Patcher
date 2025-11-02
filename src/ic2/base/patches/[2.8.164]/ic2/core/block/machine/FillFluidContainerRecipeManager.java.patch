@@ -1,20 +1,20 @@
 --- a/ic2/core/block/machine/FillFluidContainerRecipeManager.java
 +++ b/ic2/core/block/machine/FillFluidContainerRecipeManager.java
-@@ -32,7 +32,7 @@
-             } else {
-                Collection<ItemStack> collection = StackUtil.isEmpty(liquidutil$fluidoperationresult.extraOutput) ? Collections.emptyList() : Collections.singletonList(liquidutil$fluidoperationresult.extraOutput);
-                FluidStack fluidstack = liquidutil$fluidoperationresult.fluidChange.amount >= input.fluid.amount ? null : new FluidStack(input.fluid, input.fluid.amount - liquidutil$fluidoperationresult.fluidChange.amount);
--               return (new MachineRecipe((Object)null, collection)).getResult(new IFillFluidContainerRecipeManager.Input(liquidutil$fluidoperationresult.inPlaceOutput, fluidstack));
-+               return (new MachineRecipe(null, collection)).getResult(new IFillFluidContainerRecipeManager.Input(liquidutil$fluidoperationresult.inPlaceOutput, fluidstack));
+@@ -39,7 +39,7 @@
+                FluidStack changedFluid = result.fluidChange.amount >= input.fluid.amount
+                   ? null
+                   : new FluidStack(input.fluid, input.fluid.amount - result.fluidChange.amount);
+-               return new MachineRecipe<>(null, output).getResult(new IFillFluidContainerRecipeManager.Input(result.inPlaceOutput, changedFluid));
++               return new MachineRecipe(null, output).getResult(new IFillFluidContainerRecipeManager.Input(result.inPlaceOutput, changedFluid));
              }
           }
        } else if (!acceptTest) {
-@@ -40,7 +40,7 @@
-       } else if (StackUtil.isEmpty(input.container) && input.fluid == null) {
-          return null;
+@@ -49,7 +49,7 @@
        } else {
--         return !StackUtil.isEmpty(input.container) && !LiquidUtil.isFillableFluidContainer(input.container) ? null : (new MachineRecipe((Object)null, Collections.emptyList())).getResult(input);
-+         return !StackUtil.isEmpty(input.container) && !LiquidUtil.isFillableFluidContainer(input.container) ? null : (new MachineRecipe(null, Collections.emptyList())).getResult(input);
+          return !StackUtil.isEmpty(input.container) && !LiquidUtil.isFillableFluidContainer(input.container)
+             ? null
+-            : new MachineRecipe<>(null, Collections.emptyList()).getResult(input);
++            : new MachineRecipe(null, Collections.emptyList()).getResult(input);
        }
     }
  

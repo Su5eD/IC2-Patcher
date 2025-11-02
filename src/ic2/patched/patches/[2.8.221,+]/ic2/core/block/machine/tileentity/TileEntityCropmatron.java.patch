@@ -1,6 +1,6 @@
 --- a/ic2/core/block/machine/tileentity/TileEntityCropmatron.java
 +++ b/ic2/core/block/machine/tileentity/TileEntityCropmatron.java
-@@ -73,6 +73,7 @@
+@@ -77,6 +77,7 @@
     protected void updateEntityServer() {
        super.updateEntityServer();
        this.upgradeSlot.tick();

@@ -1,0 +1,10 @@
+--- a/ic2/core/block/machine/tileentity/TileEntityCropHarvester.java
++++ b/ic2/core/block/machine/tileentity/TileEntityCropHarvester.java
+@@ -45,6 +45,7 @@
+    protected void updateEntityServer() {
+       super.updateEntityServer();
+       this.upgradeSlot.tick();
++      this.energy.setSinkTier(this.upgradeSlot.getTier(1));
+       if (this.energy.getEnergy() >= 201.0) {
+          this.scan();
+       }

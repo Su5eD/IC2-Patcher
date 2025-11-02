@@ -1,6 +1,6 @@
 --- a/ic2/core/item/armor/ItemArmorJetpackElectric.java
 +++ b/ic2/core/item/armor/ItemArmorJetpackElectric.java
-@@ -3,12 +3,12 @@
+@@ -3,6 +3,7 @@
  import ic2.api.item.ElectricItem;
  import ic2.core.item.armor.jetpack.IJetpack;
  import ic2.core.ref.ItemName;
@@ -8,18 +8,12 @@
  import net.minecraft.entity.EntityLivingBase;
  import net.minecraft.entity.player.EntityPlayer;
  import net.minecraft.inventory.EntityEquipmentSlot;
- import net.minecraft.item.ItemStack;
- import net.minecraft.util.DamageSource;
--import net.minecraftforge.common.ISpecialArmor.ArmorProperties;
+@@ -35,7 +36,7 @@
  
- public class ItemArmorJetpackElectric extends ItemArmorElectric implements IJetpack {
-    public ItemArmorJetpackElectric() {
-@@ -31,7 +31,7 @@
-    }
- 
+    @Override
     public boolean isJetpackActive(ItemStack stack) {
 -      return true;
 +      return !StackUtil.getOrCreateNbtData(stack).getBoolean("jetpackDisabled");
     }
  
-    public double getChargeLevel(ItemStack stack) {
+    @Override

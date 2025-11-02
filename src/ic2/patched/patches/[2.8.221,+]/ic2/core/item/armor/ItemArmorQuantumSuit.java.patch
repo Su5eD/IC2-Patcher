@@ -1,36 +1,37 @@
 --- a/ic2/core/item/armor/ItemArmorQuantumSuit.java
 +++ b/ic2/core/item/armor/ItemArmorQuantumSuit.java
-@@ -226,6 +226,7 @@
+@@ -229,6 +229,7 @@
  
-          boolean flag3 = nbttagcompound.getBoolean("Nightvision");
-          short short1 = nbttagcompound.getShort("HudMode");
-+         int l = player.getEntityWorld().getLightFromNeighbors(new BlockPos(player));
-          if (IC2.keyboard.isAltKeyDown(player) && IC2.keyboard.isModeSwitchKeyDown(player) && b0 == 0) {
-             b0 = 10;
-             flag3 = !flag3;
-@@ -235,6 +236,8 @@
-                   IC2.platform.messagePlayer(player, "Nightvision enabled.");
-                } else {
-                   IC2.platform.messagePlayer(player, "Nightvision disabled.");
-+                  if (l > 8) IC2.platform.removePotion(player, MobEffects.BLINDNESS);
-+                  else IC2.platform.removePotion(player, MobEffects.NIGHT_VISION);
+             boolean Nightvision = nbtData.getBoolean("Nightvision");
+             short hubmode = nbtData.getShort("HudMode");
++            int skylight = player.getEntityWorld().getLightFromNeighbors(new BlockPos(player));
+             if (IC2.keyboard.isAltKeyDown(player) && IC2.keyboard.isModeSwitchKeyDown(player) && toggleTimer == 0) {
+                toggleTimer = 10;
+                Nightvision = !Nightvision;
+@@ -238,6 +239,8 @@
+                      IC2.platform.messagePlayer(player, "Nightvision enabled.");
+                   } else {
+                      IC2.platform.messagePlayer(player, "Nightvision disabled.");
++                     if (skylight > 8) IC2.platform.removePotion(player, MobEffects.BLINDNESS);
++                     else IC2.platform.removePotion(player, MobEffects.NIGHT_VISION);
+                   }
                 }
              }
-          }
-@@ -260,7 +263,6 @@
+@@ -261,8 +264,6 @@
+             }
  
-          if (flag3 && IC2.platform.isSimulating() && ElectricItem.manager.use(stack, 1.0D, player)) {
-             BlockPos blockpos = new BlockPos((int)Math.floor(player.posX), (int)Math.floor(player.posY), (int)Math.floor(player.posZ));
--            int l = player.getEntityWorld().getLightFromNeighbors(blockpos);
-             if (l > 8) {
-                IC2.platform.removePotion(player, MobEffects.NIGHT_VISION);
-                player.addPotionEffect(new PotionEffect(MobEffects.BLINDNESS, 100, 0, true, true));
-@@ -375,7 +377,7 @@
-    }
+             if (Nightvision && IC2.platform.isSimulating() && ElectricItem.manager.use(stack, 1.0, player)) {
+-               BlockPos pos = new BlockPos((int)Math.floor(player.posX), (int)Math.floor(player.posY), (int)Math.floor(player.posZ));
+-               int skylight = player.getEntityWorld().getLightFromNeighbors(pos);
+                if (skylight > 8) {
+                   IC2.platform.removePotion(player, MobEffects.NIGHT_VISION);
+                   player.addPotionEffect(new PotionEffect(MobEffects.BLINDNESS, 100, 0, true, true));
+@@ -384,7 +385,7 @@
  
+    @Override
     public boolean isJetpackActive(ItemStack stack) {
 -      return true;
 +      return !StackUtil.getOrCreateNbtData(stack).getBoolean("jetpackDisabled");
     }
  
-    public float getHoverMultiplier(ItemStack stack, boolean upwards) {
+    @Override

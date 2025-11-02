@@ -1,37 +1,37 @@
 --- a/ic2/core/block/machine/tileentity/TileEntityBatchCrafter.java
 +++ b/ic2/core/block/machine/tileentity/TileEntityBatchCrafter.java
-@@ -136,24 +136,7 @@
-          int finalI = i;
-          this.ingredientsRow[i] = new InvSlot(this, "ingredient[" + finalI + ']', InvSlot.Access.I, 1) {
+@@ -139,24 +139,7 @@
+          this.ingredientsRow[slot] = new InvSlot(this, "ingredient[" + slot + ']', InvSlot.Access.I, 1) {
+             @Override
              public boolean accepts(ItemStack ingredient) {
--               IRecipe irecipe = TileEntityBatchCrafter.this.world.isRemote ? TileEntityBatchCrafter.this.findRecipe() : TileEntityBatchCrafter.this.recipe;
--               if (irecipe == null) {
+-               IRecipe recipe = TileEntityBatchCrafter.this.world.isRemote ? TileEntityBatchCrafter.this.findRecipe() : TileEntityBatchCrafter.this.recipe;
+-               if (recipe == null) {
 -                  return false;
 -               } else {
--                  assert irecipe.matches(TileEntityBatchCrafter.this.crafting, TileEntityBatchCrafter.this.world);
+-                  assert recipe.matches(TileEntityBatchCrafter.this.crafting, TileEntityBatchCrafter.this.world);
 -
--                  ItemStack itemstack = TileEntityBatchCrafter.this.craftingGrid[finalI];
+-                  ItemStack recipeStack = TileEntityBatchCrafter.this.craftingGrid[slot];
 -
--                  boolean flag;
+-                  boolean var4;
 -                  try {
--                     TileEntityBatchCrafter.this.craftingGrid[finalI] = ingredient;
--                     flag = irecipe.matches(TileEntityBatchCrafter.this.crafting, TileEntityBatchCrafter.this.world);
+-                     TileEntityBatchCrafter.this.craftingGrid[slot] = ingredient;
+-                     var4 = recipe.matches(TileEntityBatchCrafter.this.crafting, TileEntityBatchCrafter.this.world);
 -                  } finally {
--                     TileEntityBatchCrafter.this.craftingGrid[finalI] = itemstack;
+-                     TileEntityBatchCrafter.this.craftingGrid[slot] = recipeStack;
 -                  }
 -
--                  return flag;
+-                  return var4;
 -               }
-+               return StackUtil.checkItemEquality(craftingGrid[finalI], ingredient);
++               return StackUtil.checkItemEquality(craftingGrid[slot], ingredient);
              }
  
-             public void onChanged() {
-@@ -297,7 +280,7 @@
+             @Override
+@@ -300,7 +283,7 @@
     }
  
     protected void doCrafting() {
--      for(int j = 0; j < this.operationsPerTick; ++j) {
-+      for(int j = 0; j < this.operationsPerTick && canCraft(); ++j) {
-          List<ItemStack> list = Collections.<ItemStack>singletonList(this.recipeOutput);
+-      for (int operation = 0; operation < this.operationsPerTick; operation++) {
++      for (int operation = 0; operation < this.operationsPerTick && canCraft(); operation++) {
+          List<ItemStack> outputs = Collections.singletonList(this.recipeOutput);
  
-          for(ItemStack itemstack : this.upgradeSlot) {
+          for (ItemStack stack : this.upgradeSlot) {

@@ -1,0 +1,20 @@
+--- a/ic2/core/network/NetworkManager.java
++++ b/ic2/core/network/NetworkManager.java
+@@ -196,7 +196,7 @@
+ 
+          buffer.flip();
+ 
+-         for (EntityPlayerMP target : (ArrayList)getPlayersInRange(te.getWorld(), te.getPos(), new ArrayList())) {
++         for (EntityPlayerMP target : getPlayersInRange(te.getWorld(), te.getPos(), new ArrayList<>())) {
+             if (limitRange) {
+                int dX = (int)(te.getPos().getX() + 0.5 - target.posX);
+                int dZ = (int)(te.getPos().getZ() + 0.5 - target.posZ);
+@@ -230,7 +230,7 @@
+ 
+          buffer.flip();
+ 
+-         for (EntityPlayerMP target : (ArrayList)getPlayersInRange(player.getEntityWorld(), player.getPosition(), new ArrayList())) {
++         for (EntityPlayerMP target : getPlayersInRange(player.getEntityWorld(), player.getPosition(), new ArrayList<>())) {
+             if (limitRange) {
+                int dX = (int)(player.posX - target.posX);
+                int dZ = (int)(player.posZ - target.posZ);

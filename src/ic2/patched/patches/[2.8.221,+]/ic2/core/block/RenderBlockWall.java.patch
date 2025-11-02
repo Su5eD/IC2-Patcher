@@ -1,22 +1,22 @@
 --- a/ic2/core/block/RenderBlockWall.java
 +++ b/ic2/core/block/RenderBlockWall.java
-@@ -69,15 +69,16 @@
+@@ -70,15 +70,16 @@
  
-       for(EnumFacing enumfacing : EnumFacing.VALUES) {
-          int[] aint1 = colorMultipliers[enumfacing.ordinal()];
--         List<BakedQuad> list1 = baseModel.getQuads(state, enumfacing, 0L);
-+         List<BakedQuad> list1 = new ArrayList<>(baseModel.getQuads(state, enumfacing, 0L));
-          if (aint1 == null) {
-             list[enumfacing.ordinal()] = list1;
+       for (EnumFacing side : EnumFacing.VALUES) {
+          int[] sideColorMultipliers = colorMultipliers[side.ordinal()];
+-         List<BakedQuad> baseFaceQuads = baseModel.getQuads(state, side, 0L);
++         List<BakedQuad> baseFaceQuads = new ArrayList<>(baseModel.getQuads(state, side, 0L));
+          if (sideColorMultipliers == null) {
+             mergedQuads[side.ordinal()] = baseFaceQuads;
           } else {
-             List<BakedQuad> list2 = new ArrayList<BakedQuad>(list1.size() + aint1.length);
--            list2.addAll(list1);
-+            if (aint1.length < 1) list2.addAll(list1);
-+            else list1.clear();
+             List<BakedQuad> mergedFaceQuads = new ArrayList<>(baseFaceQuads.size() + sideColorMultipliers.length);
+-            mergedFaceQuads.addAll(baseFaceQuads);
++            if (sideColorMultipliers.length < 1) mergedFaceQuads.addAll(baseFaceQuads);
++            else baseFaceQuads.clear();
  
-             for(int i : aint1) {
--               generateQuad(enumfacing, 0.001F, intbuffer);
-+               generateQuad(enumfacing, 0, intbuffer);
-                list2.add(BasicBakedBlockModel.createQuad(Arrays.copyOf(intbuffer.array(), intbuffer.position()), enumfacing, (TextureAtlasSprite)null));
-                ((Buffer)intbuffer).rewind();
+             for (int sideColorMultiplier : sideColorMultipliers) {
+-               generateQuad(side, 0.001F, buffer);
++               generateQuad(side, 0, buffer);
+                mergedFaceQuads.add(BasicBakedBlockModel.createQuad(Arrays.copyOf(buffer.array(), buffer.position()), side, null));
+                ((Buffer)buffer).rewind();
              }

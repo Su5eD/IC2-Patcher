@@ -1,7 +1,7 @@
 --- a/ic2/core/block/invslot/InvSlotUpgrade.java
 +++ b/ic2/core/block/invslot/InvSlotUpgrade.java
 @@ -31,7 +31,7 @@
-    private List<Redstone.IRedstoneModifier> redstoneModifiers = Collections.<Redstone.IRedstoneModifier>emptyList();
+    private List<Redstone.IRedstoneModifier> redstoneModifiers = Collections.emptyList();
  
     public static InvSlotUpgrade createUnchecked(TileEntityInventory base, String name, int count) {
 -      return new InvSlotUpgrade((TileEntityInventory)((IUpgradableBlock)base), name, count);

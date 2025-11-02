@@ -1,0 +1,14 @@
+--- a/ic2/core/block/TileEntityBlock.java
++++ b/ic2/core/block/TileEntityBlock.java
+@@ -225,6 +225,11 @@
+          if (!this.enableWorldTick && this.updatableComponents == null) {
+             this.getWorld().tickableTileEntities.remove(this);
+          }
++
++         // Patch: Replace BlockState from Meta with updated one based on TileEntity on load.
++         // Replaces TileEntity BlockStates from load with INVALID TileEntity Reference.
++         // See #30.
++         this.getWorld().setBlockState(pos, this.getBlockState().getActualState(world, pos));
+       }
+    }
+ 

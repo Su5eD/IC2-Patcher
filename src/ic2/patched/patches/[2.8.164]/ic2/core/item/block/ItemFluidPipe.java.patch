@@ -8,11 +8,11 @@
  import ic2.core.ref.BlockName;
  import ic2.core.ref.IMultiItem;
  import ic2.core.ref.ItemName;
-@@ -43,6 +44,7 @@
+@@ -42,6 +43,7 @@
  import net.minecraftforge.fml.relauncher.Side;
  import net.minecraftforge.fml.relauncher.SideOnly;
  
 +@NotClassic
  public class ItemFluidPipe extends ItemIC2 implements IMultiItem<PipeType>, IBoxable {
-    private final List<ItemStack> variants = new ArrayList<ItemStack>();
+    private final List<ItemStack> variants = new ArrayList<>();
  

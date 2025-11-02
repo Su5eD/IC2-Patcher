@@ -13,21 +13,110 @@
  import java.text.ParseException;
  import java.util.ArrayList;
  import java.util.Arrays;
-@@ -243,7 +241,7 @@
-                throw new RuntimeException("Non-replacement changes made alongside replacement: " + profileparser$node);
-             }
+@@ -61,7 +59,7 @@
+       }
  
--            list.add((Object)null);
-+            list.add(null);
-             break;
-          default:
-             assert parent.getType().validChildren.contains(profileparser$node.getType());
-@@ -313,7 +311,7 @@
-          ProfileTarget profiletarget = root.offset(this.path);
-          Set<ProfileTarget> set = new HashSet<ProfileTarget>();
-          if (!profiletarget.isFile()) {
--            for(File file1 : profiletarget.asFile().listFiles(new WildcardFileFilter("*.INI", IOCase.INSENSITIVE))) {
-+            for(File file1 : profiletarget.asFile().listFiles((FileFilter) new WildcardFileFilter("*.INI", IOCase.INSENSITIVE))) {
-                if (file1.isFile()) {
-                   set.add(profiletarget.offset(file1.getName()));
+       String name = null;
+-      Version var15 = null;
++      Version version = null;
+       HashSet textures = new HashSet();
+       ArrayList recipeChanges = new ArrayList();
+ 
+@@ -75,11 +73,11 @@
+                name = ((ProfileParser.NameNode)rawNode).name;
+                break;
+             case style:
+-               if (var15 != null) {
+-                  throw new RuntimeException("Duplicate profile styles: " + var15 + " and " + ((ProfileParser.StyleNode)rawNode).style);
++               if (version != null) {
++                  throw new RuntimeException("Duplicate profile styles: " + version + " and " + ((ProfileParser.StyleNode)rawNode).style);
+                }
+ 
+-               var15 = ((ProfileParser.StyleNode)rawNode).style;
++               version = ((ProfileParser.StyleNode)rawNode).style;
+                break;
+             case textures:
+                textures.add(((ProfileParser.TextureNode)rawNode).style.apply(root));
+@@ -135,15 +133,15 @@
+       if (name == null) {
+          throw new RuntimeException("Missing name for profile at " + root + "/profile.xml!");
+       } else {
+-         if (var15 == null) {
+-            var15 = Version.NEW;
++         if (version == null) {
++            version = Version.NEW;
+          }
+ 
+          if (textures.isEmpty()) {
+             textures.add(TextureStyle.EXPERIMENTAL);
+          }
+ 
+-         return new Profile(name, textures, var15, recipeChanges.toArray(new RecipeChange[0]));
++         return new Profile(name, textures, version, (RecipeChange[]) recipeChanges.toArray(new RecipeChange[0]));
+       }
+    }
+ 
+@@ -176,15 +174,15 @@
+                assert ret.stream().allMatch(change -> change.type == RecipeChange.ChangeType.REPLACEMENT);
+ 
+                madeReplacement = true;
+-               List<ProfileTarget> targets = new ArrayList<>();
++               List<ProfileTarget> replacementTargets = new ArrayList<>();
+ 
+                for (ProfileParser.Node cookedNode : ((ProfileParser.ParentNode)rawNode).getNodes()) {
+                   switch (cookedNode.getType()) {
+                      case file:
+-                        targets.add(root.offset(((ProfileParser.FileNode)cookedNode).path));
++                        replacementTargets.add(root.offset(((ProfileParser.FileNode)cookedNode).path));
+                         break;
+                      case folder:
+-                        targets.addAll(((ProfileParser.FolderNode)cookedNode).getFiles(root));
++                        replacementTargets.addAll(((ProfileParser.FolderNode)cookedNode).getFiles(root));
+                         break;
+                      default:
+                         assert ProfileParser.NodeType.replacements.validChildren.contains(cookedNode.getType());
+@@ -193,22 +191,22 @@
+                   }
+                }
+ 
+-               ret.add(new RecipeChange.RecipeReplacement(name, targets.toArray(new ProfileTarget[0])));
++               ret.add(new RecipeChange.RecipeReplacement(name, replacementTargets.toArray(new ProfileTarget[0])));
+                break;
+             case additions:
+                if (madeReplacement) {
+                   throw new RuntimeException("Non-replacement changes made alongside replacement: " + rawNode);
+                }
+ 
+-               List<ProfileTarget> targets = new ArrayList<>();
++               List<ProfileTarget> additionTargets = new ArrayList<>();
+ 
+                for (ProfileParser.Node cookedNode : ((ProfileParser.ParentNode)rawNode).getNodes()) {
+                   switch (cookedNode.getType()) {
+                      case file:
+-                        targets.add(root.offset(((ProfileParser.FileNode)cookedNode).path));
++                        additionTargets.add(root.offset(((ProfileParser.FileNode)cookedNode).path));
+                         break;
+                      case folder:
+-                        targets.addAll(((ProfileParser.FolderNode)cookedNode).getFiles(root));
++                        additionTargets.addAll(((ProfileParser.FolderNode)cookedNode).getFiles(root));
+                         break;
+                      default:
+                         assert ProfileParser.NodeType.additions.validChildren.contains(cookedNode.getType());
+@@ -217,7 +215,7 @@
+                   }
+                }
+ 
+-               ret.add(new RecipeChange.RecipeAddition(name, targets.toArray(new ProfileTarget[0])));
++               ret.add(new RecipeChange.RecipeAddition(name, additionTargets.toArray(new ProfileTarget[0])));
+                break;
+             case removals:
+                if (madeReplacement) {
+@@ -297,7 +295,7 @@
+          ProfileTarget folder = root.offset(this.path);
+          Set<ProfileTarget> files = new HashSet<>();
+          if (!folder.isFile()) {
+-            for (File file : folder.asFile().listFiles(new WildcardFileFilter("*.INI", IOCase.INSENSITIVE))) {
++            for (File file : folder.asFile().listFiles((FileFilter) new WildcardFileFilter("*.INI", IOCase.INSENSITIVE))) {
+                if (file.isFile()) {
+                   files.add(folder.offset(file.getName()));
                 }
