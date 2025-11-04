@@ -16,6 +16,7 @@ plugins {
 java.toolchain.languageVersion.set(JavaLanguageVersion.of(8))
 
 val baseProjectName:    String by project
+val modPackage:         String by project;
 val mappingsChannel:    String by project
 val mappingsVersion:    String by project
 val versionIC2:         String by project
@@ -31,7 +32,7 @@ val projectBase:    Project = project(":$baseProjectName-Base")
 val taskGroup:      String = "$baseProjectName patcher ~ patched"
 val patchedJar:     File = File(buildDir, "applyPatches/patched.jar")
 val baseSrc:        File = File(projectBase.projectDir, "src")
-val src:            File = File(projectDir, "src")
+val src:            File = File(projectDir, "ic2")
 val libs:           File = File(buildDir, "libs")
 
 fancyGradle {
@@ -71,7 +72,6 @@ dependencies {
     compileOnly(group = "mezz.jei", name = "jei_1.12.2", version = versionJEI)
     compileOnly(group = "com.mod-buildcraft", name = "buildcraft-lib", version = versionBuildCraft)
     compileOnly(group = "com.mod-buildcraft", name = "buildcraft-main", version = versionBuildCraft)
-    implementation(project(":shared"))
 
     val ejml = create(group = "com.googlecode.efficient-java-matrix-library", name = "core", version = "0.26")
     implementation(ejml)
@@ -81,10 +81,12 @@ dependencies {
 sourceSets {
     main {
         java {
-            srcDir("src/java")
+            srcDir(src.absolutePath + "/java")
+            srcDir("api/java")
         }
         resources {
-            srcDir("src/resources")
+            srcDir(src.absolutePath + "/resources")
+            srcDir("api/resources")
         }
     }
 }
@@ -161,11 +163,24 @@ tasks {
         }
     }
 
-    register<Jar>("Source Jar ~ Patched") {
+    register<Jar>("Source Jar ~ Patched (Without API)") {
         setup(this)
         if (!correctSrcExists()) dependsOn("Setup Source ~ Patched")
 
-        archiveClassifier.set("Sources")
+        archiveClassifier.set("Sources-IC2")
+
+        from(sourceSets.main.get().allSource) {
+            exclude {
+                it.path.startsWith(modPackage.replace(".", "/"))
+            }
+        }
+    }
+
+    register<Jar>("Source Jar ~ Patched (With API)") {
+        setup(this)
+        if (!correctSrcExists()) dependsOn("Setup Source ~ Patched")
+
+        archiveClassifier.set("Sources-All")
 
         from(sourceSets.main.get().allSource)
     }
@@ -173,6 +188,8 @@ tasks {
     register("Build ~ Patched") {
         setup(this)
         dependsOn("build")
+
+        outputs.file(project.tasks.getByName("shadowJar").outputs.files.singleFile)
     }
 
     named<ShadowJar>("shadowJar") {
@@ -187,7 +204,7 @@ tasks {
         setup(this)
 
         val baseSourceJar = projectBase.tasks.getByName<Jar>("Source Jar ~ Base")
-        val sourceJar = getByName<Jar>("Source Jar ~ Patched")
+        val sourceJar = getByName<Jar>("Source Jar ~ Patched (Without API)")
 
         dependsOn(baseSourceJar)
         dependsOn(sourceJar)

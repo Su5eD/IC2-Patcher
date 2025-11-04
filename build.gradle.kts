@@ -88,7 +88,6 @@ dependencies {
     minecraft(group = "net.minecraftforge", name = "forge", version = "1.12.2-${versionForge}")
 
     implementation(project(":$baseProjectName-Patched"))
-    implementation(project(":shared"))
     implementation(fg.deobf(group = "mezz.jei", name = "jei_1.12.2", version = versionJEI))
     runtimeOnly(fg.deobf(group = "curse.maven", name = "thermal_expansions-69163", version = "2926431"))
     runtimeOnly(fg.deobf(group = "curse.maven", name = "thermal_foundation-222880", version = "2926428"))
@@ -102,7 +101,12 @@ dependencies {
 }
 
 tasks {
-    named<ProcessResources>("processResources") { 
+    named<ProcessResources>("processResources") {
+        val patched = project(":$baseProjectName-Patched")
+        val binPatches = patched.tasks.getByName<GenerateBinPatches>("Generate Binary Patches ~ Patched")
+        dependsOn(binPatches)
+        mustRunAfter(binPatches)
+
         // this will ensure that this task is redone when the versions change.
         inputs.property("version", project.version)
         inputs.property("mcversion", versionMc)
@@ -139,12 +143,17 @@ tasks {
 
     register<Jar>("Release Jar ~ Patcher") {
         group = taskGroup;
-        val binPatches = project(":$baseProjectName-Patched").tasks.getByName<GenerateBinPatches>("Generate Binary Patches ~ Patched");
-        dependsOn(binPatches)
-        mustRunAfter(binPatches)
-
         archiveClassifier.set("")
-        from(sourceSets.main.get().output, project(":shared").the<JavaPluginExtension>().sourceSets["main"].output)
+
+        val patched = project(":$baseProjectName-Patched")
+
+        from(sourceSets.main.get().output)
+        from(zipTree(patched.tasks.getByName("Build ~ Patched").outputs.files.singleFile)) {
+            include {
+                it.path.startsWith(modPackage.replace(".", "/"))
+            }
+        }
+
         manifest {
             attributes(
                 "FMLCorePlugin" to "$modPackage.${baseProjectName.toLowerCase()}patcher.asm.PatcherFMLPlugin",
