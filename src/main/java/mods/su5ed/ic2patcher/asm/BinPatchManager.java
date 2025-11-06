@@ -58,7 +58,7 @@ public class BinPatchManager {
     //Must be ABOVE INSTANCE so they get set in time for the constructor.
     public static final boolean dumpPatched = Boolean.parseBoolean(System.getProperty("fml.dumpPatchedClasses", "false"));
     public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty("fml.debugClassPatchManager", "false"));
-    public static final Logger LOG = LogManager.getLogger("BinPatchManager");
+    public static final Logger LOG = LogManager.getLogger("IC2-Patch-Manager");
     public static final BinPatchManager INSTANCE = new BinPatchManager();
     private final GDiffPatcher patcher = new GDiffPatcher();
     private ListMultimap<String, ClassPatch> patches;
@@ -102,7 +102,7 @@ public class BinPatchManager {
                         System.exit(1);
                     }
                     else {
-                        LOG.fatal("FML is going to ignore this error, note that the patch will not be applied, and there is likely to be a malfunctioning behaviour, including not running at all");
+                        LOG.fatal("FML/IC2-Patcher is going to ignore this error, note that the patch will not be applied, and there is likely to be a malfunctioning behaviour, including not running at all");
                         ignoredError = true;
                         continue;
                     }
@@ -198,9 +198,9 @@ public class BinPatchManager {
                         break;
                     }
                     if (binpatchMatcher.matcher(entry.getName()).matches()) {
-                        ClassPatch cp = readPatch(entry, jis);
-                        if (cp != null && cp.patch.length > 0) {
-                            patches.put(cp.sourceClassName, cp);
+                        ClassPatch patch = readPatch(entry, jis);
+                        if (patch != null && patch.patch.length > 0) {
+                            patches.put(patch.sourceClassName, patch);
                         }
                     }
                     else {

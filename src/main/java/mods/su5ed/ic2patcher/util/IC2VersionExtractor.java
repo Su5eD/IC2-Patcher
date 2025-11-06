@@ -24,11 +24,11 @@ public class IC2VersionExtractor {
      * Used to get cached IC2 Version extracted from the IC2 Jar. Requires {@link IC2VersionExtractor#getIC2Version(File)} to be called at least once.
      * @return String with IC2 Version.
      */
-    public static String getIc2Version() throws IOException {return getIC2Version(null);}
+    public static String getIC2Version() throws IOException {return getIC2Version(null);}
 
     /**
      * Used to get IC2 Version from the jar itself. If was called at least once, returns cached value.
-     * @param mcLocation File referencing MC Directory. If called more than once, can be null or {@link IC2VersionExtractor#getIC2Version()} can be used.
+     * @param mcLocation File referencing MC Directory. If called more than once, can be null or {@link IC2VersionExtractor#getIC2Version()} )} can be used.
      * @return String with IC2 Version extracted, or null if not found.
      * @throws IOException when IO Exception occurs.
      */
@@ -38,7 +38,7 @@ public class IC2VersionExtractor {
         File mods = new File(mcLocation, "mods");
 
         if (!mods.exists() || mods.listFiles() == null) {
-            logger.fatal("No mods folder exists or list of files returned is null! This error will cause a crash.");
+            logger.fatal("No mods folder exists or list of files returned is null, while tring to determine IC2 version!");
             return null;
         }
 
@@ -54,7 +54,7 @@ public class IC2VersionExtractor {
                         Map<?,?> mcModInfo = ((List<Map<?,?>>)new Gson().fromJson(new InputStreamReader(zip.getInputStream(mcModInfoEntry)), Object.class)).get(0);
                         if (!Objects.equals(mcModInfo.get("modid"), "ic2")) continue;
                         ic2Version = (String) mcModInfo.get("version");
-                        logger.info("IC2 was found! Extracted version: " + ic2Version);
+                        logger.debug("IC2 found! In-jar version: " + ic2Version);
                         return ic2Version;
                     } catch (Exception ignored) {}
                 } catch (Exception ignored) {}
@@ -71,7 +71,7 @@ public class IC2VersionExtractor {
             if (ver != null) return ver;
         }
 
-        logger.fatal("No IC2 was found in the mods folder. Is IC2 Installed? This error will cause a crash.");
+        logger.fatal("No IC2-Exp found in the mods directory! Is IC2-Exp installed? This mod does nothing on it's own.");
         return null;
     }
 }

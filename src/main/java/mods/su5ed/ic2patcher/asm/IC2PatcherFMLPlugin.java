@@ -7,7 +7,7 @@ import java.util.Map;
 @IFMLLoadingPlugin.MCVersion("1.12.2")
 @IFMLLoadingPlugin.TransformerExclusions("mods.su5ed.ic2patcher.asm")
 @IFMLLoadingPlugin.SortingIndex(-1)
-public class PatcherFMLPlugin implements IFMLLoadingPlugin {
+public class IC2PatcherFMLPlugin implements IFMLLoadingPlugin {
     @Override
     public String[] getASMTransformerClass() {
         return new String[] { PatcherClassTransformer.class.getName() };

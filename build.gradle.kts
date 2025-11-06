@@ -141,7 +141,7 @@ tasks {
 //        }
 //    }
 
-    register<Jar>("Release Jar ~ Patcher") {
+    register<Jar>("Development Jar ~ Patcher") {
         group = taskGroup;
         archiveClassifier.set("")
 
@@ -156,36 +156,33 @@ tasks {
 
         manifest {
             attributes(
-                "FMLCorePlugin" to "$modPackage.${baseProjectName.toLowerCase()}patcher.asm.PatcherFMLPlugin",
+                "FMLCorePlugin" to "$modPackage.${baseProjectName.toLowerCase()}patcher.asm.IC2PatcherFMLPlugin",
                 "FMLCorePluginContainsFMLMod" to true
             )
         }
+    }
+
+    register("Release Jar ~ Patcher") {
+        group = taskGroup
+        dependsOn("build")
+
+        outputs.file(project.tasks.getByName("Development Jar ~ Patcher").outputs.files.singleFile)
     }
 
     register("Setup $baseProjectName Source") {
         group = taskGroup
         dependsOn(project(":$baseProjectName-Patched").tasks.getByName<Copy>("Setup Source ~ Patched"))
     }
-
-//    whenTaskAdded {
-//        if (name.startsWith("prepareRun")) {
-//            dependsOn(project(":UX2-Patched").tasks.getByName("patchRunJar"))
-//            dependsOn("devJar")
-//            dependsOn("patchModifyClassPath")
-//            dependsOn("patchGenerateObfToSrg")
-//            dependsOn("patchExtractMappingsZip")
-//        }
-//    }
 }
 
 reobf {
     create("jar") {
-        dependsOn("Release Jar ~ Patcher")
+        dependsOn("Development Jar ~ Patcher")
     }
 }
 
 artifacts {
-    archives(tasks.getByName("Release Jar ~ Patcher"))
+    archives(tasks.getByName("Release Jar ~ Patcher").outputs.files.singleFile)
 }
 
 sourceSets {
