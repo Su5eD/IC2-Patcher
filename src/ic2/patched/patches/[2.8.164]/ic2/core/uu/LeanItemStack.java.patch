@@ -1,0 +1,11 @@
+--- a/ic2/core/uu/LeanItemStack.java
++++ b/ic2/core/uu/LeanItemStack.java
+@@ -5,7 +5,7 @@
+ import net.minecraft.item.ItemStack;
+ import net.minecraft.nbt.NBTTagCompound;
+ 
+-class LeanItemStack {
++public class LeanItemStack {
+    private final Item item;
+    private final int meta;
+    private final NBTTagCompound nbt;

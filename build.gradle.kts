@@ -45,7 +45,11 @@ minecraft {
             properties(
                 mapOf(
                     "forge.logging.markers" to "SCAN,REGISTRIES,REGISTRYDUMP,COREMODLOG",
-                    "forge.logging.console.level" to "debug"
+                    "forge.logging.console.level" to "debug",
+                    // Setup for Mixin required for LagGoggles (You need to compile dev version manually smh)
+                    "mixin.debug.verbose" to "true",
+                    "mixin.debug.export" to "true",
+                    "mixin.env.disableRefMap" to "true"
                 )
             )
             workingDirectory = project.file("run").canonicalPath
