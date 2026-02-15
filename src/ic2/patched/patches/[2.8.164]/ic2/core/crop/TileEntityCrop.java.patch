@@ -12,9 +12,13 @@
              if (world.isBlockNormalCube(new BlockPos(x, this.pos.getY(), z), false)
                 || world.getTileEntity(new BlockPos(x, this.pos.getY(), z)) instanceof TileEntityCrop) {
                 fresh--;
-@@ -535,7 +536,8 @@
+@@ -533,9 +534,11 @@
+ 
+    public void updateTerrainNutrients() {
        World world = this.getWorld();
-       int nutrients = Crops.instance.getNutrientBiomeBonus(BiomeUtil.getBiome(world, this.pos));
+-      int nutrients = Crops.instance.getNutrientBiomeBonus(BiomeUtil.getBiome(world, this.pos));
++      int nutrients = Crops.instance.getNutrientBiomeBonus(BiomeUtil.getBiome(world, this.pos)) + 1;
++      // +1 -> We simulate a base bonus from the Farmland
  
 -      for (int i = 1; i < 5 && world.getBlockState(this.pos.down(i)).getBlock() == Blocks.DIRT; i++) {
 +      // Patch: Nutrient bonus is not calculated properly, always failing on the initial Farmland block (#35)
