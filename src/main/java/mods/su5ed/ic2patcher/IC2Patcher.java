@@ -39,12 +39,6 @@ public final class IC2Patcher {
     }
 
     @Mod.EventHandler
-    public static void init(FMLInitializationEvent event) {}
-
-    @Mod.EventHandler
-    public static void postInit(FMLPostInitializationEvent event) {}
-
-    @Mod.EventHandler
     public void onServerStopped(FMLServerStoppedEvent event) {
         if (!IC2PatcherConfig.get().worldReferenceSwitch) WorldData.resetMaps();
     }

@@ -7,14 +7,46 @@ import java.util.Objects;
 public class IC2PatcherConfig extends net.minecraftforge.common.config.Configuration {
 
     private static IC2PatcherConfig config;
+    /**
+     * Determines if new UU System should be used.
+     */
     public final boolean newUUCalculator;
+    /**
+     * Determines if the experimental World Reference patch should be used.
+     */
     public final boolean worldReferenceSwitch;
+    /**
+     * Determines if the experimental Push/Pull tick logic should be used.
+     */
     public final boolean enableUpgradeTickInterval;
+    /**
+     * Determines if the Fluid Cell should act like a normal bucket would.
+     */
     public final boolean bucketCell;
+    /**
+     * Determines if Night Vision in Quantum Suit should be buffed (Removed Blindness effect)
+     */
     public final boolean qsNVBuff;
+    /**
+     * Determines if Fall Damage Reduction in NanoSuit should be absorption instead.
+     */
     public final boolean nsFDBuff;
+    /**
+     * Determines the tick interval of Push/Pull upgrades.
+     */
     public final int upgradeTickInterval;
+    /**
+     * Determines the cooldown after failed push.
+     */
     public final int pushCooldown;
+    /**
+     * Determines the HU per Coil in the Electric Heater.
+     */
+    public final int huPerCoil;
+    /**
+     * Determines the HU per Heat Exchanger in the Liquid Heat Exchanger.
+     */
+    public final int huPerExc;
 
     protected IC2PatcherConfig(String file) {
         super(new File("config/" + file + ".cfg"));
@@ -47,7 +79,13 @@ public class IC2PatcherConfig extends net.minecraftforge.common.config.Configura
             "Makes QuantumSuit Night Vision fully automatic, removing the blindness effect if the surrounds are too bright, only removing the Night Vision effect in that situation.");
 
         nsFDBuff = this.getBoolean("buffedNanoSuitFallDamageReduction", "balance", true,
-            "Makes NanoSuit absorb up to 8 fall damage, instead of applying the full fall damage if it's higher than 8.");
+            "Makes NanoSuit absorb up to 10 fall damage, instead of applying the full fall damage if it's higher than 10.");
+
+        huPerCoil = this.getInt("huPerCoil", "balance", 10,
+            0, 1000, "Determines the efficiency of Coils in the Electric Heater [HU produced per Coil].");
+
+        huPerExc = this.getInt("huPerExchanger", "balance", 10, 1, 1000,
+            "Determines the efficiency of Heat Exchangers in the Liquid Heat Exchanger [HU transferred per Exchanger].");
 
         if (this.hasChanged()) this.save();
     }

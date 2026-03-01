@@ -1,0 +1,19 @@
+--- a/ic2/core/block/heatgenerator/tileentity/TileEntityElectricHeatGenerator.java
++++ b/ic2/core/block/heatgenerator/tileentity/TileEntityElectricHeatGenerator.java
+@@ -15,6 +15,7 @@
+ import ic2.core.profile.NotClassic;
+ import ic2.core.ref.ItemName;
+ import ic2.core.util.ConfigUtil;
++import mods.su5ed.ic2patcher.IC2PatcherConfig;
+ import net.minecraft.client.gui.GuiScreen;
+ import net.minecraft.entity.player.EntityPlayer;
+ import net.minecraftforge.fml.relauncher.Side;
+@@ -81,7 +82,7 @@
+          }
+       }
+ 
+-      return counter * 10;
++      return counter * IC2PatcherConfig.get().huPerCoil;
+    }
+ 
+    public final float getChargeLevel() {

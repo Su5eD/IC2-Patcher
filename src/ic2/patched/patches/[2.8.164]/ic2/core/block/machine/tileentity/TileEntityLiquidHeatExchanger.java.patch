@@ -1,0 +1,25 @@
+--- a/ic2/core/block/machine/tileentity/TileEntityLiquidHeatExchanger.java
++++ b/ic2/core/block/machine/tileentity/TileEntityLiquidHeatExchanger.java
+@@ -27,6 +27,8 @@
+ import ic2.core.util.ConfigUtil;
+ import java.util.EnumSet;
+ import java.util.Set;
++
++import mods.su5ed.ic2patcher.IC2PatcherConfig;
+ import net.minecraft.client.gui.GuiScreen;
+ import net.minecraft.entity.player.EntityPlayer;
+ import net.minecraftforge.fluids.Fluid;
+@@ -149,11 +151,11 @@
+ 
+       for (int i = 0; i < this.heatexchangerslots.size(); i++) {
+          if (!this.heatexchangerslots.isEmpty(i)) {
+-            count += 10;
++            count++;
+          }
+       }
+ 
+-      return count;
++      return count * IC2PatcherConfig.get().huPerExc;
+    }
+ 
+    @Override

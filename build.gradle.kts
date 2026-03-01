@@ -102,6 +102,7 @@ dependencies {
     runtimeOnly(fg.deobf(group = "curse.maven", name = "rf-270789", version = "2920436"))
     runtimeOnly(fg.deobf(group = "curse.maven", name = "ae2-223794", version = "2747063"))
     runtimeOnly(fg.deobf(group = "curse.maven", name = "flux_networks-248020", version = "3178199"))
+//    runtimeOnly(fg.deobf(group = "curse.maven", name = "thaumcraft-223628", version = "2629023"))
 }
 
 tasks {
