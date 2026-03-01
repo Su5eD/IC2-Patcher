@@ -32,6 +32,10 @@ public class IC2PatcherConfig extends net.minecraftforge.common.config.Configura
      */
     public final boolean nsFDBuff;
     /**
+     * Determines if the Generators should be more fuel efficient (Limit Burn-Rate when Energy Buffer is full).
+     */
+    public final boolean genEffBuff;
+    /**
      * Determines the tick interval of Push/Pull upgrades.
      */
     public final int upgradeTickInterval;
@@ -80,6 +84,9 @@ public class IC2PatcherConfig extends net.minecraftforge.common.config.Configura
 
         nsFDBuff = this.getBoolean("buffedNanoSuitFallDamageReduction", "balance", true,
             "Makes NanoSuit absorb up to 10 fall damage, instead of applying the full fall damage if it's higher than 10.");
+
+        genEffBuff = this.getBoolean("efficientGenerators", "balance", true,
+            "Changes the behaviour of the generators to limit the burn-rate if the energy buffer is full, making them more fuel efficient.");
 
         huPerCoil = this.getInt("huPerCoil", "balance", 10,
             0, 1000, "Determines the efficiency of Coils in the Electric Heater [HU produced per Coil].");
