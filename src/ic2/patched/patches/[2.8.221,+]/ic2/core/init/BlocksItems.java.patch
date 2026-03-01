@@ -1,76 +1,37 @@
 --- a/ic2/core/init/BlocksItems.java
 +++ b/ic2/core/init/BlocksItems.java
-@@ -140,14 +140,21 @@
- import net.minecraft.item.Item;
- import net.minecraft.item.Item.ToolMaterial;
- import net.minecraft.item.ItemArmor.ArmorMaterial;
-+import net.minecraft.item.ItemStack;
- import net.minecraft.util.ResourceLocation;
- import net.minecraftforge.common.util.EnumHelper;
- import net.minecraftforge.fluids.Fluid;
- import net.minecraftforge.fluids.FluidRegistry;
-+import net.minecraftforge.fluids.FluidStack;
- import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
-+import net.minecraftforge.fluids.capability.IFluidHandlerItem;
-+import net.minecraftforge.fluids.capability.IFluidTankProperties;
- import net.minecraftforge.fml.common.registry.ForgeRegistries;
- import net.minecraftforge.oredict.OreDictionary;
- 
-+import javax.annotation.Nonnull;
-+import javax.annotation.Nullable;
-+
- public class BlocksItems {
-    public static void init() {
-       initPotions();
-@@ -282,8 +289,9 @@
+@@ -129,6 +129,7 @@
+ import ic2.core.ref.FluidName;
+ import ic2.core.ref.ItemName;
+ import ic2.core.ref.TeBlock;
++import mods.su5ed.ic2patcher.ic2.handlers.DummyFluidHandler;
+ import net.minecraft.block.Block;
+ import net.minecraft.block.BlockDispenser;
+ import net.minecraft.block.material.MapColor;
+@@ -282,8 +283,10 @@
              return !IC2.version.isClassic();
           }
        };
 -      new ItemBattery(ItemName.energy_crystal, 1000000.0, 2048.0, 3);
 -      new ItemBattery(ItemName.lapotron_crystal, 1.0E7, 8092.0, 4).setRarity(EnumRarity.UNCOMMON);
++      // Patch: Fix Energy and Lapotron Crystals having incorrect energy/voltage values in classic mode.
 +      boolean classic = IC2.version.isClassic();
 +      new ItemBattery(ItemName.energy_crystal, classic ? 100000 : 1000000, classic ? 250 : 2048, classic ? 2 : 3);
 +      new ItemBattery(ItemName.lapotron_crystal, classic ? 1000000 : 1.0E7D, classic ? 600 : 8092.0D, classic ? 3 : 4).setRarity(EnumRarity.UNCOMMON);
        new ItemBatterySU(ItemName.single_use_battery, 1200, 1);
        new ItemBatteryChargeHotbar(ItemName.charging_re_battery, 40000.0, 128.0, 1);
        new ItemBatteryChargeHotbar(ItemName.advanced_charging_re_battery, 400000.0, 1024.0, 2);
-@@ -364,7 +372,38 @@
+@@ -362,9 +365,12 @@
+       new ItemFluidCell();
+       ItemMulti<CellType> cell = new ItemClassicCell();
        cell.setUseHandler(CellType.empty, ItemHandlers.emptyCellFill);
++      // Patch: Fix classic mode Fluid Cells causing errors due to missing FluidHandler. / #26.
        cell.addCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, stack -> {
           CellType type = cell.getType(stack);
 -         return type.isFluidContainer() ? new CellType.CellFluidHandler(stack, cell::getType) : null;
 +         return type.isFluidContainer() ?
 +             new CellType.CellFluidHandler(stack, cell::getType) :
-+             // Dummy FluidHandler that doesn't accept any I/O. See IC2-Patcher/#26
-+             new IFluidHandlerItem() {
-+               @Override
-+               public IFluidTankProperties[] getTankProperties() {
-+                  return new IFluidTankProperties[0];
-+               }
-+
-+               @Override
-+               public int fill(FluidStack resource, boolean doFill) {
-+                  return 0;
-+               }
-+
-+               @Nullable
-+               @Override
-+               public FluidStack drain(FluidStack resource, boolean doDrain) {
-+                  return null;
-+               }
-+
-+               @Nullable
-+               @Override
-+               public FluidStack drain(int maxDrain, boolean doDrain) {
-+                  return null;
-+               }
-+
-+               @Nonnull
-+               @Override
-+               public ItemStack getContainer() {
-+                  return stack;
-+               }
-+            };
++             new DummyFluidHandler(stack);
        });
        new ItemCable();
        ItemMulti<ItemUpgradeModule.UpgradeType> upgrade = new ItemUpgradeModule();

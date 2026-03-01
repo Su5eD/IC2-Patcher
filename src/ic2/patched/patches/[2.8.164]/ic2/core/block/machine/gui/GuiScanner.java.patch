@@ -1,0 +1,17 @@
+--- a/ic2/core/block/machine/gui/GuiScanner.java
++++ b/ic2/core/block/machine/gui/GuiScanner.java
+@@ -106,4 +106,14 @@
+    protected ResourceLocation getTexture() {
+       return background;
+    }
++
++   // Patch: Change the title from X Center to x:43 y:7
++   // to not overlap the Scan Result text, and be centered above the scan slot
++   @Override
++   protected void drawBackgroundAndTitle(float partialTicks, int mouseX, int mouseY) {
++      this.bindTexture();
++      this.drawTexturedModalRect(this.guiLeft, this.guiTop, 0, 0, this.xSize, this.ySize);
++      String name = Localization.translate(this.container.base.getName());
++      this.drawString(43, 7, name, 4210752, false);
++   }
+ }

@@ -16,7 +16,12 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.registries.IForgeRegistryModifiable;
 import org.apache.logging.log4j.Logger;
 
-@Mod(modid = "mods/su5ed/ic2patcher", name = "IC2 Patcher", dependencies = "required-after:ic2@[2.8.164-ex112],[2.8.221-ex112,);")
+@Mod(
+    modid = "ic2patcher",
+    name = "IC2 Patcher",
+    dependencies = "required-after:ic2@[2.8.164-ex112],[2.8.221-ex112,);",
+    useMetadata = true
+)
 public final class IC2Patcher {
     public static Logger logger;
 
@@ -32,12 +37,6 @@ public final class IC2Patcher {
 
         if (IC2.version.isClassic()) fixUraniumCellRecipe();
     }
-
-    @Mod.EventHandler
-    public static void init(FMLInitializationEvent event) {}
-
-    @Mod.EventHandler
-    public static void postInit(FMLPostInitializationEvent event) {}
 
     @Mod.EventHandler
     public void onServerStopped(FMLServerStoppedEvent event) {

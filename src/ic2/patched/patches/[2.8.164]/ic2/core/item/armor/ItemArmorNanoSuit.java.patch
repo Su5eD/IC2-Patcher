@@ -1,0 +1,58 @@
+--- a/ic2/core/item/armor/ItemArmorNanoSuit.java
++++ b/ic2/core/item/armor/ItemArmorNanoSuit.java
+@@ -7,6 +7,7 @@
+ import ic2.core.init.Localization;
+ import ic2.core.ref.ItemName;
+ import ic2.core.util.StackUtil;
++import mods.su5ed.ic2patcher.IC2PatcherConfig;
+ import net.minecraft.entity.EntityLivingBase;
+ import net.minecraft.entity.player.EntityPlayer;
+ import net.minecraft.init.MobEffects;
+@@ -59,13 +60,15 @@
+          if (armor != null && armor.getItem() == this) {
+             int fallDamage = (int)event.getDistance() - 3;
+             if (fallDamage >= 8) {
+-               return;
++               if (!IC2PatcherConfig.get().nsFDBuff) return;
++               fallDamage = 7;
+             }
+ 
+             double energyCost = this.getEnergyPerDamage() * fallDamage;
+             if (energyCost <= ElectricItem.manager.getCharge(armor)) {
+                ElectricItem.manager.discharge(armor, energyCost, Integer.MAX_VALUE, true, false, false);
+-               event.setCanceled(true);
++               // Buff: Make NanoSuit Fall Damage absorption a reduction instead.
++               event.setDistance(Math.max(event.getDistance() - 10, 0));
+             }
+          }
+       }
+@@ -79,6 +82,10 @@
+          IC2.platform.profilerStartSection("NanoHelmet");
+          boolean Nightvision = nbtData.getBoolean("Nightvision");
+          short hubmode = nbtData.getShort("HudMode");
++         int skylight = IC2.platform.isSimulating()? player.getEntityWorld().getLightFromNeighbors(
++                 new BlockPos((int)Math.floor(player.posX), (int)Math.floor(player.posY), (int)Math.floor(player.posZ))
++         ): 0;
++
+          if (IC2.keyboard.isAltKeyDown(player) && IC2.keyboard.isModeSwitchKeyDown(player) && toggleTimer == 0) {
+             toggleTimer = 10;
+             Nightvision = !Nightvision;
+@@ -88,6 +95,9 @@
+                   IC2.platform.messagePlayer(player, "Nightvision enabled.");
+                } else {
+                   IC2.platform.messagePlayer(player, "Nightvision disabled.");
++                  // PATCH: Make Night Vision turn off instantly.
++                  if (skylight > 8) IC2.platform.removePotion(player, MobEffects.BLINDNESS);
++                  else IC2.platform.removePotion(player, MobEffects.NIGHT_VISION);
+                }
+             }
+          }
+@@ -111,8 +121,6 @@
+          }
+ 
+          if (Nightvision && IC2.platform.isSimulating() && ElectricItem.manager.use(stack, 1.0, player)) {
+-            BlockPos pos = new BlockPos((int)Math.floor(player.posX), (int)Math.floor(player.posY), (int)Math.floor(player.posZ));
+-            int skylight = player.getEntityWorld().getLightFromNeighbors(pos);
+             if (skylight > 8) {
+                IC2.platform.removePotion(player, MobEffects.NIGHT_VISION);
+                player.addPotionEffect(new PotionEffect(MobEffects.BLINDNESS, 100, 0, true, true));

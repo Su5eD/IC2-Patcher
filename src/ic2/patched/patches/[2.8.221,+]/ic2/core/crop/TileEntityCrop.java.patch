@@ -6,9 +6,23 @@
  
 -      for (int x = this.pos.getX() - 1; x < this.pos.getX() + 1 && fresh > 0; x++) {
 -         for (int z = this.pos.getZ() - 1; z < this.pos.getZ() + 1 && fresh > 0; z++) {
-+      // Patch - Air Quality Calculation checks 2x2 area instead of 3x3. (Github #32)
++      // Patch - Air Quality Calculation checks 2x2 area instead of 3x3. (#32)
 +      for (int x = this.pos.getX() - 1; x <= this.pos.getX() + 1 && fresh > 0; x++) {
 +         for (int z = this.pos.getZ() - 1; z <= this.pos.getZ() + 1 && fresh > 0; z++) {
              if (this.world.isBlockNormalCube(new BlockPos(x, this.pos.getY(), z), false)
                 || this.world.getTileEntity(new BlockPos(x, this.pos.getY(), z)) instanceof TileEntityCrop) {
                 fresh--;
+@@ -545,9 +546,11 @@
+    }
+ 
+    public void updateTerrainNutrients() {
+-      int nutrients = Crops.instance.getNutrientBiomeBonus(BiomeUtil.getBiome(this.world, this.pos));
++      // +1 -> We simulate a base bonus from the Farmland
++      int nutrients = Crops.instance.getNutrientBiomeBonus(BiomeUtil.getBiome(this.world, this.pos)) + 1;
+ 
+-      for (int i = 1; i < 5 && this.world.getBlockState(this.pos.down(i)).getBlock() == Blocks.DIRT; i++) {
++      // Patch: Nutrient bonus is not calculated properly, always failing on the initial Farmland block (#35)
++      for (int i = 2; i < 5 && this.world.getBlockState(this.pos.down(i)).getBlock() == Blocks.DIRT; i++) {
+          nutrients++;
+       }
+ 

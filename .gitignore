@@ -37,4 +37,4 @@ run
 
 # IC2 Source (To setup manually, can't include it)
 src/ic2/base/src
-src/ic2/patched/src
+src/ic2/patched/ic2

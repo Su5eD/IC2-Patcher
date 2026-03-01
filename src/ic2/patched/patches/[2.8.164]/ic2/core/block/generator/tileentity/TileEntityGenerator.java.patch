@@ -1,0 +1,32 @@
+--- a/ic2/core/block/generator/tileentity/TileEntityGenerator.java
++++ b/ic2/core/block/generator/tileentity/TileEntityGenerator.java
+@@ -6,6 +6,7 @@
+ import ic2.core.init.MainConfig;
+ import ic2.core.network.GuiSynced;
+ import ic2.core.util.ConfigUtil;
++import mods.su5ed.ic2patcher.IC2PatcherConfig;
+ import net.minecraft.nbt.NBTTagCompound;
+ import net.minecraftforge.fml.relauncher.Side;
+ import net.minecraftforge.fml.relauncher.SideOnly;
+@@ -42,6 +43,21 @@
+          this.fuel += fuelValue;
+          this.totalFuel = fuelValue;
+          return true;
++      }
++   }
++
++   @Override
++   public boolean gainEnergy() {
++      // Patch: Make the generator consume fuel at decreased rate when the Energy Buffer is full.
++      if (!IC2PatcherConfig.get().genEffBuff) return super.gainEnergy();
++      if (this.isConverting()) {
++         if (this.energy.getFreeEnergy() >= this.production || this.world.getTotalWorldTime() % 20 == 0) {
++            this.energy.addEnergy(this.production);
++            this.fuel--;
++         }
++         return true;
++      } else {
++         return false;
+       }
+    }
+ 

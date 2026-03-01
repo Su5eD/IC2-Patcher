@@ -26,6 +26,19 @@
              }
           });
        }
+@@ -203,9 +213,9 @@
+       }
+    }
+ 
+-   private static class InitialValue {
+-      LeanItemStack stack;
+-      double value;
++   public static class InitialValue {
++      public LeanItemStack stack;
++      public double value;
+ 
+       InitialValue(LeanItemStack stack, double value) {
+          this.stack = stack;
 @@ -237,14 +247,16 @@
  
                       assert false;

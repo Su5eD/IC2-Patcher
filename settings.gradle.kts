@@ -30,8 +30,6 @@ rootProject.name = "$baseProjectName-Patcher"
 
 include(":$baseProjectName-Base")
 include(":$baseProjectName-Patched")
-include(":shared")
 
 project(":$baseProjectName-Base").projectDir = file("src/${baseProjectName.toLowerCase()}/base")
 project(":$baseProjectName-Patched").projectDir = file("src/${baseProjectName.toLowerCase()}/patched")
-project(":shared").projectDir = file("src/shared")
