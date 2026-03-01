@@ -1,0 +1,58 @@
+--- a/ic2/core/block/machine/tileentity/TileEntityStandardMachine.java
++++ b/ic2/core/block/machine/tileentity/TileEntityStandardMachine.java
+@@ -116,7 +116,7 @@
+       if (output != null && this.energy.useEnergy(this.energyConsume)) {
+          this.setActive(true);
+          if (this.progress == 0) {
+-            IC2.network.get(true).initiateTileEntityEvent(this, 0, true);
++            IC2.network.get(true).initiateTileEntityEvent(this, EventStart, true);
+          }
+ 
+          this.progress++;
+@@ -124,14 +124,14 @@
+             this.operate(output);
+             needsInvUpdate = true;
+             this.progress = 0;
+-            IC2.network.get(true).initiateTileEntityEvent(this, 2, true);
++            IC2.network.get(true).initiateTileEntityEvent(this, EventFinish, true);
+          }
+       } else {
+          if (this.getActive()) {
+             if (this.progress != 0) {
+-               IC2.network.get(true).initiateTileEntityEvent(this, 1, true);
++               IC2.network.get(true).initiateTileEntityEvent(this, EventInterrupt, true);
+             } else {
+-               IC2.network.get(true).initiateTileEntityEvent(this, 3, true);
++               IC2.network.get(true).initiateTileEntityEvent(this, EventStop, true);
+             }
+          }
+ 
+@@ -229,12 +229,12 @@
+       }
+ 
+       switch (event) {
+-         case 0:
++         case EventStart:
+             if (this.audioSource != null) {
+                this.audioSource.play();
+             }
+             break;
+-         case 1:
++         case EventInterrupt:
+             if (this.audioSource != null) {
+                this.audioSource.stop();
+                if (this.getInterruptSoundFile() != null) {
+@@ -242,11 +242,11 @@
+                }
+             }
+             break;
+-         case 2:
++         case EventFinish:
+             if (this.audioSource != null) {
+                this.audioSource.stop();
+             }
+-         case 3:
++         case EventStop:
+       }
+    }
+ 

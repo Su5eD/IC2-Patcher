@@ -1,0 +1,94 @@
+--- a/ic2/core/item/ItemFluidCell.java
++++ b/ic2/core/item/ItemFluidCell.java
+@@ -4,14 +4,12 @@
+ import ic2.core.ref.ItemName;
+ import ic2.core.util.LiquidUtil;
+ import ic2.core.util.StackUtil;
++import mods.su5ed.ic2patcher.IC2PatcherConfig;
+ import net.minecraft.block.BlockDispenser;
+ import net.minecraft.creativetab.CreativeTabs;
+ import net.minecraft.entity.player.EntityPlayer;
+ import net.minecraft.item.ItemStack;
+-import net.minecraft.util.EnumActionResult;
+-import net.minecraft.util.EnumFacing;
+-import net.minecraft.util.EnumHand;
+-import net.minecraft.util.NonNullList;
++import net.minecraft.util.*;
+ import net.minecraft.util.math.BlockPos;
+ import net.minecraft.util.math.RayTraceResult;
+ import net.minecraft.util.math.RayTraceResult.Type;
+@@ -42,30 +40,50 @@
+          return EnumActionResult.SUCCESS;
+       } else {
+          RayTraceResult position = this.rayTrace(world, player, true);
+-         if (position == null) {
+-            return EnumActionResult.FAIL;
+-         } else {
+-            if (position.typeOfHit == Type.BLOCK) {
+-               pos = position.getBlockPos();
+-               if (!world.canMineBlockBody(player, pos)) {
+-                  return EnumActionResult.FAIL;
+-               }
+-
+-               if (!player.canPlayerEdit(pos, position.sideHit, player.getHeldItem(hand))) {
+-                  return EnumActionResult.FAIL;
+-               }
+-
+-               if (LiquidUtil.drainBlockToContainer(world, pos, player, hand)
+-                  || LiquidUtil.fillBlockFromContainer(world, pos, player, hand)
+-                  || LiquidUtil.fillBlockFromContainer(world, pos.offset(side), player, hand)) {
+-                  player.inventoryContainer.detectAndSendChanges();
+-                  return EnumActionResult.SUCCESS;
+-               }
+-            }
+-
+-            return EnumActionResult.FAIL;
+-         }
+-      }
++         if (position == null) return EnumActionResult.FAIL;
++
++         if (position.typeOfHit == Type.BLOCK) {
++            pos = position.getBlockPos();
++            if (!world.canMineBlockBody(player, pos)) {
++               return EnumActionResult.FAIL;
++            }
++
++            if (!player.canPlayerEdit(pos, position.sideHit, StackUtil.get(player, hand))) {
++               return EnumActionResult.FAIL;
++            }
++
++            if (LiquidUtil.drainBlockToContainer(world, pos, player, hand)
++               || LiquidUtil.fillBlockFromContainer(world, pos, player, hand)
++               || LiquidUtil.fillBlockFromContainer(world, pos.offset(side), player, hand)) {
++               player.inventoryContainer.detectAndSendChanges();
++               return EnumActionResult.SUCCESS;
++            }
++         }
++
++         return EnumActionResult.FAIL;
++      }
++   }
++
++   // Patch: Add bucket-like behavior to Fluid Cell.
++   @Override
++   public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
++      if (world.isRemote || !IC2PatcherConfig.get().bucketCell) return super.onItemRightClick(world, player, hand);
++      RayTraceResult position = this.rayTrace(world, player, true);
++      if (position == null) return new ActionResult<>(EnumActionResult.FAIL, StackUtil.get(player, hand));
++
++      if (position.typeOfHit == Type.BLOCK) {
++         BlockPos pos = position.getBlockPos();
++         if (!world.canMineBlockBody(player, pos)) return new ActionResult<>(EnumActionResult.FAIL, StackUtil.get(player, hand));
++
++         if (!player.canPlayerEdit(pos, position.sideHit, StackUtil.get(player, hand))) return new ActionResult<>(EnumActionResult.FAIL, StackUtil.get(player, hand));
++
++         if (LiquidUtil.drainBlockToContainer(world, pos, player, hand) || LiquidUtil.fillBlockFromContainer(world, pos, player, hand)) {
++            player.inventoryContainer.detectAndSendChanges();
++            return new ActionResult<>(EnumActionResult.SUCCESS, StackUtil.get(player, hand));
++         }
++      }
++
++      return new ActionResult<>(EnumActionResult.FAIL, StackUtil.get(player, hand));
+    }
+ 
+    @Override
