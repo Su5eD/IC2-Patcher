@@ -6,8 +6,8 @@ import net.minecraftforge.fml.common.DummyModContainer;
 import net.minecraftforge.fml.common.LoadController;
 import net.minecraftforge.fml.common.ModMetadata;
 
-public class PatcherDummyModContainer extends DummyModContainer {
-    public PatcherDummyModContainer() {
+public class IC2PatcherCore extends DummyModContainer {
+    public IC2PatcherCore() {
         super(new ModMetadata());
         ModMetadata meta = super.getMetadata();
         meta.modId = "ic2patcher-core";

@@ -15,7 +15,7 @@ public class IC2PatcherFMLPlugin implements IFMLLoadingPlugin {
 
     @Override
     public String getModContainerClass() {
-        return PatcherDummyModContainer.class.getName();
+        return IC2PatcherCore.class.getName();
     }
 
     @Override
