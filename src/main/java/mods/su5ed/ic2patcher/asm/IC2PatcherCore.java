@@ -5,8 +5,12 @@ import com.google.common.eventbus.EventBus;
 import net.minecraftforge.fml.common.DummyModContainer;
 import net.minecraftforge.fml.common.LoadController;
 import net.minecraftforge.fml.common.ModMetadata;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class IC2PatcherCore extends DummyModContainer {
+    public static final Logger LOG = LogManager.getLogger("IC2-Patcher-Core");
+
     public IC2PatcherCore() {
         super(new ModMetadata());
         ModMetadata meta = super.getMetadata();

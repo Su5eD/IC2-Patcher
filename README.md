@@ -78,5 +78,5 @@ that the patch is applicable to, and then port the changes to the newer versions
 </div>
 <h2 align="left">Licensing</h2>
 
-All code is licensed under **The Unlicense**, except for `mods.su5ed.ic2patcher.asm.BinPatchManager`, which is a modified version
+All code is licensed under **The Unlicense**, except for `mods.su5ed.ic2patcher.asm.IC2PatcherBinPatchManager`, which is a modified version
 of MinecraftForge's [ClassPatchManager](https://github.com/MinecraftForge/MinecraftForge/blob/1.12.x/src/main/java/net/minecraftforge/fml/common/patcher/ClassPatchManager.java) class, and is licensed under the **GNU Lesser General Public License version 2.1**

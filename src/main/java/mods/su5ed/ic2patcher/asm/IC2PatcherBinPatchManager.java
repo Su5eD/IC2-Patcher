@@ -33,8 +33,6 @@ import net.minecraftforge.fml.common.patcher.ClassPatch;
 import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
 import net.minecraftforge.fml.repackage.com.nothome.delta.GDiffPatcher;
 import org.apache.commons.io.IOUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -47,6 +45,7 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import static mods.su5ed.ic2patcher.asm.IC2PatcherCore.LOG;
 import static mods.su5ed.ic2patcher.util.VersionComparison.compareVersions;
 
 /**
@@ -54,18 +53,17 @@ import static mods.su5ed.ic2patcher.util.VersionComparison.compareVersions;
  * which is licensed under GNU Lesser General Public License version 2.1
  * @author MinecraftForge (Modified by Su5eD and Kanzaji)
  */
-public class BinPatchManager {
+public class IC2PatcherBinPatchManager {
     //Must be ABOVE INSTANCE so they get set in time for the constructor.
     public static final boolean dumpPatched = Boolean.parseBoolean(System.getProperty("fml.dumpPatchedClasses", "false"));
     public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty("fml.debugClassPatchManager", "false"));
-    public static final Logger LOG = LogManager.getLogger("IC2-Patch-Manager");
-    public static final BinPatchManager INSTANCE = new BinPatchManager();
+    public static final IC2PatcherBinPatchManager INSTANCE = new IC2PatcherBinPatchManager();
     private final GDiffPatcher patcher = new GDiffPatcher();
     private ListMultimap<String, ClassPatch> patches;
     private final Map<String,byte[]> patchedClasses = Maps.newHashMap();
     private File tempDir;
     
-    private BinPatchManager() {
+    private IC2PatcherBinPatchManager() {
         if (dumpPatched) {
             tempDir = Files.createTempDir();
             LOG.info("Dumping patched classes to {}",tempDir.getAbsolutePath());

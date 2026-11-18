@@ -130,26 +130,10 @@ tasks {
         }
     }
     
-//    named("jar") {
-//        enabled = false
-//    }
-
-    //TODO: Add Generate Binary Patches ~ Dev 1.12 task and configure this one to use patches from that.
-//    register<Jar>("Dev Jar ~ Patcher") {
-//        group = taskGroup;
-//        archiveFileName.set("${baseArchiveName}-dev.jar")
-//
-//        from(sourceSets.main.get().output) {
-//            exclude("patches");
-//        }
-//
-//        manifest {
-//            attributes(
-//                "FMLCorePlugin" to "${modPackage}.${baseProjectName.toLowerCase()}patcher.asm.PatcherFMLPlugin",
-//                "FMLCorePluginContainsFMLMod" to true
-//            )
-//        }
-//    }
+    named("jar") {
+        dependsOn("Development Jar ~ Patcher")
+        enabled = false
+    }
 
     register<Jar>("Development Jar ~ Patcher") {
         group = taskGroup;
