@@ -1,0 +1,97 @@
+--- a/ic2/core/init/Localization.java
++++ b/ic2/core/init/Localization.java
+@@ -56,7 +56,7 @@
+       }
+    }
+ 
+-   private static String getLangPath(String language) {
++   public static String getLangPath(String language) {
+       return "lang_ic2/" + language + ".properties";
+    }
+ 
+@@ -64,43 +64,41 @@
+    private static void registerResourceReloadHook() {
+       IResourceManager resManager = Minecraft.getMinecraft().getResourceManager();
+       if (resManager instanceof IReloadableResourceManager) {
+-         ((IReloadableResourceManager)resManager).registerReloadListener(new IResourceManagerReloadListener() {
+-            public void onResourceManagerReload(IResourceManager manager) {
+-               Map<String, String> tmpMap = new HashMap<>();
+-               Map<String, String> lmMap = Localization.getLanguageMapMap();
+-               Map<String, String> localeMap = Localization.getLocaleMap();
+-               Set<String> languages = new LinkedHashSet<>();
+-               languages.add("en_us");
+-               languages.add(Minecraft.getMinecraft().gameSettings.language);
++         ((IReloadableResourceManager)resManager).registerReloadListener(manager -> {
++            Map<String, String> tmpMap = new HashMap<>();
++            Map<String, String> lmMap = Localization.getLanguageMapMap();
++            Map<String, String> localeMap = Localization.getLocaleMap();
++            Set<String> languages = new LinkedHashSet<>();
++            languages.add("en_us");
++            languages.add(Minecraft.getMinecraft().gameSettings.language);
+ 
+-               for (String lang : languages) {
+-                  try {
+-                     for (IResource res : manager.getAllResources(new ResourceLocation("ic2", Localization.getLangPath(lang)))) {
++            for (String lang : languages) {
++               try {
++                  for (IResource res : manager.getAllResources(new ResourceLocation("ic2", Localization.getLangPath(lang)))) {
++                     try {
++                        tmpMap.clear();
++                        Localization.loadLocalization(res.getInputStream(), tmpMap);
++                        lmMap.putAll(tmpMap);
++                        localeMap.putAll(tmpMap);
++                        IC2.log.debug(LogCategory.Resource, "Loaded translation keys from %s.", res.getResourceLocation());
++                     } finally {
+                         try {
+-                           tmpMap.clear();
+-                           Localization.loadLocalization(res.getInputStream(), tmpMap);
+-                           lmMap.putAll(tmpMap);
+-                           localeMap.putAll(tmpMap);
+-                           IC2.log.debug(LogCategory.Resource, "Loaded translation keys from %s.", res.getResourceLocation());
+-                        } finally {
+-                           try {
+-                              res.close();
+-                           } catch (IOException var18) {
+-                           }
++                           res.close();
++                        } catch (IOException ignored) {
+                         }
+                      }
+-                  } catch (FileNotFoundException var20) {
+-                     IC2.log.debug(LogCategory.Resource, "No translation file for language %s.", lang);
+-                  } catch (IOException var21) {
+-                     throw new RuntimeException(var21);
+                   }
++               } catch (FileNotFoundException var20) {
++                  IC2.log.debug(LogCategory.Resource, "No translation file for language %s.", lang);
++               } catch (IOException var21) {
++                  throw new RuntimeException(var21);
+                }
+             }
+          });
+       }
+    }
+ 
+-   private static void loadLocalization(InputStream inputStream, Map<String, String> out) throws IOException {
++   public static void loadLocalization(InputStream inputStream, Map<String, String> out) throws IOException {
+       Properties properties = new Properties();
+       properties.load(new InputStreamReader(inputStream, Charsets.UTF_8));
+ 
+@@ -118,7 +116,7 @@
+       }
+    }
+ 
+-   protected static Map<String, String> getLanguageMapMap() {
++   public static Map<String, String> getLanguageMapMap() {
+       for (Method method : LanguageMap.class.getDeclaredMethods()) {
+          if (method.getReturnType() == LanguageMap.class) {
+             method.setAccessible(true);
+@@ -135,7 +133,7 @@
+       return null;
+    }
+ 
+-   protected static Map<String, String> getLocaleMap() {
++   public static Map<String, String> getLocaleMap() {
+       Field localeField = ReflectionUtil.getField(I18n.class, Locale.class);
+       Field mapField = ReflectionUtil.getField(Locale.class, Map.class);
+ 
