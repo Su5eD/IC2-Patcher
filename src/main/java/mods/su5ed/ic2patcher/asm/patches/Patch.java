@@ -3,6 +3,7 @@ package mods.su5ed.ic2patcher.asm.patches;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
+//TODO: Add an option to define a mod version range for the patch dependency. For now, not necessary.
 /**
  * Used for discovery of patches done "the old way". Annotated class has to be implementor of {@link IPatch}
  */

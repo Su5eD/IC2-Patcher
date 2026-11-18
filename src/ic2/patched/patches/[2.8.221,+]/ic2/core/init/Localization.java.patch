@@ -62,10 +62,10 @@
 -                  } catch (IOException var21) {
 -                     throw new RuntimeException(var21);
                    }
-+               } catch (FileNotFoundException var20) {
++               } catch (FileNotFoundException ignored) {
 +                  IC2.log.debug(LogCategory.Resource, "No translation file for language %s.", lang);
-+               } catch (IOException var21) {
-+                  throw new RuntimeException(var21);
++               } catch (IOException io) {
++                  throw new RuntimeException(io);
                 }
              }
           });
