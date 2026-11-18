@@ -11,11 +11,13 @@ import static mods.su5ed.ic2patcher.asm.IC2PatcherCore.LOG;
 public abstract class MethodPatch implements IPatch {
     private final String name;
     private final String srg;
+    private final String obfs;
     private final String desc;
 
-    public MethodPatch(String name, String srgName, String desc) {
+    public MethodPatch(String name, String srgName, String obfuscatedName, String desc) {
         this.name = name;
         this.srg = srgName;
+        this.obfs = obfuscatedName;
         this.desc = desc;
     }
 
@@ -26,7 +28,7 @@ public abstract class MethodPatch implements IPatch {
         reader.accept(node, 0);
 
         for (MethodNode method : node.methods) {
-            if ((!Objects.equals(method.name, this.name) && !Objects.equals(method.name, this.srg))
+            if ((!Objects.equals(method.name, this.name) && !Objects.equals(method.name, this.srg) && !Objects.equals(method.name, this.obfs))
                 || !Objects.equals(method.desc, this.desc))
                 continue;
             this.patchMethod(node, method);

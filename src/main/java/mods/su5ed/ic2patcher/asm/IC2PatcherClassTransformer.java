@@ -32,8 +32,8 @@ public class IC2PatcherClassTransformer implements IClassTransformer {
 
     @Override
     public byte[] transform(String name, String transformedName, byte[] bytes) {
-        if (customPatches.containsKey(name))
-            return cache.computeIfAbsent(name, key -> customPatches.get(key).patch(key, transformedName, bytes));
+        if (customPatches.containsKey(transformedName))
+            return cache.computeIfAbsent(transformedName, key -> customPatches.get(key).patch(key, transformedName, bytes));
         return IC2PatcherBinPatchManager.INSTANCE.applyPatch(name, transformedName, bytes);
     }
 

@@ -23,7 +23,7 @@ import java.util.Set;
 public class UTLanguageSwitchPatch extends MethodPatch {
 
     public UTLanguageSwitchPatch() {
-        super("elementClicked", "func_148144_a", "(IZII)V");
+        super("elementClicked", "func_148144_a", "a",  "(IZII)V");
     }
 
     @Override
