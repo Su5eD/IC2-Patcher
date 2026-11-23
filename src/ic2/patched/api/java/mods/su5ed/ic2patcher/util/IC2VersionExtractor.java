@@ -1,6 +1,7 @@
 package mods.su5ed.ic2patcher.util;
 
 import com.google.gson.Gson;
+import ic2.core.IC2;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -22,7 +23,10 @@ public class IC2VersionExtractor {
 
     public static boolean checkVersion(String version) {
         try {
-            if (getIC2Version() == null) return false;
+            if (getIC2Version() == null) {
+                // Check IC2-Annotation version
+                return IC2.VERSION.equals(version);
+            }
             return getIC2Version().equals(version);
         } catch (IOException e) {
             throw new RuntimeException(e);

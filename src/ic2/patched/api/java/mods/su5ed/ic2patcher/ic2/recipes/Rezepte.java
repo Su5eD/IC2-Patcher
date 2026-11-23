@@ -41,7 +41,7 @@ public class Rezepte {
         }
 
         // 2.2.164 IC2 Compatiblity. It doesn't contain milk!
-        if (IC2VersionExtractor.checkVersion("2.8.164-exp112"))
+        if (IC2VersionExtractor.checkVersion("2.8.164-ex112"))
             cannerEnrich.remove("Fluid:water ic2:dust#milk");
 
         loadEnrichRecipes(cannerEnrich, Recipes.cannerEnrich);
@@ -95,7 +95,7 @@ public class Rezepte {
             } else {
                 additive = ConfigUtil.asRecipeInputWithAmount(additiveStr);
             }
-        } catch (ParseException ex) {
+        } catch (Exception ex) {
             throw new Config.ParseException("invalid key", value, ex);
         }
 
@@ -171,7 +171,7 @@ public class Rezepte {
             } else {
                 fill = ConfigUtil.asRecipeInputWithAmount(fillStr);
             }
-        } catch (ParseException ex) {
+        } catch (Exception ex) {
             throw new Config.ParseException("invalid key", value, ex);
         }
 
