@@ -20,6 +20,15 @@ public class IC2VersionExtractor {
     private static String ic2Version = null;
     private static final Logger logger = LogManager.getLogger("IC2-Patcher/IC2VersionExtraction");
 
+    public static boolean checkVersion(String version) {
+        try {
+            if (getIC2Version() == null) return false;
+            return getIC2Version().equals(version);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     /**
      * Used to get cached IC2 Version extracted from the IC2 Jar. Requires {@link IC2VersionExtractor#getIC2Version(File)} to be called at least once.
      * @return String with IC2 Version.

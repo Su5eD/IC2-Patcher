@@ -1,0 +1,54 @@
+--- a/ic2/core/block/machine/tileentity/TileEntityCanner.java
++++ b/ic2/core/block/machine/tileentity/TileEntityCanner.java
+@@ -50,7 +50,7 @@
+ public class TileEntityCanner extends TileEntityStandardMachine<Object, Object, Object> implements INetworkClientTileEntityEventListener {
+    private TileEntityCanner.Mode mode = TileEntityCanner.Mode.BottleSolid;
+    public static final int eventSetModeBase = 0;
+-   public static final int eventSwapTanks = 0 + TileEntityCanner.Mode.values.length + 1;
++   public static final int eventSwapTanks = eventSetModeBase + TileEntityCanner.Mode.values.length + 1;
+    public final FluidTank inputTank;
+    public final FluidTank outputTank;
+    public final InvSlotConsumableCanner canInputSlot;
+@@ -72,41 +72,7 @@
+    public static void init() {
+       Recipes.cannerBottle = new CannerBottleRecipeManager();
+       Recipes.cannerEnrich = new CannerEnrichRecipeManager();
+-      ItemStack fuelRod = ItemName.crafting.getItemStack(CraftingItemType.fuel_rod);
+-      addBottleRecipe(fuelRod, ItemName.nuclear.getItemStack(NuclearResourceType.uranium), ItemName.uranium_fuel_rod.getItemStack());
+-      addBottleRecipe(fuelRod, ItemName.nuclear.getItemStack(NuclearResourceType.mox), ItemName.mox_fuel_rod.getItemStack());
+-      ItemStack tinCan = ItemName.crafting.getItemStack(CraftingItemType.tin_can);
+-      ItemStack filledTinCan = ItemName.filled_tin_can.getItemStack();
+-      addBottleRecipe(tinCan, new ItemStack(Items.POTATO), filledTinCan);
+-      addBottleRecipe(tinCan, 2, new ItemStack(Items.COOKIE), StackUtil.copyWithSize(filledTinCan, 2));
+-      addBottleRecipe(tinCan, 2, new ItemStack(Items.MELON), StackUtil.copyWithSize(filledTinCan, 2));
+-      addBottleRecipe(tinCan, 2, new ItemStack(Items.FISH), StackUtil.copyWithSize(filledTinCan, 2));
+-      addBottleRecipe(tinCan, 2, new ItemStack(Items.CHICKEN), StackUtil.copyWithSize(filledTinCan, 2));
+-      addBottleRecipe(tinCan, 3, new ItemStack(Items.PORKCHOP), StackUtil.copyWithSize(filledTinCan, 3));
+-      addBottleRecipe(tinCan, 3, new ItemStack(Items.BEEF), StackUtil.copyWithSize(filledTinCan, 3));
+-      addBottleRecipe(tinCan, 4, new ItemStack(Items.APPLE), StackUtil.copyWithSize(filledTinCan, 4));
+-      addBottleRecipe(tinCan, 4, new ItemStack(Items.CARROT), StackUtil.copyWithSize(filledTinCan, 4));
+-      addBottleRecipe(tinCan, 5, new ItemStack(Items.BREAD), StackUtil.copyWithSize(filledTinCan, 5));
+-      addBottleRecipe(tinCan, 5, new ItemStack(Items.COOKED_FISH), StackUtil.copyWithSize(filledTinCan, 5));
+-      addBottleRecipe(tinCan, 6, new ItemStack(Items.COOKED_CHICKEN), StackUtil.copyWithSize(filledTinCan, 6));
+-      addBottleRecipe(tinCan, 6, new ItemStack(Items.BAKED_POTATO), StackUtil.copyWithSize(filledTinCan, 6));
+-      addBottleRecipe(tinCan, 6, new ItemStack(Items.MUSHROOM_STEW), StackUtil.copyWithSize(filledTinCan, 6));
+-      addBottleRecipe(tinCan, 6, new ItemStack(Items.PUMPKIN_PIE), StackUtil.copyWithSize(filledTinCan, 6));
+-      addBottleRecipe(tinCan, 8, new ItemStack(Items.COOKED_PORKCHOP), StackUtil.copyWithSize(filledTinCan, 8));
+-      addBottleRecipe(tinCan, 8, new ItemStack(Items.COOKED_BEEF), StackUtil.copyWithSize(filledTinCan, 8));
+-      addBottleRecipe(tinCan, 12, new ItemStack(Items.CAKE), StackUtil.copyWithSize(filledTinCan, 12));
+-      addBottleRecipe(tinCan, new ItemStack(Items.POISONOUS_POTATO), 2, filledTinCan);
+-      addBottleRecipe(tinCan, new ItemStack(Items.ROTTEN_FLESH), 2, filledTinCan);
+-      addEnrichRecipe(FluidRegistry.WATER, ItemName.dust.getItemStack(DustResourceType.milk), FluidName.milk.getInstance());
+-      addEnrichRecipe(FluidRegistry.WATER, ItemName.crafting.getItemStack(CraftingItemType.cf_powder), FluidName.construction_foam.getInstance());
+-      addEnrichRecipe(FluidRegistry.WATER, Recipes.inputFactory.forOreDict("dustLapis", 8), FluidName.coolant.getInstance());
+-      addEnrichRecipe(FluidName.distilled_water.getInstance(), Recipes.inputFactory.forOreDict("dustLapis", 1), FluidName.coolant.getInstance());
+-      addEnrichRecipe(FluidRegistry.WATER, ItemName.crafting.getItemStack(CraftingItemType.bio_chaff), FluidName.biomass.getInstance());
+-      addEnrichRecipe(
+-         new FluidStack(FluidRegistry.WATER, 6000),
+-         Recipes.inputFactory.forStack(new ItemStack(Items.STICK)),
+-         new FluidStack(FluidName.hot_water.getInstance(), 1000)
+-      );
++      // Patch: Remove Hard-Coded recipes and move then to .ini configuration. Resolves #43
+    }
+ 
+    public static void addBottleRecipe(ItemStack container, int conamount, ItemStack fill, int fillamount, ItemStack output) {
