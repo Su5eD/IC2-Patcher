@@ -38,7 +38,7 @@ public class ElectrolyzerRecipes {
                     value.name
                 );
             } else {
-                Rezepte.pendingRecipes.add(() -> loadRecipe(value, manager, true));
+                IC2Recipes.pendingRecipes.add(() -> loadRecipe(value, manager, true));
             }
 
             return false;
@@ -68,7 +68,7 @@ public class ElectrolyzerRecipes {
                             value.name
                         );
                     } else {
-                        Rezepte.pendingRecipes.add(() -> loadRecipe(value, manager, true));
+                        IC2Recipes.pendingRecipes.add(() -> loadRecipe(value, manager, true));
                     }
 
                     return false;

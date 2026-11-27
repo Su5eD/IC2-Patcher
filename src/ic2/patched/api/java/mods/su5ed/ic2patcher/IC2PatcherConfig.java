@@ -36,6 +36,10 @@ public class IC2PatcherConfig extends net.minecraftforge.common.config.Configura
      */
     public final boolean genEffBuff;
     /**
+     * Makes Hard-Coded recipes that use values from <code>general.ini</code> configuration file to be loaded from the recipe .ini configurations instead.
+     */
+    public final boolean useRecipeInis;
+    /**
      * Determines the tick interval of Push/Pull upgrades.
      */
     public final int upgradeTickInterval;
@@ -57,6 +61,11 @@ public class IC2PatcherConfig extends net.minecraftforge.common.config.Configura
 
         bucketCell = this.getBoolean("bucketFluidCell", "patches", true,
             "Adds bucket-like behaviour to the FluidCell, allowing to pickup fluids that aren't adjacent to a block.");
+
+        useRecipeInis = this.getBoolean("useRecipeInis", "patches", false,
+            "Makes IC2 Hard-Coded recipes that use values from IC2's \"general.ini\" configuration file be loaded from recipe .ini configuration files instead.\n" +
+                "By default, this is disabled to keep compatibility with modpacks that don't ship IC2-Patcher by default.\n" +
+                "Machines that don't offer any customizability for their hard-coded recipes have recipe .ini support enabled by default.");
 
         enableUpgradeTickInterval = this.getBoolean("enableUpgradeTickInterval", "patches", false,
             "[Experimental] Forces the Push/Pull upgrades to tick only once every x ticks with few exceptions. If false, uses default IC2 behaviour.");

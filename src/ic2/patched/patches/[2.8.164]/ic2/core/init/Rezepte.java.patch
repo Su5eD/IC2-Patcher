@@ -5,7 +5,7 @@
        loadMachineRecipes(oreWashing, Recipes.oreWashing, Rezepte.MachineType.OreWashingPlant);
        loadMachineRecipes(centrifuge, Recipes.centrifuge, Rezepte.MachineType.ThermalCentrifuge);
 +      // Patch: Add additional machines for the .ini configuration. Resolves #43
-+      mods.su5ed.ic2patcher.ic2.recipes.Rezepte.loadAdditionalRecipes(disabledRecipeOutputs, pendingRecipes);
++      mods.su5ed.ic2patcher.ic2.recipes.IC2Recipes.loadAdditionalRecipes(disabledRecipeOutputs, pendingRecipes);
        IC2.log.debug(LogCategory.Recipe, "%d recipes failed to load in the first pass.", pendingRecipes.size());
     }
  

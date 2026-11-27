@@ -2,11 +2,16 @@ package mods.su5ed.ic2patcher.ic2.recipes;
 
 import ic2.api.recipe.*;
 import ic2.core.IC2;
+import ic2.core.profile.ProfileManager;
 import ic2.core.util.Config;
 import ic2.core.util.LogCategory;
+import mods.su5ed.ic2patcher.IC2PatcherConfig;
 import mods.su5ed.ic2patcher.util.IC2VersionExtractor;
 import mods.su5ed.ic2patcher.util.TriFunction;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.function.BooleanSupplier;
 
@@ -16,22 +21,24 @@ import static ic2.core.init.Rezepte.getConfigFile;
  * Handles loading of recipes for machines without official .ini support.<br>
  * Resolves <a href="https://github.com/Su5eD/IC2-Patcher/issues/43">#43</a>
  */
-public class Rezepte {
+public class IC2Recipes {
     static List<IRecipeInput> disabledRecipeOutputs = null;
     static Queue<BooleanSupplier> pendingRecipes = null;
 
     public static void loadAdditionalRecipes(List<IRecipeInput> disabledRecipes, Queue<BooleanSupplier> pendingRecipes) {
-        Rezepte.disabledRecipeOutputs = disabledRecipes;
-        Rezepte.pendingRecipes = pendingRecipes;
+        IC2Recipes.disabledRecipeOutputs = disabledRecipes;
+        IC2Recipes.pendingRecipes = pendingRecipes;
 
         Config cannerEnrich = new Config("canner enrichment recipes");
         Config cannerBottle = new Config("canner bottling recipes");
         Config electrolyzer = new Config("electrolyzer recipes");
+        Config fermenter = new Config("fermenter recipes");
 
         try {
             cannerEnrich.load(getConfigFile("canner_enrich"));
             cannerBottle.load(getConfigFile("canner_bottle"));
             electrolyzer.load(getConfigFile("electrolyzer"));
+            fermenter.load(getConfigFile("fermenter"));
         } catch (Exception e) {
             IC2.log.warn(LogCategory.Recipe, e, "Recipe loading failed.");
         }
@@ -43,6 +50,34 @@ public class Rezepte {
         loadRecipes(cannerEnrich, Recipes.cannerEnrich, CannerRecipes::loadEnrichRecipe);
         loadRecipes(cannerBottle, Recipes.cannerBottle, CannerRecipes::loadBottleRecipe);
         loadRecipes(electrolyzer, Recipes.electrolyzer, ElectrolyzerRecipes::loadRecipe);
+        loadRecipesConditional(fermenter, Recipes.fermenter, FermenterRecipes::loadRecipe);
+        loadRecipesConditional(fermenter, Recipes.fermenter, FermenterRecipes::loadRecipe);
+        loadRecipesConditional(fermenter, Recipes.fermenter, FermenterRecipes::loadRecipe);
+        loadRecipesConditional(fermenter, Recipes.fermenter, FermenterRecipes::loadRecipe);
+        loadRecipesConditional(fermenter, Recipes.fermenter, FermenterRecipes::loadRecipe);
+    }
+
+    /**
+     * Used to patch the classic near_depleted_uranium recipe on load time.
+     * @param config Shaped Recipes Config.
+     */
+    public static void loadShaped(Config config) throws IOException {
+        File file = new File(IC2.platform.getMinecraftDir(), "config/ic2/shaped_recipes.ini");
+        if (file.canRead() && file.isFile()) {
+            config.load(Files.newInputStream(file.toPath()));
+            return;
+        }
+
+        config.load(ProfileManager.getRecipeConfig("shaped_recipes"));
+        if (IC2.version.isClassic()) {
+            Config.Value recipe = config.get("\"CCC|CUC|CCC\" C:ic2:cell#empty U:OreDict:ingotUranium");
+            if (Objects.nonNull(recipe) && Objects.equals(recipe.value, "ic2:nuclear#near_depleted_uranium"))
+                recipe.set("ic2:nuclear#near_depleted_uranium*8");
+        }
+    }
+
+    static <M> void loadRecipesConditional(Config config, M recipeManager, TriFunction<Config.Value, M, Boolean, Boolean> loader) {
+        if (IC2PatcherConfig.get().useRecipeInis) loadRecipes(config, recipeManager, loader);
     }
 
     static <M> void loadRecipes(Config config, M recipeManager, TriFunction<Config.Value, M, Boolean, Boolean> loader) {

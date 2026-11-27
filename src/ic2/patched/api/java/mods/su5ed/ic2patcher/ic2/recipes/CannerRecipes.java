@@ -50,7 +50,7 @@ public class CannerRecipes {
                     additive == null? " " + additiveStr: ""
                 );
             } else {
-                Rezepte.pendingRecipes.add(() -> loadEnrichRecipe(value, machine, true));
+                IC2Recipes.pendingRecipes.add(() -> loadEnrichRecipe(value, machine, true));
             }
 
             return false;
@@ -67,7 +67,7 @@ public class CannerRecipes {
                         value.name
                     );
                 } else {
-                    Rezepte.pendingRecipes.add(() -> loadEnrichRecipe(value, machine, true));
+                    IC2Recipes.pendingRecipes.add(() -> loadEnrichRecipe(value, machine, true));
                 }
 
                 return false;
@@ -126,7 +126,7 @@ public class CannerRecipes {
                     fill == null? " " + fillStr: ""
                 );
             } else {
-                Rezepte.pendingRecipes.add(() -> loadBottleRecipe(value, machine, true));
+                IC2Recipes.pendingRecipes.add(() -> loadBottleRecipe(value, machine, true));
             }
 
             return false;
@@ -144,13 +144,13 @@ public class CannerRecipes {
                         value.name
                     );
                 } else {
-                    Rezepte.pendingRecipes.add(() -> loadBottleRecipe(value, machine, true));
+                    IC2Recipes.pendingRecipes.add(() -> loadBottleRecipe(value, machine, true));
                 }
 
                 return false;
             }
 
-            for (IRecipeInput disable : Rezepte.disabledRecipeOutputs) {
+            for (IRecipeInput disable : IC2Recipes.disabledRecipeOutputs) {
                 if (disable.matches(output)) {
                     return true;
                 }
