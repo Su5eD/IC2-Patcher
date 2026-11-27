@@ -9,8 +9,8 @@ import java.text.ParseException;
 public class IC2ConfigUtil {
     public static FluidStack getFluidStack(String str, boolean checkAmount) throws ParseException {
         String[] parts = str.split("(?=(@|#|\\*))");
-        String itemName = parts[0];
-        if (!itemName.startsWith("Fluid:")) return null;
+        String fluidName = parts[0];
+        if (!fluidName.startsWith("Fluid:")) return null;
         Integer amount = null;
         for (int i = 1; i < parts.length; i++) {
             String tmp = parts[i];
@@ -21,9 +21,8 @@ public class IC2ConfigUtil {
             }
         }
 
-        if (itemName.startsWith("OreDict:")) return null;
         if (amount == null) amount = 1000;
-        Fluid fluid = FluidRegistry.getFluid(itemName.substring("Fluid:".length()));
+        Fluid fluid = FluidRegistry.getFluid(fluidName.substring("Fluid:".length()));
         if (fluid == null) return null;
         return new FluidStack(fluid, amount);
     }
