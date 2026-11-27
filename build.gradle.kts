@@ -103,10 +103,11 @@ dependencies {
     runtimeOnly(fg.deobf(group = "curse.maven", name = "ae2-223794", version = "2747063"))
     runtimeOnly(fg.deobf(group = "curse.maven", name = "flux_networks-248020", version = "3178199"))
     // #36 - Universal Tweaks Fast Language Change breaks IC2.
-    runtimeOnly(fg.deobf(group = "curse.maven", name = "mixin-booter-419286", version = "7049694"))
-    runtimeOnly(fg.deobf(group = "curse.maven", name = "configanytime-870276", version = "5212709"))
-    runtimeOnly(fg.deobf(group = "curse.maven", name = "bdlib-70496", version = "4675629"))
-    runtimeOnly(fg.deobf(group = "curse.maven", name = "universaltweaks-705000", version = "7403701"))
+//    runtimeOnly(fg.deobf(group = "curse.maven", name = "mixin-booter-419286", version = "7049694"))
+//    runtimeOnly(fg.deobf(group = "curse.maven", name = "configanytime-870276", version = "5212709"))
+//    runtimeOnly(fg.deobf(group = "curse.maven", name = "bdlib-70496", version = "4675629"))
+//    runtimeOnly(fg.deobf(group = "curse.maven", name = "universaltweaks-705000", version = "7403701"))
+    // Thaumcraft.
 //    runtimeOnly(fg.deobf(group = "curse.maven", name = "thaumcraft-223628", version = "2629023"))
 }
 

@@ -127,6 +127,6 @@ public class ElectrolyzerRecipes {
         if (amount == null) amount = 1000;
         Fluid fluid = FluidRegistry.getFluid(fluidName.substring(6));
         if (fluid == null) return null;
-        return new IElectrolyzerRecipeManager.ElectrolyzerOutput(fluidName, amount, dir);
+        return new IElectrolyzerRecipeManager.ElectrolyzerOutput(fluid.getName(), amount, dir);
     }
 }

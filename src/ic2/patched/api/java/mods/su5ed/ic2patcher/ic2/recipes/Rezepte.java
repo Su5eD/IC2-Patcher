@@ -1,11 +1,11 @@
 package mods.su5ed.ic2patcher.ic2.recipes;
 
-import buildcraft.lib.expression.NodeInliningHelper;
 import ic2.api.recipe.*;
 import ic2.core.IC2;
 import ic2.core.util.Config;
 import ic2.core.util.LogCategory;
 import mods.su5ed.ic2patcher.util.IC2VersionExtractor;
+import mods.su5ed.ic2patcher.util.TriFunction;
 
 import java.util.*;
 import java.util.function.BooleanSupplier;
@@ -41,11 +41,11 @@ public class Rezepte {
             cannerEnrich.remove("Fluid:water ic2:dust#milk");
 
         loadRecipes(cannerEnrich, Recipes.cannerEnrich, CannerRecipes::loadEnrichRecipe);
-        loadRecipes(cannerEnrich, Recipes.cannerBottle, CannerRecipes::loadBottleRecipe);
+        loadRecipes(cannerBottle, Recipes.cannerBottle, CannerRecipes::loadBottleRecipe);
         loadRecipes(electrolyzer, Recipes.electrolyzer, ElectrolyzerRecipes::loadRecipe);
     }
 
-    static <M> void loadRecipes(Config config, M recipeManager, NodeInliningHelper.TriFunction<Config.Value, M, Boolean, Boolean> loader) {
+    static <M> void loadRecipes(Config config, M recipeManager, TriFunction<Config.Value, M, Boolean, Boolean> loader) {
         int amount = 0;
         int successful = 0;
 
