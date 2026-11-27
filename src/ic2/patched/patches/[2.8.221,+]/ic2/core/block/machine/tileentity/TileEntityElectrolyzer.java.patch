@@ -1,0 +1,18 @@
+--- a/ic2/core/block/machine/tileentity/TileEntityElectrolyzer.java
++++ b/ic2/core/block/machine/tileentity/TileEntityElectrolyzer.java
+@@ -53,14 +53,7 @@
+ 
+    public static void init() {
+       Recipes.electrolyzer = new ElectrolyzerRecipeManager();
+-      Recipes.electrolyzer
+-         .addRecipe(
+-            FluidRegistry.WATER.getName(),
+-            40,
+-            32,
+-            new IElectrolyzerRecipeManager.ElectrolyzerOutput(FluidName.hydrogen.getName(), 26, EnumFacing.DOWN),
+-            new IElectrolyzerRecipeManager.ElectrolyzerOutput(FluidName.oxygen.getName(), 13, EnumFacing.UP)
+-         );
++      // Patch: Remove hard-coded recipes from machines and move them to recipe .ini configuration. See #43.
+    }
+ 
+    @Override

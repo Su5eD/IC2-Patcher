@@ -1,0 +1,18 @@
+--- a/ic2/core/block/machine/tileentity/TileEntityFermenter.java
++++ b/ic2/core/block/machine/tileentity/TileEntityFermenter.java
+@@ -70,14 +70,7 @@
+ 
+    public static void init() {
+       Recipes.fermenter = new FermenterRecipeManager();
+-      Recipes.fermenter
+-         .addRecipe(
+-            FluidName.biomass.getName(),
+-            ConfigUtil.getInt(MainConfig.get(), "balance/fermenter/need_amount_biomass_per_run"),
+-            ConfigUtil.getInt(MainConfig.get(), "balance/fermenter/hU_per_run"),
+-            FluidName.biogas.getName(),
+-            ConfigUtil.getInt(MainConfig.get(), "balance/fermenter/output_amount_biogas_per_run")
+-         );
++      // Patch: Remove hard-coded recipes from machines and move them to recipe .ini configuration. See #43.
+    }
+ 
+    @Override

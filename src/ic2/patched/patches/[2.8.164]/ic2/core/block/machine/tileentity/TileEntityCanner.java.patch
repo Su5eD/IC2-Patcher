@@ -1,5 +1,14 @@
 --- a/ic2/core/block/machine/tileentity/TileEntityCanner.java
 +++ b/ic2/core/block/machine/tileentity/TileEntityCanner.java
+@@ -49,7 +49,7 @@
+ public class TileEntityCanner extends TileEntityStandardMachine<Object, Object, Object> implements INetworkClientTileEntityEventListener {
+    private TileEntityCanner.Mode mode = TileEntityCanner.Mode.BottleSolid;
+    public static final int eventSetModeBase = 0;
+-   public static final int eventSwapTanks = 0 + TileEntityCanner.Mode.values.length + 1;
++   public static final int eventSwapTanks = eventSetModeBase + TileEntityCanner.Mode.values.length + 1;
+    public final FluidTank inputTank;
+    public final FluidTank outputTank;
+    public final InvSlotConsumableCanner canInputSlot;
 @@ -71,40 +71,7 @@
     public static void init() {
        Recipes.cannerBottle = new CannerBottleRecipeManager();
@@ -38,7 +47,7 @@
 -         Recipes.inputFactory.forStack(new ItemStack(Items.STICK)),
 -         new FluidStack(FluidName.hot_water.getInstance(), 1000)
 -      );
-+      // Patch: Remove Hard-Coded recipes and move then to .ini configuration. Resolves #43
++      // Patch: Remove hard-coded recipes from machines and move them to recipe .ini configuration. See #43.
     }
  
     public static void addBottleRecipe(ItemStack container, int conamount, ItemStack fill, int fillamount, ItemStack output) {

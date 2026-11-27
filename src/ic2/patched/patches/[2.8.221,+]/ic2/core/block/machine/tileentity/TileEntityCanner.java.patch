@@ -48,7 +48,7 @@
 -         Recipes.inputFactory.forStack(new ItemStack(Items.STICK)),
 -         new FluidStack(FluidName.hot_water.getInstance(), 1000)
 -      );
-+      // Patch: Remove Hard-Coded recipes and move then to .ini configuration. Resolves #43
++      // Patch: Remove hard-coded recipes from machines and move them to recipe .ini configuration. See #43.
     }
  
     public static void addBottleRecipe(ItemStack container, int conamount, ItemStack fill, int fillamount, ItemStack output) {

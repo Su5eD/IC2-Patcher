@@ -1,0 +1,60 @@
+--- a/ic2/core/block/heatgenerator/tileentity/TileEntityFluidHeatGenerator.java
++++ b/ic2/core/block/heatgenerator/tileentity/TileEntityFluidHeatGenerator.java
+@@ -67,25 +67,38 @@
+ 
+    public static void init() {
+       Recipes.fluidHeatGenerator = new FluidHeatManager();
+-      if (ConfigUtil.getFloat(MainConfig.get(), "balance/energy/generator/semiFluidOil") > 0.0F) {
+-         addFuel("oil", 10, Math.round(16.0F * ConfigUtil.getFloat(MainConfig.get(), "balance/energy/heatgenerator/semiFluidOil")));
+-      }
+-
+-      if (ConfigUtil.getFloat(MainConfig.get(), "balance/energy/generator/semiFluidFuel") > 0.0F) {
+-         addFuel("fuel", 5, Math.round(64.0F * ConfigUtil.getFloat(MainConfig.get(), "balance/energy/heatgenerator/semiFluidFuel")));
+-      }
+-
+-      if (ConfigUtil.getFloat(MainConfig.get(), "balance/energy/generator/semiFluidBiomass") > 0.0F) {
+-         addFuel("biomass", 20, Math.round(16.0F * ConfigUtil.getFloat(MainConfig.get(), "balance/energy/heatgenerator/semiFluidBiomass")));
+-      }
+-
+-      if (ConfigUtil.getFloat(MainConfig.get(), "balance/energy/generator/semiFluidBioethanol") > 0.0F) {
+-         addFuel("bio.ethanol", 10, Math.round(32.0F * ConfigUtil.getFloat(MainConfig.get(), "balance/energy/heatgenerator/semiFluidBioethanol")));
+-      }
+-
+-      if (ConfigUtil.getFloat(MainConfig.get(), "balance/energy/generator/semiFluidBiogas") > 0.0F) {
+-         addFuel("ic2biogas", 10, Math.round(32.0F * ConfigUtil.getFloat(MainConfig.get(), "balance/energy/heatgenerator/semiFluidBiogas")));
+-      }
++      // Patch: Fix checks using Electric generator values instead of heat ones.
++      float modifier = ConfigUtil.getFloat(MainConfig.get(), "balance/energy/heatgenerator/semiFluidOil");
++      if (modifier > 0.0F) {
++         addFuel("oil", 10, Math.round(16.0F * modifier));
++      }
++
++      modifier = ConfigUtil.getFloat(MainConfig.get(), "balance/energy/heatgenerator/semiFluidFuel");
++      if (modifier > 0.0F) {
++         addFuel("fuel", 5, Math.round(64.0F * modifier));
++      }
++
++      modifier = ConfigUtil.getFloat(MainConfig.get(), "balance/energy/heatgenerator/semiFluidBiomass");
++      if (modifier > 0.0F) {
++         addFuel("biomass", 20, Math.round(16.0F * modifier));
++      }
++
++      modifier = ConfigUtil.getFloat(MainConfig.get(), "balance/energy/heatgenerator/semiFluidBioethanol");
++      if (modifier > 0.0F) {
++         addFuel("bio.ethanol", 10, Math.round(32.0F * modifier));
++      }
++
++      modifier = ConfigUtil.getFloat(MainConfig.get(), "balance/energy/heatgenerator/semiFluidBiogas");
++      if (modifier > 0.0F) {
++         addFuel("ic2biogas", 10, Math.round(32.0F * modifier));
++      }
++
++      // Patch: Add support for creosote (like SemiFluid has)
++      modifier = ConfigUtil.getFloat(MainConfig.get(), "balance/energy/heatgenerator/semiFluidCreosote");
++      if (modifier > 0.0f) {
++         addFuel("ic2creosote", 10, Math.round(8.0F * modifier));
++         addFuel("creosote", 10, Math.round(8.0F * modifier));
++       }
+    }
+ 
+    public static void addFuel(String fluidName, int amount, int heat) {

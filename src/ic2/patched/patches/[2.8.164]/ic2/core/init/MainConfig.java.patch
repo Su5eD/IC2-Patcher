@@ -1,0 +1,21 @@
+--- a/ic2/core/init/MainConfig.java
++++ b/ic2/core/init/MainConfig.java
+@@ -4,6 +4,8 @@
+ import ic2.core.IC2;
+ import ic2.core.util.Config;
+ import ic2.core.util.ConfigUtil;
++import mods.su5ed.ic2patcher.IC2PatcherConfig;
++
+ import java.io.File;
+ import java.util.Iterator;
+ import java.util.List;
+@@ -20,6 +22,9 @@
+       try {
+          config.load(IC2.class.getResourceAsStream("/assets/ic2/config/general.ini"));
+          defaultConfig.load(IC2.class.getResourceAsStream("/assets/ic2/config/general.ini"));
++         // Patch: Add additional values to the default configs.
++         IC2PatcherConfig.patchIC2Config(config);
++         IC2PatcherConfig.patchIC2Config(defaultConfig);
+       } catch (Exception var2) {
+          throw new RuntimeException("Error loading base config", var2);
+       }
